@@ -1,0 +1,9 @@
+# React frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# ASP.NET backend
+Server/bin/
+Server/obj/
+Server/app.db
