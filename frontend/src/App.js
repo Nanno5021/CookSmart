@@ -2,12 +2,13 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Import pages
-import MainPage from "./pages/MainPage";
-import ProfilePage from "./pages/ProfilePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import CoursePage from "./pages/CoursePage";
-import RecipePage from "./pages/RecipePage";
+import MainPage from "./pages/MainPage.js";
+import ProfilePage from "./pages/ProfilePage.js";
+import LoginPage from "./pages/LoginPage.js";
+import RegisterPage from "./pages/RegisterPage.js";
+import CoursePage from "./pages/CoursePage.js";
+import RecipePage from "./pages/RecipePage.js";
+import PostBlogPage from "./pages/PostBlogPage.js";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/course" element={<CoursePage />} />
         <Route path="/recipe" element={<RecipePage />} />
+        <Route path="/postblog" element={<PostBlogPage />} />
       </Routes>
     </Router>
   );
