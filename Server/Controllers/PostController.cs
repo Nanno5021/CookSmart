@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Data; 
 using Server.Models; 
-using Server.DTOs;   
+using Server.DTOs.Post;   
 
 namespace Server.Controllers
 { 
