@@ -1,25 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.Data; 
-using Server.Models; 
-using Server.DTOs.Post;   
+using Server.Data;
+using Server.Models;
+using Server.DTOs;
 
 namespace Server.Controllers
-{ 
+{
     [ApiController]
     [Route("api/[controller]")]
-    public class PostController : ControllerBase
+    public class PostsController : ControllerBase 
     {
         private readonly AppDbContext _context;
 
-        public PostController(AppDbContext context)
+        public PostsController(AppDbContext context)
         {
             _context = context;
         }
 
-        // ✅ CREATE POST
-        [HttpPost("post")]
-        public IActionResult CreatePost(PostDto dto)
+        // ✅ CREATE POST (POST /api/posts)
+        [HttpPost]
+        public IActionResult CreatePost([FromBody] PostDto dto)
         {
+            if (dto == null)
+                return BadRequest("Invalid data.");
+
             var post = new Post
             {
                 Title = dto.Title,
@@ -33,8 +36,8 @@ namespace Server.Controllers
             return Ok(new { message = "Post created successfully!", postId = post.Id });
         }
 
-        // ✅ GET ALL POSTS
-        [HttpGet("all")]
+        // ✅ GET ALL POSTS (GET /api/posts)
+        [HttpGet]
         public IActionResult GetAllPosts()
         {
             var posts = _context.Posts.ToList();
