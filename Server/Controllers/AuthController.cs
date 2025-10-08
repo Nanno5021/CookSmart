@@ -57,29 +57,5 @@ namespace Server.Controllers
                 user = new { user.Id, user.Username, user.Email }
             });
         }
-
-        // ✅ POST BLOG
-        [HttpPost("post")]
-        public IActionResult CreatePost(PostDto dto)
-        {
-            var user = _context.Users.FirstOrDefault(u => u.Username == dto.Username);
-            if (user == null)
-            {
-                return BadRequest("User not found.");
-            }
-
-            var post = new Post
-            {
-                Username = dto.Username,
-                Title = dto.Title,
-                Content = dto.Content,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.Posts.Add(post);
-            _context.SaveChanges();
-
-            return Ok(new { message = "Post created successfully!" });
-        }
     }
 }
