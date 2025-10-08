@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png"; // temporary placeholder
 import ratingIcon from "../assets/rating.png";
@@ -9,6 +10,7 @@ import postIcon from "../assets/post.png";
 function MainPage() {
   const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
+  const navigate = useNavigate();
 
   const posts = [
     {
@@ -71,6 +73,11 @@ function MainPage() {
     console.log(`Commented on post ${id}`);
   };
 
+  const handleNewPost = () => {
+    // Navigate to BlogPostPage and pass title (if any)
+    navigate("/postblog", { state: { title: newPost } });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center relative">
       <Navbar />
@@ -109,7 +116,9 @@ function MainPage() {
               className="w-full bg-transparent border-b border-gray-600 text-gray-300 focus:outline-none focus:border-white pb-1"
             />
           </div>
-          <button className="bg-white text-black font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 transition ml-4">
+          <button 
+            onClick={handleNewPost} 
+            className="bg-white text-black font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 transition ml-4">
             Post
           </button>
         </div>
@@ -198,6 +207,7 @@ function MainPage() {
 
       {/* Floating Post Button */}
       <button
+        onClick={() => navigate("/postblog")}
         className="fixed bottom-10 right-10 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition"
         title="New Post"
       >
