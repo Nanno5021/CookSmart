@@ -1,27 +1,47 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios"; // ✅ Add axios import
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
 import imageIcon from "../assets/picture.png";
 
 function PostBlogPage() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [title, setTitle] = useState(location.state?.title || "");
-    const [body, setBody] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [title, setTitle] = useState(location.state?.title || "");
+  const [body, setBody] = useState("");
+  const [image, setImage] = useState(null);
 
-    const handlePost = () => {
-        // Handle post submission logic here (e.g., send to backend)
-        console.log("Posting:", { title, body });
-        // After posting, navigate back to main page
-        navigate("/");
-    };
+  // ✅ Handle Post submission
+  const handlePost = async (e) => {
+    e.preventDefault();
 
-    return (
+    try {
+      // Build the post object (match your backend model)
+      const postData = {
+        username: "ChefLiam", // replace with logged-in username later
+        title: title,
+        content: body,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Send POST request to backend
+      const res = await axios.post("http://localhost:5037/api/posts", postData);
+
+      alert("✅ Post created successfully!");
+      console.log("Posted:", res.data);
+
+      // Redirect or clear after posting
+      navigate("/"); // go back to home page (adjust as needed)
+    } catch (error) {
+      console.error("❌ Error posting:", error);
+      alert("Failed to post. Check console for details.");
+    }
+  };
+
+  return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-      <div
-        className="bg-[#181818] text-white rounded-2xl shadow-lg p-8 w-full max-w-2xl relative"
-      >
+      <div className="bg-[#181818] text-white rounded-2xl shadow-lg p-8 w-full max-w-2xl relative">
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
           <button
@@ -36,16 +56,25 @@ function PostBlogPage() {
 
         {/* Profile */}
         <div className="flex items-center space-x-4 mb-6">
-          <img src={picture} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
+          <img
+            src={picture}
+            alt="Profile"
+            className="w-12 h-12 rounded-full object-cover"
+          />
           <span className="font-semibold text-lg">ChefLiam</span>
         </div>
 
         {/* Image Placeholder */}
         <label className="w-24 h-24 bg-gray-800 flex justify-center items-center rounded-lg mb-6 cursor-pointer hover:bg-gray-700 transition">
-            <img src={imageIcon} alt="Upload" className="w-10 h-10 opacity-70" />
-            <input type="file" className="hidden" accept="image/*" />
+          <img src={imageIcon} alt="Upload" className="w-10 h-10 opacity-70" />
+          <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
         </label>
-        
+
         {/* Title */}
         <input
           type="text"
