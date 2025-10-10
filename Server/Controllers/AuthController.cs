@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.Data; 
-using Server.Models; 
-using Server.DTOs;   
+using Microsoft.IdentityModel.Tokens;
+using Server.Data;
+using Server.Models;
+using Server.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Server.Controllers
 {
@@ -10,13 +14,15 @@ namespace Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
-        // ✅ REGISTER
+
         [HttpPost("register")]
         public IActionResult Register(RegisterDto dto)
         {
@@ -38,7 +44,7 @@ namespace Server.Controllers
             return Ok(new { message = "User registered successfully!" });
         }
 
-        // ✅ LOGIN
+
         [HttpPost("login")]
         public IActionResult Login(LoginDto dto)
         {
@@ -49,13 +55,39 @@ namespace Server.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Right now: just return success + user info
-            // Later: we’ll return a JWT token
+            // Generate JWT token
+            var token = GenerateJwtToken(user);
+            
             return Ok(new
             {
                 message = "Login successful",
+                token = token,
                 user = new { user.Id, user.Username, user.Email }
             });
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("userId", user.Id.ToString()) // Custom claim for user ID
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
