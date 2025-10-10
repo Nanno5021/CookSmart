@@ -11,6 +11,7 @@ function MainPage() {
   const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
   const navigate = useNavigate();
+console.log("Token from localStorage:", localStorage.getItem("token"));
 
   const posts = [
     {

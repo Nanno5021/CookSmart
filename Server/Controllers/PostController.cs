@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Data;
 using Server.Models;
@@ -7,7 +8,7 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PostsController : ControllerBase 
+    public class PostsController : ControllerBase
     {
         private readonly AppDbContext _context;
 
@@ -16,8 +17,9 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // ✅ CREATE POST (POST /api/posts)
+
         [HttpPost]
+        [Authorize]
         public IActionResult CreatePost([FromBody] PostDto dto)
         {
             if (dto == null)
@@ -36,7 +38,7 @@ namespace Server.Controllers
             return Ok(new { message = "Post created successfully!", postId = post.Id });
         }
 
-        // ✅ GET ALL POSTS (GET /api/posts)
+
         [HttpGet]
         public IActionResult GetAllPosts()
         {

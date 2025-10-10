@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios"; // ✅ Add axios import
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
 import imageIcon from "../assets/picture.png";
+import { createPost } from "../api/post"; // ✅ Make sure file name matches (e.g., postApi.js)
 
 function PostBlogPage() {
   const navigate = useNavigate();
@@ -17,24 +17,22 @@ function PostBlogPage() {
     e.preventDefault();
 
     try {
-      // Build the post object (match your backend model)
       const postData = {
-        username: "ChefLiam", // replace with logged-in username later
-        title: title,
+        title,
         content: body,
         createdAt: new Date().toISOString(),
       };
 
-      // Send POST request to backend
-      const res = await axios.post("http://localhost:5037/api/posts", postData);
+      console.log("🟢 Posting data:", postData);
 
-      alert("✅ Post created successfully!");
-      console.log("Posted:", res.data);
+      // ✅ Use your API helper that attaches JWT token
+      const res = await createPost(postData);
 
-      // Redirect or clear after posting
-      navigate("/"); // go back to home page (adjust as needed)
+      console.log("✅ Post created:", res);
+      alert("Post created successfully!");
+      navigate("/"); // Redirect to home
     } catch (error) {
-      console.error("❌ Error posting:", error);
+      console.error("❌ Error creating post:", error);
       alert("Failed to post. Check console for details.");
     }
   };
@@ -51,7 +49,7 @@ function PostBlogPage() {
             Cancel
           </button>
           <h2 className="text-xl font-bold">New Blog</h2>
-          <div className="w-16" /> {/* Spacer to center title */}
+          <div className="w-16" />
         </div>
 
         {/* Profile */}

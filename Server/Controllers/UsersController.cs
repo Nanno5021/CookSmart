@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Data;
-using Server.Models;   // 👈 THIS is important
+using Server.Models;   
 using Microsoft.EntityFrameworkCore;
 
 namespace Server.Controllers

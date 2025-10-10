@@ -22,7 +22,7 @@ function LoginPage() {
       alert("Login successful!");
       console.log("Logged in:", data);
 
-      // Optional: store token if backend sends JWT
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
