@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { loginUser } from "../api/auth";
+import { useNavigate } from "react-router-dom"; 
 
 function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -21,6 +24,7 @@ function LoginPage() {
       const data = await loginUser(formData);
       alert("Login successful!");
       console.log("Logged in:", data);
+      navigate("/"); 
 
       
       if (data.token) {
