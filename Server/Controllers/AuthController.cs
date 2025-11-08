@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Server.Data;
 using Server.Models;
 using Server.DTOs;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 namespace Server.Controllers
@@ -14,80 +15,110 @@ namespace Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AppDbContext context, IConfiguration config)
+        public AuthController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
-            _config = config;
+            _configuration = configuration;
         }
 
-
         [HttpPost("register")]
-        public IActionResult Register(RegisterDto dto)
+        public async Task<ActionResult> Register(RegisterDto registerDto)
         {
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            // Validate passwords match
+            if (registerDto.Password != registerDto.ConfirmPassword)
             {
-                return BadRequest("Email already registered.");
+                return BadRequest(new { message = "Passwords do not match" });
             }
 
+            // Check if username already exists
+            if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
+            {
+                return BadRequest(new { message = "Username already exists" });
+            }
+
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            {
+                return BadRequest(new { message = "Email already exists" });
+            }
+
+            // Hash the password
+            string hashedPassword = BCrypt.HashPassword(registerDto.Password);
+
+            // Create new user
             var user = new User
             {
-                Username = dto.Username,
-                Email = dto.Email,
-                Password = dto.Password 
+                FullName = registerDto.FullName,
+                Username = registerDto.Username,
+                Email = registerDto.Email,
+                PhoneNumber = registerDto.PhoneNumber,
+                Password = hashedPassword
             };
 
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User registered successfully!" });
+            return Ok(new { message = "Registration successful!" });
         }
 
-
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public async Task<ActionResult> Login(LoginDto loginDto)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+            // Find user by username or email
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == loginDto.UsernameOrEmail || u.Email == loginDto.UsernameOrEmail);
 
-            if (user == null || user.Password != dto.Password)
+            if (user == null)
             {
-                return Unauthorized("Invalid email or password.");
+                return Unauthorized(new { message = "Invalid credentials" });
+            }
+
+            // Verify password
+            if (!BCrypt.Verify(loginDto.Password, user.Password))
+            {
+                return Unauthorized(new { message = "Invalid credentials" });
             }
 
             // Generate JWT token
             var token = GenerateJwtToken(user);
-            
-            return Ok(new
-            {
-                message = "Login successful",
+
+            return Ok(new 
+            { 
+                message = "Login successful!",
                 token = token,
-                user = new { user.Id, user.Username, user.Email }
+                user = new 
+                {
+                    id = user.Id,
+                    fullName = user.FullName,
+                    username = user.Username,
+                    email = user.Email
+                }
             });
         }
 
         private string GenerateJwtToken(User user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "YourSecretKeyHere_MustBeAtLeast32CharactersLong!");
+            
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("userId", user.Id.ToString()) // Custom claim for user ID
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Email, user.Email)
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Issuer"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

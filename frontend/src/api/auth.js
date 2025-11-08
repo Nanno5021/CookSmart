@@ -1,28 +1,39 @@
 
 import { apiFetch, setToken, removeToken } from "./apiClient";
 
-export async function registerUser(formData) {
-  return await apiFetch("/auth/register", {
+export const registerUser = async (userData) => {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
-    body: JSON.stringify(formData),
-  });
-}
-
-export async function loginUser(formData) {
-  const data = await apiFetch("/auth/login", {
-    method: "POST",
-    body: JSON.stringify(formData),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
   });
 
-  if (data.token) {
-    setToken(data.token);
-    console.log("✅ Token saved:", data.token);
-  } else {
-    console.warn("⚠️ No token received");
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Registration failed");
   }
 
-  return data;
-}
+  return await response.json();
+};
+
+export const loginUser = async (credentials) => {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Login failed");
+  }
+
+  return await response.json();
+};
 
 export function logoutUser() {
   removeToken();
