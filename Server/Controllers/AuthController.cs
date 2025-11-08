@@ -44,17 +44,14 @@ namespace Server.Controllers
                 return BadRequest(new { message = "Email already exists" });
             }
 
-            // Hash the password
-            string hashedPassword = BCrypt.HashPassword(registerDto.Password);
-
-            // Create new user
+            // Create new user (without hashing for now)
             var user = new User
             {
                 FullName = registerDto.FullName,
                 Username = registerDto.Username,
                 Email = registerDto.Email,
                 PhoneNumber = registerDto.PhoneNumber,
-                Password = hashedPassword
+                Password = registerDto.Password  // Storing plain text password (not recommended for production)
             };
 
             _context.Users.Add(user);
@@ -75,8 +72,8 @@ namespace Server.Controllers
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            // Verify password
-            if (!BCrypt.Verify(loginDto.Password, user.Password))
+            // Verify password (plain text comparison)
+            if (loginDto.Password != user.Password)
             {
                 return Unauthorized(new { message = "Invalid credentials" });
             }
