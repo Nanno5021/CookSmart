@@ -27,15 +27,15 @@ namespace Server.Controllers
 
             var post = new Post
             {
-                Title = dto.Title,
-                Content = dto.Content,
-                CreatedAt = DateTime.UtcNow
+                title = dto.title,
+                content = dto.content,
+                createdAt = DateTime.UtcNow
             };
 
             _context.Posts.Add(post);
             _context.SaveChanges();
 
-            return Ok(new { message = "Post created successfully!", postId = post.Id });
+            return Ok(new { message = "Post created successfully!", postId = post.id });
         }
 
 

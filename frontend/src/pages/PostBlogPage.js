@@ -12,30 +12,33 @@ function PostBlogPage() {
   const [body, setBody] = useState("");
   const [image, setImage] = useState(null);
 
-  // ✅ Handle Post submission
-  const handlePost = async (e) => {
-    e.preventDefault();
 
-    try {
-      const postData = {
-        title,
-        content: body,
-        createdAt: new Date().toISOString(),
-      };
+const handlePost = async (e) => {
+  e.preventDefault();
 
-      console.log("🟢 Posting data:", postData);
+  try {
+    const postData = {
+      title,
+      content: body,
+      createdAt: new Date().toISOString(),
+    };
 
-      // ✅ Use your API helper that attaches JWT token
-      const res = await createPost(postData);
+    console.log("🟢 Posting data:", postData);
 
-      console.log("✅ Post created:", res);
-      alert("Post created successfully!");
-      navigate("/"); // Redirect to home
-    } catch (error) {
-      console.error("❌ Error creating post:", error);
-      alert("Failed to post. Check console for details.");
+    const res = await createPost(postData);
+
+    console.log("✅ Post created:", res);
+    alert("Post created successfully!");
+    navigate("/"); 
+  } catch (error) {
+    console.error("❌ Error creating post:", error);
+    alert(error.message); 
+
+    if (error.message.includes("Unauthorized")) {
+      navigate("/login");
     }
-  };
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
