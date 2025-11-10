@@ -3,64 +3,74 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import sampleFood from "../assets/food.png";
 import chefProfile from "../assets/pfp.png";
+import { fetchAllCourses } from "../api/courseApi";
 
 function CoursePage() {
   const navigate = useNavigate();
 
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all"); // "all" or "enrolled"
   const [enrolledCourses, setEnrolledCourses] = useState(
     JSON.parse(localStorage.getItem("enrolledCourses")) || []
   );
 
   useEffect(() => {
-    setCourses([
-      {
-        chefId: 1,
-        chefName: "Chef Gordon Ramsay",
-        chefImage: chefProfile,
-        courses: [
-          {
-            name: "Beef Wellington",
-            image: sampleFood,
-            ingredients: "Beef, pastry, mushrooms, butter",
-            difficulty: "Hard",
-            time: "2 hrs",
-            description:
-              "Learn the art of making the perfect Beef Wellington step by step.",
-          },
-          {
-            name: "Scrambled Eggs",
-            image: sampleFood,
-            ingredients: "Eggs, butter, salt",
-            difficulty: "Easy",
-            time: "10 mins",
-            description:
-              "Master creamy scrambled eggs with professional techniques.",
-          },
-        ],
-      },
-      {
-        chefId: 2,
-        chefName: "Nigella Lawson",
-        chefImage: chefProfile,
-        courses: [
-          {
-            name: "Chocolate Cake",
-            image: sampleFood,
-            ingredients: "Cocoa, flour, sugar, butter",
-            difficulty: "Medium",
-            time: "1 hr",
-            description: "Bake a rich, indulgent chocolate cake.",
-          },
-        ],
-      },
-    ]);
+    loadCourses();
   }, []);
 
-  // Navigate to course detail
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAllCourses();
+      
+      // Transform API response to match the component's expected format
+      const groupedCourses = data.reduce((acc, course) => {
+        const existingChef = acc.find(c => c.chefId === course.chefId);
+        
+        const courseData = {
+          id: course.id,
+          name: course.courseName,
+          image: course.courseImage || sampleFood,
+          ingredients: course.ingredients || "N/A",
+          difficulty: course.difficulty || "Medium",
+          time: course.estimatedTime || "N/A",
+          description: course.description || "No description provided.",
+          sections: course.sections,
+          quizQuestions: course.quizQuestions
+        };
+
+        if (existingChef) {
+          existingChef.courses.push(courseData);
+        } else {
+          acc.push({
+            chefId: course.chefId,
+            chefName: course.chefName,
+            chefImage: course.chefImage || chefProfile,
+            courses: [courseData]
+          });
+        }
+        
+        return acc;
+      }, []);
+      
+      setCourses(groupedCourses);
+      setError(null);
+    } catch (err) {
+      console.error("Error loading courses:", err);
+      setError("Failed to load courses. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToCourseDetail = (chef, course) => {
-    navigate("/coursedetail", { state: { chef, course } });
+    if (filter === "enrolled") {
+      navigate("/enrolleddetail", { state: { chef, course } });
+    } else {
+      navigate("/coursedetail", { state: { chef, course } });
+    }
   };
 
   // Filter displayed courses
@@ -79,6 +89,34 @@ function CoursePage() {
             ),
           }))
           .filter((chef) => chef.courses.length > 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-xl text-gray-400">Loading courses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+        <Navbar />
+        <div className="flex flex-col items-center justify-center h-screen">
+          <p className="text-xl text-red-400 mb-4">{error}</p>
+          <button 
+            onClick={loadCourses}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -140,7 +178,7 @@ function CoursePage() {
                 <div className="flex overflow-x-auto space-x-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4">
                   {chef.courses.map((course, index) => (
                     <div
-                      key={index}
+                      key={course.id || index}
                       onClick={() => goToCourseDetail(chef, course)}
                       className="min-w-[320px] bg-[#1f1f1f] rounded-xl shadow-md flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
                     >
