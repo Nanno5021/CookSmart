@@ -94,7 +94,8 @@ namespace Server.Controllers
                 new Claim(JwtRegisteredClaimNames.Email, user.email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("userId", user.id.ToString()),
-                new Claim("fullName", user.fullName ?? "")
+                new Claim("fullName", user.fullName ?? ""),
+                new Claim("role", user.role ?? "User")
             };
 
             var token = new JwtSecurityToken(
