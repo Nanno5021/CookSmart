@@ -13,6 +13,8 @@ import RecipePage from "./pages/RecipePage.js";
 import PostBlogPage from "./pages/PostBlogPage.js";
 import ChefCoursePage from "./pages/ChefCoursePage.js";
 import AddCoursePage from "./pages/AddCoursePage.js";
+import AdminDashboard from "./pages/admin/MainPage.js";
+import RequireAdmin from './components/RequireAdmin';
 
 function App() {
   return (
@@ -29,6 +31,14 @@ function App() {
         <Route path="/postblog" element={<PostBlogPage />} />
         <Route path="/chefcourse" element={<ChefCoursePage />} />
         <Route path="/addcourse" element={<AddCoursePage />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboard />
+            </RequireAdmin>
+          }
+        />
       </Routes>
     </Router>
   );

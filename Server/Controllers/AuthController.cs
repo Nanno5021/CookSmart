@@ -6,6 +6,7 @@ using Server.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BCrypt.Net;
 
 namespace Server.Controllers
 {
@@ -26,16 +27,29 @@ namespace Server.Controllers
         [HttpPost("register")]
         public IActionResult Register(RegisterDto dto)
         {
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            // Check if email already exists
+            if (_context.Users.Any(u => u.email == dto.email))
             {
-                return BadRequest("Email already registered.");
+                return BadRequest(new { message = "Email already registered." });
             }
+
+            // Check if username already exists
+            if (_context.Users.Any(u => u.username == dto.username))
+            {
+                return BadRequest(new { message = "Username already taken." });
+            }
+
+            // Hash the password before storing
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.password);
 
             var user = new User
             {
-                Username = dto.Username,
-                Email = dto.Email,
-                Password = dto.Password 
+                fullName = dto.fullName,
+                username = dto.username,
+                email = dto.email,
+                phone = dto.phone,
+                password = hashedPassword,  // Store hashed password
+                role = dto.role ?? "User"
             };
 
             _context.Users.Add(user);
@@ -46,25 +60,28 @@ namespace Server.Controllers
 
 
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public IActionResult Login([FromBody] LoginDto dto)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Identifier) || string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest(new { message = "Invalid login data." });
 
-            if (user == null || user.Password != dto.Password)
-            {
-                return Unauthorized("Invalid email or password.");
-            }
+            var user = _context.Users
+                .FirstOrDefault(u => u.email == dto.Identifier || u.username == dto.Identifier);
 
-            // Generate JWT token
+            // Verify password using BCrypt
+            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.password))
+                return Unauthorized(new { message = "Invalid username/email or password." });
+
             var token = GenerateJwtToken(user);
-            
+
             return Ok(new
             {
                 message = "Login successful",
                 token = token,
-                user = new { user.Id, user.Username, user.Email }
+                user = new { user.id, user.username, user.email, user.fullName, user.phone }
             });
         }
+
 
         private string GenerateJwtToken(User user)
         {
@@ -73,10 +90,12 @@ namespace Server.Controllers
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.username),
+                new Claim(JwtRegisteredClaimNames.Email, user.email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("userId", user.Id.ToString()) // Custom claim for user ID
+                new Claim("userId", user.id.ToString()),
+                new Claim("fullName", user.fullName ?? ""),
+                new Claim("role", user.role ?? "User")
             };
 
             var token = new JwtSecurityToken(

@@ -27,12 +27,28 @@ function LoginPage() {
     try {
       const data = await loginUser(formData);
       alert("Login successful!");
-      if (data.token) localStorage.setItem("token", data.token);
-      navigate("/");
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+
+        // ✅ Decode token payload
+        const payload = JSON.parse(atob(data.token.split(".")[1]));
+        const userRole = payload.role; // <-- Your JWT uses `role`
+
+        console.log("Logged in role:", userRole);
+
+        // ✅ Redirect based on role
+        if (userRole === "Admin") {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      }
     } catch (error) {
       alert("Error: " + error.message);
     }
   };
+
 
   return (
     <div
