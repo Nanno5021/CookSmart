@@ -11,6 +11,7 @@ import CourseDetailPage from "./pages/CourseDetailPage.js";
 import RecipePage from "./pages/RecipePage.js";
 import PostBlogPage from "./pages/PostBlogPage.js";
 import AdminDashboard from "./pages/admin/MainPage.js";
+import RequireAdmin from './components/RequireAdmin';
 
 function App() {
   return (
@@ -24,7 +25,14 @@ function App() {
         <Route path="/coursedetail" element={<CourseDetailPage />} />
         <Route path="/recipe" element={<RecipePage />} />
         <Route path="/postblog" element={<PostBlogPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboard />
+            </RequireAdmin>
+          }
+        />
       </Routes>
     </Router>
   );

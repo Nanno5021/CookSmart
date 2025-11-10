@@ -6,6 +6,7 @@ import ManageBlogPage from './ManageBlogPage';
 import ManageRecipePage from './ManageRecipePage';
 import ManageUserPage from './ManageUserPage';
 import ManageQuizPage from './ManageQuizPage';
+import { logoutUser } from '../../api/auth';
 
 function AdminDashboard() {
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -13,7 +14,7 @@ function AdminDashboard() {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      alert('Logged out successfully');
+      logoutUser();
     }
   };
 
