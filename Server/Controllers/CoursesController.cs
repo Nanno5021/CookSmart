@@ -31,7 +31,7 @@ namespace Server.Controllers
             {
                 Id = c.Id,
                 ChefId = c.ChefId,
-                ChefName = c.Chef?.Username ?? "Unknown Chef",
+                ChefName = c.Chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
                 CourseName = c.CourseName,
                 CourseImage = c.CourseImage,
@@ -80,7 +80,7 @@ namespace Server.Controllers
             {
                 Id = course.Id,
                 ChefId = course.ChefId,
-                ChefName = course.Chef?.Username ?? "Unknown Chef",
+                ChefName = course.Chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
                 CourseName = course.CourseName,
                 CourseImage = course.CourseImage,
@@ -125,7 +125,7 @@ namespace Server.Controllers
             {
                 Id = c.Id,
                 ChefId = c.ChefId,
-                ChefName = c.Chef?.Username ?? "Unknown Chef",
+                ChefName = c.Chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
                 CourseName = c.CourseName,
                 CourseImage = c.CourseImage,

@@ -32,7 +32,7 @@ namespace Server.Controllers
                 Id = r.Id,
                 CourseId = r.CourseId,
                 UserId = r.UserId,
-                Username = r.User?.Username ?? "Anonymous",
+                Username = r.User?.username ?? "Anonymous",
                 UserProfileImage = "", // Temporarily removed until profile images are implemented
                 Rating = r.Rating,
                 Comment = r.Comment,
@@ -86,7 +86,7 @@ namespace Server.Controllers
                 Id = review.Id,
                 CourseId = review.CourseId,
                 UserId = review.UserId,
-                Username = user.Username,
+                Username = user.username,
                 UserProfileImage = "", // Temporarily removed until profile images are implemented
                 Rating = review.Rating,
                 Comment = review.Comment,
