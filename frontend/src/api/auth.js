@@ -16,9 +16,9 @@ export async function loginUser(formData) {
 
   if (data.token) {
     setToken(data.token);
-    console.log("✅ Token saved:", data.token);
+    console.log("Token saved:", data.token);
   } else {
-    console.warn("⚠️ No token received");
+    console.warn("No token received");
   }
 
   return data;

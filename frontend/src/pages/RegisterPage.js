@@ -21,22 +21,25 @@ function RegisterPage() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
+  if (formData.password !== formData.confirmPassword) {
+    alert("Passwords do not match!");
+    return;
+  }
 
-    try {
-      const data = await registerUser(formData);
-      alert(data.message || "Registration successful!");
-      console.log("Registered:", data);
-    } catch (error) {
-      alert("Error: " + error.message);
-    }
-  };
+  try {
+    const { confirmPassword, ...dataToSend } = formData;
+    dataToSend.role = "User"; 
+    
+    const data = await registerUser(dataToSend);
+    alert(data.message || "Registration successful!");
+    console.log("Registered:", data);
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+};
 
   return (
     <div
