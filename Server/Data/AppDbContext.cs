@@ -60,5 +60,7 @@ namespace Server.Data
                 .HasIndex(r => new { r.courseId, r.userId })
                 .IsUnique();
         }
+        public DbSet<ChefApplication> ChefApplications { get; set; }
+        public DbSet<Chef> Chefs { get; set; }
     }
 }
