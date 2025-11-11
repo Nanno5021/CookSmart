@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { fetchProfile } from "../api/profileapi";
+import { fetchMyProfile } from "../api/profileapi";
+import { apiFetch } from "../api/apiClient";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
 import ratingIcon from "../assets/rating.png";
 import commentIcon from "../assets/comment.png";
 import viewsIcon from "../assets/views.png";
-
 
 function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Threads");
@@ -25,15 +25,18 @@ function ProfilePage() {
       setLoading(true);
       setError(null);
 
+      console.log("Loading profile... Token exists:", !!token);
+
       // show cached login user instantly if present (login stores "user")
       try {
         const cached = localStorage.getItem("user");
         if (cached) {
           const u = JSON.parse(cached);
+          console.log("Loaded cached user:", u);
           setUserData({
             fullName: u.fullName || "Unknown",
             username: u.username || "unknown",
-            profilePic: picture,
+            profilePic: u.profilePic || picture,
           });
         }
       } catch (e) {
@@ -42,12 +45,16 @@ function ProfilePage() {
 
       // if no token, skip server fetch
       if (!token) {
+        console.log("No token found, skipping server fetch");
         setLoading(false);
         return;
       }
 
       try {
-        const data = await fetchProfile(); // uses apiClient to attach auth header
+        console.log("Fetching profile from server...");
+        // fetchProfile() is from ../api/profileapi and uses apiClient internally
+        const data = await fetchMyProfile();
+        console.log("Profile data received:", data);
 
         if (!data) {
           setError("No profile data returned from server.");
@@ -64,17 +71,22 @@ function ProfilePage() {
 
         const mappedPosts = (data.posts || []).map((p) => ({
           id: p.id,
-          username: data.username || data.username || "unknown",
+          username: data.username || "unknown",
           content: p.content ?? p.title ?? "",
           createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-          rating: p.rating ?? 0,
+          rating: typeof p.rating === "number" ? p.rating : 0,
           comments: p.comments ?? 0,
           views: p.views ?? 0,
         }));
 
         setPosts(mappedPosts);
+        console.log("Profile loaded successfully");
       } catch (err) {
         console.error("Error fetching profile:", err);
+        console.error("Error details:", {
+          message: err.message,
+          stack: err.stack
+        });
         setError(err.message || "Failed to fetch profile");
       } finally {
         setLoading(false);
@@ -92,19 +104,26 @@ function ProfilePage() {
     navigate("/postblog", { state: { title: newPost } });
   };
 
+  // Use apiFetch directly for post actions
   const handleRate = async (id) => {
     if (!isLoggedIn) {
       alert("You need to log in to rate posts.");
       return;
     }
+
     try {
-      await fetchProfile(`${API_BASE}/api/posts/${id}/rate`, {
+      // POST to /posts/:id/rate (apiFetch will add base and auth headers)
+      await apiFetch(`/posts/${id}/rate`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
       });
-      // optionally re-fetch posts or update state
+
+      // Optimistic UI: increment rating locally
+      setPosts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, rating: (p.rating || 0) + 1 } : p))
+      );
     } catch (err) {
-      console.error(err);
+      console.error("Failed to rate post:", err);
+      alert("Failed to rate post. Please try again.");
     }
   };
 
@@ -125,7 +144,18 @@ function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white pl-24 flex justify-center items-center">
         <Navbar />
-        <div className="text-red-400">Error: {error}</div>
+        <div className="max-w-md text-center">
+          <div className="text-red-400 mb-4">Error: {error}</div>
+          <p className="text-gray-400 text-sm mb-4">
+            Check the browser console for more details.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -247,16 +277,10 @@ function ProfilePage() {
                             onClick={() => handleRate(post.id)}
                             disabled={!isLoggedIn}
                             className={`flex items-center space-x-1 transition ${
-                              isLoggedIn
-                                ? "hover:text-white"
-                                : "opacity-50 cursor-not-allowed"
+                              isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"
                             }`}
                           >
-                            <img
-                              src={ratingIcon}
-                              alt="Rating"
-                              className="w-5 h-5 invert"
-                            />
+                            <img src={ratingIcon} alt="Rating" className="w-5 h-5 invert" />
                             <span>{post.rating}</span>
                           </button>
 
@@ -264,20 +288,12 @@ function ProfilePage() {
                             onClick={() => handleComment(post.id)}
                             className="flex items-center space-x-1 hover:text-white transition"
                           >
-                            <img
-                              src={commentIcon}
-                              alt="Comment"
-                              className="w-5 h-5 invert"
-                            />
+                            <img src={commentIcon} alt="Comment" className="w-5 h-5 invert" />
                             <span>{post.comments}</span>
                           </button>
 
                           <div className="flex items-center space-x-1">
-                            <img
-                              src={viewsIcon}
-                              alt="Views"
-                              className="w-5 h-5 invert"
-                            />
+                            <img src={viewsIcon} alt="Views" className="w-5 h-5 invert" />
                             <span>{post.views}</span>
                           </div>
                         </div>
@@ -285,15 +301,11 @@ function ProfilePage() {
                     </div>
                   </div>
 
-                  {index < posts.length - 1 && (
-                    <hr className="border-gray-800" />
-                  )}
+                  {index < posts.length - 1 && <hr className="border-gray-800" />}
                 </React.Fragment>
               ))
             ) : (
-              <p className="text-center text-gray-500 mt-10">
-                No posts yet. Share something!
-              </p>
+              <p className="text-center text-gray-500 mt-10">No posts yet. Share something!</p>
             )
           ) : (
             <p className="text-center text-gray-500 mt-10">No replies yet.</p>

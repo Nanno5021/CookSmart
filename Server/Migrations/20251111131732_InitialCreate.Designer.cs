@@ -11,7 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251111121208_InitialCreate")]
+    [Migration("20251111131732_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -64,6 +64,44 @@ namespace Server.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Chefs");
+                });
+
+            modelBuilder.Entity("Post", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("comments")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("views")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("Server.Models.ChefApplication", b =>
@@ -228,32 +266,6 @@ namespace Server.Migrations
                     b.ToTable("CourseSections");
                 });
 
-            modelBuilder.Entity("Server.Models.Post", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("content")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("createdAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Posts");
-                });
-
             modelBuilder.Entity("Server.Models.QuizQuestion", b =>
                 {
                     b.Property<int>("id")
@@ -376,6 +388,10 @@ namespace Server.Migrations
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("avatarUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("email")
                         .IsRequired()

@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
-import { fetchProfile, updateProfile } from "../api/profileapi";
+// Use the profile API helpers
+import { fetchMyProfile, updateProfile } from "../api/profileapi";
+// For avatar upload we need the token and the API base URL
+import { getToken, API_BASE } from "../api/apiClient";
 
 function EditProfilePage() {
   const navigate = useNavigate();
@@ -55,7 +58,8 @@ function EditProfilePage() {
 
       // Fetch authoritative profile from server
       try {
-        const data = await fetchProfile();
+        // <-- use fetchMyProfile from profileapi.js
+        const data = await fetchMyProfile();
         if (!data) {
           setError("No profile data returned from server.");
           return;
@@ -122,13 +126,16 @@ function EditProfilePage() {
     const token = getToken();
     if (!token) throw new Error("Missing auth token");
 
+    // NOTE: apiFetch sets JSON Content-Type by default; since we're uploading a FormData
+    // we do a direct fetch call here and manually set only Authorization header.
+    // Make sure API_BASE is exported from apiClient.js (e.g. `export const API_BASE = "http://localhost:5037/api";`)
     const form = new FormData();
     form.append("file", file);
 
     const res = await fetch(`${API_BASE}/profile/avatar`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`, // DO NOT set Content-Type
+        Authorization: `Bearer ${token}`, // DO NOT set Content-Type so browser sets the multipart boundary
       },
       body: form,
     });
@@ -165,7 +172,25 @@ function EditProfilePage() {
       };
       if (avatarUrl) payload.avatarUrl = avatarUrl;
 
-      const resp = await updateProfile(payload);
+      // updateProfile might be exported as updateProfile(id, data) OR updateProfile(data)
+      // handle both cases: prefer id-based call if we have an id
+      let resp;
+      try {
+        if (profileData.id) {
+          resp = await updateProfile(profileData.id, payload);
+        } else {
+          resp = await updateProfile(payload);
+        }
+      } catch (err) {
+        // fallback: try the other signature if first attempt failed
+        if (profileData.id) {
+          // maybe updateProfile expects only data
+          resp = await updateProfile(payload);
+        } else {
+          // maybe updateProfile expects (id, data) but we don't have id
+          throw err;
+        }
+      }
 
       // Update cached local user
       const cached = localStorage.getItem("user");
