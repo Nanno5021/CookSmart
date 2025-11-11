@@ -1,38 +1,79 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import { createRecipe } from "../../api/recipeApi";
+
+const CUISINE_TYPES = [
+  "Italian",
+  "Chinese", 
+  "Japanese",
+  "Malaysian",
+  "Mexican",
+  "Indian",
+  "Thai",
+  "French",
+  "American",
+  "Mediterranean",
+  "Korean",
+  "Vietnamese",
+  "Other"
+];
 
 function AddRecipePage() {
   const navigate = useNavigate();
-
+  
   // Recipe form states
   const [recipeName, setRecipeName] = useState("");
   const [recipeImage, setRecipeImage] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [customCuisine, setCustomCuisine] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Submit recipe
-  const handleSubmitRecipe = () => {
-    if (!recipeName || !ingredients || !steps.trim()) {
-      alert("Please fill in recipe name, ingredients, and steps");
+  // Replace with actual logged-in chef ID
+  const chefId = 2;
+
+  const handleCuisineChange = (e) => {
+    const selectedCuisine = e.target.value;
+    setCuisine(selectedCuisine);
+    if (selectedCuisine !== "Other") {
+      setCustomCuisine("");
+    }
+  };
+
+  const getFinalCuisine = () => {
+    return cuisine === "Other" ? customCuisine : cuisine;
+  };
+
+  const handleSubmitRecipe = async () => {
+    const finalCuisine = getFinalCuisine();
+    
+    if (!recipeName || !ingredients || !steps.trim() || !finalCuisine) {
+      alert("Please fill in recipe name, cuisine, ingredients, and steps");
       return;
     }
 
     setIsSubmitting(true);
 
-    const newRecipe = {
-      id: Date.now(),
-      name: recipeName,
-      image: recipeImage,
-      ingredients: ingredients.split(",").map((i) => i.trim()),
-      steps: steps.split("\n").map((s) => s.trim()).filter((s) => s),
+    const recipeData = {
+      recipeName,
+      recipeImage,
+      cuisine: finalCuisine,
+      ingredients: ingredients.split(",").map((i) => i.trim()).join(","),
+      steps: steps.split("\n").map((s) => s.trim()).filter((s) => s).join("\n"),
     };
 
-    console.log("Recipe submitted:", newRecipe);
-    alert("Recipe added successfully!");
-    setIsSubmitting(false);
-    navigate("/chefrecipe");
+    try {
+      await createRecipe(recipeData, chefId);
+      alert("Recipe added successfully!");
+      navigate("/chefrecipe");
+    } catch (error) {
+      console.error("Error creating recipe:", error);
+      alert("Failed to add recipe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -53,6 +94,34 @@ function AddRecipePage() {
                 className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                 placeholder="e.g., Spaghetti Carbonara"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Cuisine *</label>
+              <select
+                value={cuisine}
+                onChange={handleCuisineChange}
+                className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Select a cuisine</option>
+                {CUISINE_TYPES.map((cuisineType) => (
+                  <option key={cuisineType} value={cuisineType}>
+                    {cuisineType}
+                  </option>
+                ))}
+              </select>
+              
+              {cuisine === "Other" && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    value={customCuisine}
+                    onChange={(e) => setCustomCuisine(e.target.value)}
+                    className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                    placeholder="Enter custom cuisine..."
+                  />
+                </div>
+              )}
             </div>
 
             <div>

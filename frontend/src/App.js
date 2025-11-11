@@ -22,6 +22,7 @@ import RequireAdmin from './components/RequireAdmin';
 import EditCoursePage from "./pages/chef/EditCoursePage.js";
 import ChefMainPage from "./pages/chef/MainPage.js";
 import RequestChefAccountPage from "./pages/chef/RequestChefAccountPage.js";
+import CheckStatus from "./pages/CheckStatus.js";
 
 function App() {
   return (
@@ -38,12 +39,13 @@ function App() {
         <Route path="/recipedetail" element={<RecipeDetailPage />} />
         <Route path="/chefrecipe" element={<ChefRecipePage />} />
         <Route path="/addrecipe" element={<AddRecipePage />} />
-        <Route path="/editrecipe" element={<EditRecipePage />} />
+        <Route path="/editrecipe/:recipeId" element={<EditRecipePage />} />
         <Route path="/postblog" element={<PostBlogPage />} />
         <Route path="/chefcourse" element={<ChefCoursePage />} />
         <Route path="/addcourse" element={<AddCoursePage />} />
         <Route path="/editcourse/:courseId" element={<EditCoursePage />} />
         <Route path="/requestchef" element={<RequestChefAccountPage />} />
+        <Route path="/checkstatus" element={<CheckStatus />} />
 
         <Route path="/chef" element={<ChefMainPage />} />
         <Route

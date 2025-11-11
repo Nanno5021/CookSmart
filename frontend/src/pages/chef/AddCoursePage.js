@@ -126,7 +126,7 @@ function AddCoursePage() {
     try {
       // Format data to match the API DTO structure
       const courseData = {
-        chefId: 1,
+        chefId: 2,
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",

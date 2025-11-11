@@ -181,7 +181,7 @@ useEffect(() => {
     try {
       // Format data to match the API DTO structure
       const courseData = {
-        chefId: 1, // TODO: Get from auth
+        chefId: 2, // TODO: Get from auth
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",

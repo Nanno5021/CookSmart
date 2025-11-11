@@ -1,49 +1,42 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { fetchRecipesByChef, deleteRecipe } from "../../api/recipeApi";
 
 function ChefRecipePage() {
   const navigate = useNavigate();
-
-  // 🧑‍🍳 Mock chef recipes
-  const mockChefRecipes = [
-    {
-      id: 1,
-      name: "Spaghetti Carbonara",
-      cuisine: "Italian",
-      image: "https://images.unsplash.com/photo-1603133872878-684f0b9f1f64",
-      ingredients: ["Pasta", "Egg", "Bacon", "Cheese", "Pepper"],
-    },
-    {
-      id: 2,
-      name: "Nasi Lemak",
-      cuisine: "Malaysian",
-      image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0",
-      ingredients: ["Rice", "Coconut Milk", "Chili", "Anchovies", "Egg"],
-    },
-  ];
-
   const [recipes, setRecipes] = useState([]);
+  
+  // Replace with actual logged-in chef ID
+  const chefId = 2;
 
   useEffect(() => {
-    // Fetch chef's recipes (mock here)
-    setRecipes(mockChefRecipes);
-  }, []);
+    const getChefRecipes = async () => {
+      try {
+        const data = await fetchRecipesByChef(chefId);
+        setRecipes(data);
+      } catch (error) {
+        console.error("Error fetching chef recipes:", error);
+      }
+    };
+    getChefRecipes();
+  }, [chefId]);
 
-  // Delete recipe
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this recipe?")) {
-      setRecipes(recipes.filter((r) => r.id !== id));
+      try {
+        await deleteRecipe(id);
+        setRecipes(recipes.filter((r) => r.id !== id));
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+      }
     }
   };
 
-  // Edit recipe
   const handleEdit = (recipe) => {
-    // Navigate to edit page with recipe data
-    navigate("/editrecipe", { state: { recipe } });
+    navigate(`/editrecipe/${recipe.id}`);
   };
 
-  // Add new recipe
   const handleAdd = () => {
     navigate("/addrecipe");
   };
@@ -53,7 +46,6 @@ function ChefRecipePage() {
       <Navbar />
 
       <div className="w-full max-w-5xl mt-10 p-6 rounded-2xl shadow-lg bg-[#181818]">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">My Recipes</h1>
           <button
@@ -77,12 +69,12 @@ function ChefRecipePage() {
                 style={{ backgroundColor: "#1f1f1f" }}
               >
                 <img
-                  src={recipe.image}
-                  alt={recipe.name}
+                  src={recipe.recipeImage}
+                  alt={recipe.recipeName}
                   className="w-full h-40 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-1">{recipe.name}</h3>
+                  <h3 className="text-lg font-semibold mb-1">{recipe.recipeName}</h3>
                   <p className="text-gray-400 text-sm mb-2">
                     Cuisine: {recipe.cuisine}
                   </p>

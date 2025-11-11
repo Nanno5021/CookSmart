@@ -9,7 +9,7 @@ import { fetchCoursesByChef, deleteCourse } from "../../api/courseApi";
 function ChefCoursePage() {
   const navigate = useNavigate();
   // TODO: Replace with actual logged-in chef ID from auth or localStorage
-  const chefId = 1;
+  const chefId = 2;
 
   const [myCourses, setMyCourses] = useState([]);
   const [loading, setLoading] = useState(true);
