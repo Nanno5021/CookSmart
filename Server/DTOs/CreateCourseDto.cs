@@ -2,6 +2,7 @@ namespace Server.DTOs
 {
     public class CreateCourseDto
     {
+        public int chefId { get; set; }
         public string courseName { get; set; } = string.Empty;
         public string courseImage { get; set; } = string.Empty;
         public string ingredients { get; set; } = string.Empty;

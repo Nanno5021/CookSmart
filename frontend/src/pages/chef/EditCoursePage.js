@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Plus, Image, Video, FileText } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
-import { createCourse } from "../../api/courseApi";
+import { fetchCourseById, updateCourse } from "../../api/courseApi";
 
-function AddCoursePage() {
+function EditCoursePage() {
   const navigate = useNavigate();
+  const { courseId } = useParams();
+  
+  const [loading, setLoading] = useState(true);
   const [courseName, setCourseName] = useState("");
   const [courseImage, setCourseImage] = useState("");
   const [ingredients, setIngredients] = useState("");
@@ -30,6 +33,58 @@ function AddCoursePage() {
   const [quizOptions, setQuizOptions] = useState(["", "", "", ""]);
   const [quizAnswer, setQuizAnswer] = useState("");
   const [editingQuiz, setEditingQuiz] = useState(null);
+
+  // Load existing course data
+  // Load existing course data
+useEffect(() => {
+    const loadCourseData = async () => {
+        if (!courseId) {
+            console.error("No courseId in params");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            console.log("Loading course with ID:", courseId);
+            const data = await fetchCourseById(courseId);
+            
+            // Populate form with existing data
+            setCourseName(data.courseName);
+            setCourseImage(data.courseImage || "");
+            setIngredients(data.ingredients || "");
+            setDifficulty(data.difficulty || "Easy");
+            setTime(data.estimatedTime || "");
+            setDescription(data.description || "");
+            
+            // Map sections
+            const mappedSections = data.sections.map(section => ({
+                id: section.id,
+                title: section.sectionTitle,
+                contentType: section.contentType,
+                content: section.content
+            }));
+            setSections(mappedSections);
+            
+            // Map quiz questions
+            const mappedQuizzes = data.quizQuestions.map(quiz => ({
+                id: quiz.id,
+                question: quiz.question,
+                options: quiz.options,
+                answer: quiz.answer
+            }));
+            setQuizQuestions(mappedQuizzes);
+            
+        } catch (error) {
+        console.error("Error loading course:", error);
+        alert("Failed to load course data");
+        navigate("/chefcourse");
+        } finally {
+        setLoading(false);
+        }
+    };
+
+    loadCourseData();
+    }, [courseId, navigate]);
 
   const addSection = () => {
     if (!sectionTitle || !sectionContent) {
@@ -115,7 +170,7 @@ function AddCoursePage() {
     setQuizQuestions(quizQuestions.filter(q => q.id !== id));
   };
 
-  const handleSubmitCourse = async () => {
+  const handleUpdateCourse = async () => {
     if (!courseName || !description || sections.length === 0 || quizQuestions.length === 0) {
       alert("Please fill in course name, description, add at least one section, and at least one quiz question");
       return;
@@ -126,7 +181,7 @@ function AddCoursePage() {
     try {
       // Format data to match the API DTO structure
       const courseData = {
-        chefId: 1,
+        chefId: 1, // TODO: Get from auth
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",
@@ -150,23 +205,33 @@ function AddCoursePage() {
         }))
       };
 
-      const response = await createCourse(courseData);
-      console.log("Course created:", response);
-      alert("Course created successfully!");
+      await updateCourse(courseId, courseData);
+      alert("Course updated successfully!");
       navigate("/chefcourse");
     } catch (error) {
-      console.error("Error creating course:", error);
-      alert(`Failed to create course: ${error.message}`);
+      console.error("Error updating course:", error);
+      alert(`Failed to update course: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-xl text-gray-400">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
       <Navbar />
       <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Add New Course</h1>
+        <h1 className="text-3xl font-bold mb-8">Edit Course</h1>
 
         {/* Basic Course Info */}
         <div className="bg-[#181818] rounded-xl p-6 mb-6">
@@ -293,7 +358,7 @@ function AddCoursePage() {
             <h2 className="text-xl font-semibold">Quiz Questions *</h2>
             <button
               onClick={() => setShowQuizModal(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={20} />
               Add Question
@@ -335,18 +400,18 @@ function AddCoursePage() {
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/chefcourse")}
             className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
             disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
-            onClick={handleSubmitCourse}
+            onClick={handleUpdateCourse}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-semibold disabled:bg-gray-600 disabled:cursor-not-allowed"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating..." : "Create Course"}
+            {isSubmitting ? "Updating..." : "Update Course"}
           </button>
         </div>
       </div>
@@ -537,4 +602,4 @@ function AddCoursePage() {
   );
 }
 
-export default AddCoursePage;
+export default EditCoursePage;

@@ -67,7 +67,22 @@ function CoursePage() {
 
   const goToCourseDetail = (chef, course) => {
     if (filter === "enrolled") {
-      navigate("/enrolleddetail", { state: { chef, course } });
+      // Pass the full course object with id
+      navigate("/enrolleddetail", { 
+        state: { 
+          chef: {
+            chefId: chef.chefId,
+            chefName: chef.chefName,
+            chefImage: chef.chefImage
+          }, 
+          course: {
+            id: course.id, // Make sure to pass the course ID
+            name: course.name,
+            courseName: course.name,
+            ...course
+          } 
+        } 
+      });
     } else {
       navigate("/coursedetail", { state: { chef, course } });
     }

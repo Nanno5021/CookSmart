@@ -15,6 +15,7 @@ import ChefCoursePage from "./pages/chef/ChefCoursePage.js";
 import AddCoursePage from "./pages/chef/AddCoursePage.js";
 import AdminDashboard from "./pages/admin/MainPage.js";
 import RequireAdmin from './components/RequireAdmin';
+import EditCoursePage from "./pages/chef/EditCoursePage.js";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/postblog" element={<PostBlogPage />} />
         <Route path="/chefcourse" element={<ChefCoursePage />} />
         <Route path="/addcourse" element={<AddCoursePage />} />
+        <Route path="/editcourse/:courseId" element={<EditCoursePage />} />
         <Route
           path="/admin"
           element={

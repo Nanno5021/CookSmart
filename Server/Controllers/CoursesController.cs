@@ -159,16 +159,17 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<ActionResult<CourseResponseDto>> CreateCourse(CreateCourseDto dto)
         {
-            // Temporarily skip chef validation - you can uncomment this later
-            // var chef = await _context.Users.FindAsync(dto.ChefId);
-            // if (chef == null)
-            // {
-            //     return BadRequest("Chef not found");
-            // }
+            // ✅ Validate chef exists
+            var chef = await _context.Users.FindAsync(dto.chefId);
+            if (chef == null)
+            {
+                return BadRequest($"Chef with ID {dto.chefId} not found.");
+            }
 
+            // ✅ Create main course entry
             var course = new Course
             {
-                chefId = 1, // Use default ChefId of 1 if not provided
+                chefId = dto.chefId,
                 courseName = dto.courseName,
                 courseImage = dto.courseImage,
                 ingredients = dto.ingredients,
@@ -179,26 +180,25 @@ namespace Server.Controllers
             };
 
             _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // saves to get course.id
 
-            // Add sections
+            // ✅ Add course sections
             foreach (var sectionDto in dto.sections)
             {
-                var section = new CourseSection
+                _context.CourseSections.Add(new CourseSection
                 {
                     courseId = course.id,
                     sectionTitle = sectionDto.sectionTitle,
                     contentType = sectionDto.contentType,
                     content = sectionDto.content,
                     sectionOrder = sectionDto.sectionOrder
-                };
-                _context.CourseSections.Add(section);
+                });
             }
 
-            // Add quiz questions
+            // ✅ Add quiz questions
             foreach (var quizDto in dto.quizQuestions)
             {
-                var quiz = new QuizQuestion
+                _context.QuizQuestions.Add(new QuizQuestion
                 {
                     courseId = course.id,
                     question = quizDto.question,
@@ -208,15 +208,15 @@ namespace Server.Controllers
                     option4 = quizDto.option4,
                     correctAnswer = quizDto.correctAnswer,
                     questionOrder = quizDto.questionOrder
-                };
-                _context.QuizQuestions.Add(quiz);
+                });
             }
 
             await _context.SaveChangesAsync();
 
-            // Return the created course
+            // ✅ Return the full course response
             return await GetCourse(course.id);
         }
+
 
         // PUT: api/courses/{id}
         [HttpPut("{id}")]
