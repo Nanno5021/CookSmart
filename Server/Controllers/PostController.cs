@@ -47,7 +47,8 @@ namespace Server.Controllers
                         : "Anonymous",
                     avatarUrl = p.User != null && !string.IsNullOrWhiteSpace(p.User.avatarUrl)
                         ? p.User.avatarUrl
-                        : string.Empty
+                        : string.Empty,
+                    imageUrl = p.imageUrl // ✅ add this
                 })
                 .ToListAsync();
 
@@ -124,6 +125,7 @@ namespace Server.Controllers
 
             var publicUrl = $"{Request.Scheme}://{Request.Host}/post_uploads/{fileName}";
             return Ok(new { imageUrl = publicUrl });
-}
+        }
+        
     }
 }

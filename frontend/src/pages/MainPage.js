@@ -93,90 +93,60 @@ export default function MainPage() {
   useEffect(() => {
     let mounted = true;
 
-    const load = async () => {
+    const loadPosts = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // load current user (for small avatar & username)
+        // 1️⃣ Fetch current user profile
+        let currentUser = null;
         try {
           const profile = await fetchMyProfile();
           if (!mounted) return;
-          setMe({
+
+          currentUser = {
             username: profile.username ?? profile.fullName ?? "You",
             fullName: profile.fullName ?? profile.username ?? "You",
             avatar: pickAvatarFromProfile(profile),
-          });
+          };
+          setMe(currentUser);
         } catch (err) {
-          // quietly ignore; me can be null (anonymous)
           console.warn("Failed to load current profile:", err);
           if (mounted) setMe(null);
         }
 
-        // load posts
+        // 2️⃣ Fetch posts
         const data = await fetchPosts();
-        const arr = Array.isArray(data) ? data : data?.posts ?? [];
+        console.log(data); // check that each post has imageUrl
+        const postsArray = Array.isArray(data) ? data : data?.posts ?? [];
         if (!mounted) return;
 
-        // compute username for each post using various fields, keep original post object
-        const postsWithUsernames = arr.map(p => ({
-          raw: p,
+        const mappedPosts = postsArray.map((p) => ({
           id: p.id,
-          username: p.username ?? p.author?.username ?? p.user?.username ?? p.user?.email ?? "Anonymous",
-          content: p.content ?? p.title ?? "",
-          createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-          rating: typeof p.rating === "number" ? p.rating : 0,
-          comments: p.comments ?? 0,
-          views: p.views ?? 0,
-          avatarFromPost: pickAvatarFromPost(p),
-        }));
-
-        // gather unique usernames to fetch public profiles
-        const usernameSet = new Set(
-          postsWithUsernames.map(p => p.username).filter(Boolean).slice(0, 200) // defensive: limit
-        );
-
-        const usernameList = Array.from(usernameSet).filter(u => u && u !== "Anonymous");
-
-        // Fetch profiles in parallel, but map results to username -> profile (graceful fail)
-        const profileMap = {};
-
-        await Promise.all(
-          usernameList.map(async (uname) => {
-            try {
-              const prof = await fetchProfileByUsername(uname);
-              profileMap[uname] = prof;
-            } catch (err) {
-              // ignore failures for individual username
-              profileMap[uname] = null;
-            }
-          })
-        );
-
-        // map to UI posts
-        const mapped = arr.map((p) => ({
-          id: p.id,
-          username: p.username || "Anonymous",
+          username: p.username || p.author?.username || p.user?.username || "Anonymous",
           content: p.content ?? p.title ?? "",
           createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
           rating: p.rating ?? 0,
           comments: p.comments ?? 0,
           views: p.views ?? 0,
-          avatar: p.avatarUrl || null,
+          avatar: pickAvatarFromPost(p) || null,
+          imageUrl: resolveAvatarUrl(p.imageUrl ?? p.image ?? p.filePath ?? p.postImage ?? null), // ← updated
         }));
 
         if (!mounted) return;
-        setPosts(mapped);
+        setPosts(mappedPosts);
       } catch (err) {
-        console.error("Error loading main feed:", err);
+        console.error("Error loading posts:", err);
         if (mounted) setError(err.message || "Failed to load posts");
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    load();
-    return () => { mounted = false; };
+    loadPosts();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleNewPost = () => {
@@ -274,13 +244,11 @@ export default function MainPage() {
                   <p className="text-gray-200 mb-4">{post.content}</p>
 
                   {post.imageUrl && (
-                    <div className="mt-3 mb-4">
-                      <img
-                        src={post.imageUrl}
-                        alt="Post"
-                        className="rounded-xl max-h-96 w-full object-cover border border-gray-700"
-                      />
-                    </div>
+                    <img
+                      src={post.imageUrl}
+                      alt="Post"
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
                   )}
 
                   <div className="flex items-center justify-between text-gray-400 text-sm">

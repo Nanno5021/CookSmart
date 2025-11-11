@@ -52,7 +52,8 @@ namespace Server.Controllers
                         createdAt = p.createdAt,
                         rating = p.rating,
                         comments = p.comments,
-                        views = p.views
+                        views = p.views,
+                        imageUrl = p.imageUrl // ✅ ADD THIS LINE - FIX
                     })
                     .ToListAsync();
             }
