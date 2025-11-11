@@ -398,6 +398,12 @@ namespace Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("isBanned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("joinDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("TEXT");
