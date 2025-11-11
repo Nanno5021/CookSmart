@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import chefProfile from "../assets/pfp.png"; // placeholder chef profile
 import sampleFood from "../assets/food.png"; // placeholder course image
+import { fetchReviewsByCourse, createReview } from "../api/courseReviewApi";
 
 function CourseDetailPage() {
   const location = useLocation();
@@ -10,6 +11,7 @@ function CourseDetailPage() {
   const { chef, course } = location.state || {
     chef: { chefName: "Unknown", chefImage: chefProfile },
     course: {
+      id: null,
       name: "Unknown",
       image: sampleFood,
       ingredients: "N/A",
@@ -19,27 +21,15 @@ function CourseDetailPage() {
     },
   };
 
+  // Get current user ID from localStorage or your auth system
+  const currentUserId = parseInt(localStorage.getItem("userId")) || 1;
+
   // Reviews
   const [myRating, setMyRating] = useState(0);
   const [myReview, setMyReview] = useState("");
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      username: "Alice",
-      profilePic: chefProfile,
-      rating: 5,
-      date: "2025-11-01",
-      comment: "Amazing course! Learned a lot.",
-    },
-    {
-      id: 2,
-      username: "Bob",
-      profilePic: chefProfile,
-      rating: 4,
-      date: "2025-11-03",
-      comment: "Great instructions, but took longer than expected.",
-    },
-  ]);
+  const [reviews, setReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Enrollment state
   const [enrolledCourses, setEnrolledCourses] = useState(
@@ -47,11 +37,33 @@ function CourseDetailPage() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Check if this course is enrolled
   const isEnrolled = enrolledCourses.some(
     (c) => c.chefId === chef.chefId && c.courseName === course.name
   );
+
+  // Fetch reviews from API
+  useEffect(() => {
+    if (course.id) {
+      loadReviews();
+    }
+  }, [course.id]);
+
+  const loadReviews = async () => {
+    try {
+      setIsLoadingReviews(true);
+      const data = await fetchReviewsByCourse(course.id);
+      setReviews(data);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      // Don't show error to user, just log it
+      setReviews([]);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
 
   // Enroll / Unenroll handler
   const toggleEnroll = () => {
@@ -62,6 +74,7 @@ function CourseDetailPage() {
       );
       setEnrolledCourses(newEnrolled);
       localStorage.setItem("enrolledCourses", JSON.stringify(newEnrolled));
+      setSuccessMessage("Unenrolled successfully!");
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
     } else {
@@ -78,12 +91,13 @@ function CourseDetailPage() {
     setEnrolledCourses(newEnrolled);
     localStorage.setItem("enrolledCourses", JSON.stringify(newEnrolled));
     setIsDialogOpen(false);
+    setSuccessMessage("Enrolled successfully!");
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
 
   // Review submission
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!isEnrolled) {
       alert("You must enroll in this course to submit a review.");
       return;
@@ -92,21 +106,52 @@ function CourseDetailPage() {
       alert("Please provide a rating and review.");
       return;
     }
-    const newReview = {
-      id: reviews.length + 1,
-      username: "You",
-      profilePic: chefProfile,
-      rating: myRating,
-      date: new Date().toLocaleDateString(),
-      comment: myReview,
-    };
-    setReviews([newReview, ...reviews]);
-    setMyRating(0);
-    setMyReview("");
+
+    try {
+      setIsSubmitting(true);
+      const reviewData = {
+        courseId: course.id,
+        rating: myRating,
+        comment: myReview,
+      };
+      
+      const newReview = await createReview(reviewData, currentUserId);
+      
+      setReviews([newReview, ...reviews]);
+      setMyRating(0);
+      setMyReview("");
+      setSuccessMessage("Review submitted successfully!");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      
+      // Check if it's a duplicate review error
+      if (error.message && error.message.includes("already reviewed")) {
+        alert("You have already reviewed this course");
+      } else {
+        alert("Failed to submit review. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  // Calculate total rating
   const totalRating =
-    reviews.reduce((acc, r) => acc + r.rating, 0) / (reviews.length || 1);
+    reviews.length > 0
+      ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+      : 0;
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center items-start p-4">
@@ -175,7 +220,7 @@ function CourseDetailPage() {
                 onClick={() => isEnrolled && setMyRating(star)}
                 className={`text-2xl ${
                   myRating >= star ? "text-yellow-400" : "text-gray-500"
-                }`}
+                } ${isEnrolled ? "cursor-pointer" : "cursor-not-allowed"}`}
               >
                 ★
               </button>
@@ -197,11 +242,13 @@ function CourseDetailPage() {
           <button
             onClick={handleSubmitReview}
             className={`self-end px-4 py-2 rounded-lg mt-2 text-white ${
-              isEnrolled ? "bg-blue-600 hover:bg-blue-500" : "bg-gray-600 cursor-not-allowed"
+              isEnrolled && !isSubmitting
+                ? "bg-blue-600 hover:bg-blue-500"
+                : "bg-gray-600 cursor-not-allowed"
             }`}
-            disabled={!isEnrolled}
+            disabled={!isEnrolled || isSubmitting}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
 
           {/* Total Rating */}
@@ -212,23 +259,31 @@ function CourseDetailPage() {
           {/* Reviews */}
           <h2 className="text-xl font-semibold mt-4 mb-2">Reviews</h2>
           <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto">
-            {reviews.map((rev) => (
-              <div key={rev.id} className="flex gap-3 p-3 bg-[#222] rounded-lg items-start">
-                <img
-                  src={rev.profilePic || chefProfile}
-                  alt={rev.username}
-                  className="w-10 h-10 rounded-full object-cover mt-1"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{rev.username}</span>
-                    <span className="text-yellow-400">{'★'.repeat(rev.rating)}</span>
-                    <span className="text-gray-400 text-sm">({rev.date})</span>
+            {isLoadingReviews ? (
+              <p className="text-gray-400 text-center">Loading reviews...</p>
+            ) : reviews.length === 0 ? (
+              <p className="text-gray-400 text-center">No reviews yet. Be the first to review!</p>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="flex gap-3 p-3 bg-[#222] rounded-lg items-start">
+                  <img
+                    src={rev.userProfileImage || chefProfile}
+                    alt={rev.username}
+                    className="w-10 h-10 rounded-full object-cover mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{rev.username}</span>
+                      <span className="text-yellow-400">{"★".repeat(rev.rating)}</span>
+                      <span className="text-gray-400 text-sm">
+                        ({formatDate(rev.reviewDate)})
+                      </span>
+                    </div>
+                    <p className="text-gray-300 mt-1">{rev.comment}</p>
                   </div>
-                  <p className="text-gray-300">{rev.comment}</p>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -261,7 +316,7 @@ function CourseDetailPage() {
         {/* Success Message */}
         {showSuccess && (
           <div className="fixed bottom-10 right-10 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-out">
-            {isEnrolled ? "Unenrolled successfully!" : "Enrolled successfully!"}
+            {successMessage}
           </div>
         )}
       </div>
