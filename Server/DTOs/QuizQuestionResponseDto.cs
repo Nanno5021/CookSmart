@@ -2,10 +2,10 @@ namespace Server.DTOs
 {
     public class QuizQuestionResponseDto
     {
-        public int Id { get; set; }
-        public string Question { get; set; } = string.Empty;
-        public List<string> Options { get; set; } = new List<string>();
-        public string Answer { get; set; } = string.Empty;
-        public int QuestionOrder { get; set; }
+        public int id { get; set; }
+        public string question { get; set; } = string.Empty;
+        public List<string> options { get; set; } = new List<string>();
+        public string answer { get; set; } = string.Empty;
+        public int questionOrder { get; set; }
     }
 }

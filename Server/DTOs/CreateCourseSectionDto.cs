@@ -2,9 +2,9 @@ namespace Server.DTOs
 {
     public class CreateCourseSectionDto
     {
-        public string SectionTitle { get; set; } = string.Empty;
-        public string ContentType { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
-        public int SectionOrder { get; set; }
+        public string sectionTitle { get; set; } = string.Empty;
+        public string contentType { get; set; } = string.Empty;
+        public string content { get; set; } = string.Empty;
+        public int sectionOrder { get; set; }
     }
 }
