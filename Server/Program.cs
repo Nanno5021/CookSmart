@@ -64,6 +64,7 @@ builder.Services.AddOpenApi();
 // 5️⃣ Build App
 // ---------------------------
 var app = builder.Build();
+
 app.UseStaticFiles(); // enable serving files from wwwroot
 
 // ---------------------------

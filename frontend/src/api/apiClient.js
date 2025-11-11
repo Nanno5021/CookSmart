@@ -47,7 +47,8 @@ export function clearAllAuthData() {
     "branch_name",
     "deliveryMethod",
     "sellHereflg",
-    "redux_localstorage_simple"
+    "redux_localstorage_simple",
+    "user" // Add this to clear the cached user object
   ];
   
   authKeys.forEach(key => localStorage.removeItem(key));
@@ -99,7 +100,15 @@ export async function apiFetch(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data.message || data || "API Error");
+    // Provide more detailed error information
+    const errorMessage = data.message || data.error || data || `HTTP ${response.status}`;
+    console.error("API Error:", {
+      endpoint,
+      status: response.status,
+      statusText: response.statusText,
+      error: errorMessage
+    });
+    throw new Error(errorMessage);
   }
   
   return data;

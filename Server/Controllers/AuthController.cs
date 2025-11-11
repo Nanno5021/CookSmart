@@ -41,6 +41,7 @@ namespace Server.Controllers
 
             // Hash the password before storing
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.password);
+            var defaultAvatar = $"{Request.Scheme}://{Request.Host}/uploads/default.png"; // ensure default.png exists in wwwroot/uploads
 
             var user = new User
             {
@@ -48,8 +49,9 @@ namespace Server.Controllers
                 username = dto.username,
                 email = dto.email,
                 phone = dto.phone,
-                password = hashedPassword,  // Store hashed password
-                role = dto.role ?? "User"
+                password = hashedPassword,
+                role = dto.role ?? "User",
+                avatarUrl = defaultAvatar
             };
 
             _context.Users.Add(user);
