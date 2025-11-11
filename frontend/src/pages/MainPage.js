@@ -7,7 +7,7 @@ import viewsIcon from "../assets/views.png";
 import postIcon from "../assets/post.png";
 import { fetchPosts } from "../api/post";
 import { apiFetch } from "../api/apiClient";
-import { fetchMyProfile } from "../api/profileapi";
+import { fetchMyProfile, fetchProfileByUsername } from "../api/profileapi";
 
 /* Helper: convert relative -> absolute and accept many field names */
 function resolveAvatarUrl(raw) {
@@ -28,7 +28,7 @@ function pickAvatarFromPost(post) {
     post.author?.avatarUrl,
     post.user?.avatarUrl,
   ];
-  const first = candidates.flat().find(Boolean);
+  const first = candidates.flat?.().find(Boolean) ?? candidates.find(Boolean);
   return first ? resolveAvatarUrl(first) : null;
 }
 
@@ -47,7 +47,14 @@ function pickAvatarFromProfile(data) {
 
 function Avatar({ src, name, size = 40 }) {
   if (src) {
-    return <img src={src} alt={name || "avatar"} className={`w-${size} h-${size} rounded-full object-cover`} style={{ width: size, height: size }} />;
+    return (
+      <img
+        src={src}
+        alt={name || "avatar"}
+        className={`rounded-full object-cover`}
+        style={{ width: size, height: size }}
+      />
+    );
   }
   // fallback: initials circle
   const initials = (name || "U").split(" ").map(n => n[0]).slice(0,2).join("").toUpperCase();
@@ -71,7 +78,7 @@ function Avatar({ src, name, size = 40 }) {
   );
 }
 
-function MainPage() {
+export default function MainPage() {
   const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
   const [posts, setPosts] = useState([]);
@@ -111,17 +118,54 @@ function MainPage() {
         const arr = Array.isArray(data) ? data : data?.posts ?? [];
         if (!mounted) return;
 
-        const mapped = arr.map((p) => ({
+        // compute username for each post using various fields, keep original post object
+        const postsWithUsernames = arr.map(p => ({
+          raw: p,
           id: p.id,
-          username: p.username ?? p.author?.username ?? p.user?.username ?? "Anonymous",
+          username: p.username ?? p.author?.username ?? p.user?.username ?? p.user?.email ?? "Anonymous",
           content: p.content ?? p.title ?? "",
           createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
           rating: typeof p.rating === "number" ? p.rating : 0,
           comments: p.comments ?? 0,
           views: p.views ?? 0,
-          avatar: pickAvatarFromPost(p),
+          avatarFromPost: pickAvatarFromPost(p),
         }));
 
+        // gather unique usernames to fetch public profiles
+        const usernameSet = new Set(
+          postsWithUsernames.map(p => p.username).filter(Boolean).slice(0, 200) // defensive: limit
+        );
+
+        const usernameList = Array.from(usernameSet).filter(u => u && u !== "Anonymous");
+
+        // Fetch profiles in parallel, but map results to username -> profile (graceful fail)
+        const profileMap = {};
+
+        await Promise.all(
+          usernameList.map(async (uname) => {
+            try {
+              const prof = await fetchProfileByUsername(uname);
+              profileMap[uname] = prof;
+            } catch (err) {
+              // ignore failures for individual username
+              profileMap[uname] = null;
+            }
+          })
+        );
+
+        // map to UI posts
+        const mapped = arr.map((p) => ({
+          id: p.id,
+          username: p.username || "Anonymous",
+          content: p.content ?? p.title ?? "",
+          createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+          rating: p.rating ?? 0,
+          comments: p.comments ?? 0,
+          views: p.views ?? 0,
+          avatar: p.avatarUrl || null,
+        }));
+
+        if (!mounted) return;
         setPosts(mapped);
       } catch (err) {
         console.error("Error loading main feed:", err);
@@ -229,6 +273,16 @@ function MainPage() {
 
                   <p className="text-gray-200 mb-4">{post.content}</p>
 
+                  {post.imageUrl && (
+                    <div className="mt-3 mb-4">
+                      <img
+                        src={post.imageUrl}
+                        alt="Post"
+                        className="rounded-xl max-h-96 w-full object-cover border border-gray-700"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-gray-400 text-sm">
                     <div className="flex space-x-6 items-center">
                       <button onClick={() => handleRate(post.id)} disabled={!isLoggedIn} className={`flex items-center space-x-1 transition ${isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"}`}>
@@ -266,5 +320,3 @@ function MainPage() {
     </div>
   );
 }
-
-export default MainPage;

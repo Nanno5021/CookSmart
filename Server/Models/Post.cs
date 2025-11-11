@@ -1,14 +1,19 @@
-public class Post
+namespace Server.Models
 {
-    public int id { get; set; }
-    public int userId { get; set; }
-    public string title { get; set; } = "";
-    public string content { get; set; } = "";
-    public string username { get; set; } = "";
-    public DateTime createdAt { get; set; }
+    public class Post
+    {
+        public int id { get; set; }
+        public string title { get; set; } = string.Empty;
+        public string content { get; set; } = string.Empty;
+        public DateTime createdAt { get; set; }
+        public int rating { get; set; }
+        public int comments { get; set; }
+        public int views { get; set; }
 
-    // Optional new fields
-    public int rating { get; set; } = 0;
-    public int comments { get; set; } = 0;
-    public int views { get; set; } = 0;
+        // ✅ New field for image
+        public string? imageUrl { get; set; }
+
+        public int userId { get; set; }
+        public User User { get; set; } = null!;
+    }
 }

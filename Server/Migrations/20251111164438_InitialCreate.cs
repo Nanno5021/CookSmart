@@ -34,26 +34,6 @@ namespace Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Posts",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    userId = table.Column<int>(type: "INTEGER", nullable: false),
-                    title = table.Column<string>(type: "TEXT", nullable: false),
-                    content = table.Column<string>(type: "TEXT", nullable: false),
-                    username = table.Column<string>(type: "TEXT", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    rating = table.Column<int>(type: "INTEGER", nullable: false),
-                    comments = table.Column<int>(type: "INTEGER", nullable: false),
-                    views = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Posts", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -122,6 +102,32 @@ namespace Server.Migrations
                     table.ForeignKey(
                         name: "FK_Courses_Users_chefId",
                         column: x => x.chefId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    title = table.Column<string>(type: "TEXT", nullable: false),
+                    content = table.Column<string>(type: "TEXT", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    rating = table.Column<int>(type: "INTEGER", nullable: false),
+                    comments = table.Column<int>(type: "INTEGER", nullable: false),
+                    views = table.Column<int>(type: "INTEGER", nullable: false),
+                    imageUrl = table.Column<string>(type: "TEXT", nullable: true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Posts_Users_userId",
+                        column: x => x.userId,
                         principalTable: "Users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -284,6 +290,11 @@ namespace Server.Migrations
                 name: "IX_CourseSections_courseId",
                 table: "CourseSections",
                 column: "courseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_userId",
+                table: "Posts",
+                column: "userId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_courseId",
