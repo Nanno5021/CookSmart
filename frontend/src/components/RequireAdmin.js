@@ -8,7 +8,7 @@ function RequireAdmin({ children }) {
 
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const userRole = payload.role; // ✅ use the correct claim key
+    const userRole = payload.role; 
 
     if (userRole !== "Admin") {
       return <Navigate to="/" replace />;
