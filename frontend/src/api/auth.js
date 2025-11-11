@@ -1,5 +1,4 @@
-
-import { apiFetch, setToken, removeToken } from "./apiClient";
+import { apiFetch, setToken, clearAllAuthData, setUserData } from "./apiClient";
 
 export async function registerUser(formData) {
   return await apiFetch("/auth/register", {
@@ -14,9 +13,30 @@ export async function loginUser(formData) {
     body: JSON.stringify(formData),
   });
 
+    console.log("Full backend response:", data);
+  console.log("User object:", data.user);
+  console.log("Role from user:", data.user?.role);
+
   if (data.token) {
     setToken(data.token);
-    console.log("Token saved:", data.token);
+
+    if (data.user) {
+      setUserData({
+        userId: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        fullName: data.user.fullName,
+        phone: data.user.phone,
+        role: data.user.role
+      });
+      
+      console.log("Login successful:", {
+        token: data.token,
+        userId: data.user.id,
+        username: data.user.username,
+        email: data.user.email
+      });
+    }
   } else {
     console.warn("No token received");
   }
@@ -25,6 +45,7 @@ export async function loginUser(formData) {
 }
 
 export function logoutUser() {
-  removeToken();
+  clearAllAuthData();
+  
   window.location.href = "/login";
 }

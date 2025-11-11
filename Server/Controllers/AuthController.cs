@@ -80,7 +80,14 @@ namespace Server.Controllers
             {
                 message = "Login successful",
                 token = token,
-                user = new { user.id, user.username, user.email, user.fullName, user.phone }
+                user = new { 
+                    user.id, 
+                    user.username, 
+                    user.email, 
+                    user.fullName, 
+                    user.phone,
+                    user.role  
+                }
             });
         }
 

@@ -40,6 +40,8 @@ function LoginPage() {
         // ✅ Redirect based on role
         if (userRole === "Admin") {
           navigate("/admin", { replace: true });
+        } else if (userRole === "Chef") {
+          navigate("/chef", { replace: true });
         } else {
           navigate("/", { replace: true });
         }
