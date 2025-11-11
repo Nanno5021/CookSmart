@@ -65,12 +65,9 @@ namespace Server.Migrations
                     phone = table.Column<string>(type: "TEXT", nullable: false),
                     password = table.Column<string>(type: "TEXT", nullable: false),
                     role = table.Column<string>(type: "TEXT", nullable: false),
-<<<<<<<< HEAD:Server/Migrations/20251111143725_InitialCreate.cs
                     isBanned = table.Column<bool>(type: "INTEGER", nullable: false),
-                    joinDate = table.Column<DateTime>(type: "TEXT", nullable: false)
-========
+                    joinDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     avatarUrl = table.Column<string>(type: "TEXT", nullable: false)
->>>>>>>> main:Server/Migrations/20251111142728_InitialCreate.cs
                 },
                 constraints: table =>
                 {

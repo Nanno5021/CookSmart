@@ -1,3 +1,4 @@
+// manageUserApi.js - FIXED VERSION
 import { apiFetch } from "./apiClient";
 
 // GET: Fetch all users
@@ -16,6 +17,56 @@ export async function banUser(id) {
 export async function updateUserRole(id, newRole) {
   return await apiFetch(`/ManageUser/update-role/${id}`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(newRole),
+  });
+}
+
+// GET: Fetch user by ID
+export async function fetchUserById(userId) {
+  return await apiFetch(`/ManageUser/users/${userId}`);
+}
+
+// PUT: Update user profile - FIXED
+export async function updateUser(userId, userData) {
+  return await apiFetch(`/ManageUser/update/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+}
+
+// POST: Upload user avatar - FIXED
+export async function uploadAvatar(userId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = localStorage.getItem("token");
+  
+  const response = await fetch(`http://localhost:5037/api/ManageUser/upload-avatar/${userId}`, {
+    method: "POST",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+      // Remove Content-Type header for FormData - browser will set it automatically with boundary
+    },
+    body: formData, 
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: "Failed to upload avatar" }));
+    throw new Error(errorData.message || "Failed to upload avatar");
+  }
+
+  return await response.json();
+}
+
+// POST: Reset user avatar to default - FIXED
+export async function resetAvatar(userId) {
+  return await apiFetch(`/ManageUser/reset-avatar/${userId}`, {
+    method: "POST",
   });
 }

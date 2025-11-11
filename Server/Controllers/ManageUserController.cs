@@ -11,10 +11,12 @@ namespace Server.Controllers
     public class ManageUserController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ManageUserController(AppDbContext context)
+        public ManageUserController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: api/ManageUser
@@ -26,7 +28,9 @@ namespace Server.Controllers
                 {
                     id = u.id,
                     fullName = u.fullName,
+                    username = u.username,
                     email = u.email,
+                    phone = u.phone,
                     role = u.role,
                     isBanned = u.isBanned,
                     joinDate = u.joinDate
@@ -34,6 +38,179 @@ namespace Server.Controllers
                 .ToListAsync();
 
             return Ok(users);
+        }
+
+        // GET: api/ManageUser/users/{id}
+        [HttpGet("users/{id}")]
+        public async Task<ActionResult<UserDetailDTO>> GetUserById(int id)
+        {
+            var user = await _context.Users
+                .Where(u => u.id == id)
+                .Select(u => new UserDetailDTO
+                {
+                    id = u.id,
+                    fullName = u.fullName,
+                    username = u.username,
+                    email = u.email,
+                    phone = u.phone,
+                    role = u.role,
+                    isBanned = u.isBanned,
+                    joinDate = u.joinDate,
+                    avatarUrl = u.avatarUrl
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            return Ok(user);
+        }
+
+        // PUT: api/ManageUser/update/{id}
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) 
+                return NotFound(new { message = "User not found" });
+
+            // Update fields
+            if (!string.IsNullOrWhiteSpace(dto.fullName))
+                user.fullName = dto.fullName;
+            
+            if (!string.IsNullOrWhiteSpace(dto.username))
+            {
+                // Check if username is already taken by another user
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.username == dto.username && u.id != id);
+                if (existingUser != null)
+                    return BadRequest(new { message = "Username already taken" });
+                
+                user.username = dto.username;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.email))
+            {
+                // Check if email is already taken by another user
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.email == dto.email && u.id != id);
+                if (existingUser != null)
+                    return BadRequest(new { message = "Email already in use" });
+                
+                user.email = dto.email;
+            }
+
+            if (dto.phone != null)
+                user.phone = dto.phone;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User updated successfully" });
+        }
+
+        // POST: api/ManageUser/upload-avatar/{id}
+        [HttpPost("upload-avatar/{id}")]
+        public async Task<IActionResult> UploadAvatar(int id, [FromForm] IFormFile file)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded" });
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new { message = "Invalid file type. Only images are allowed." });
+
+            // Validate file size (max 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "File size exceeds 5MB limit" });
+
+            try
+            {
+                // Delete old avatar if it's not the default
+                if (!string.IsNullOrEmpty(user.avatarUrl) && 
+                    !user.avatarUrl.Contains("default.png"))
+                {
+                    var oldFilePath = Path.Combine(_env.WebRootPath, user.avatarUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                // Create uploads directory if it doesn't exist
+                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "avatars");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+
+                // Generate unique filename
+                var fileName = $"user_{id}_{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Update user avatar URL
+                user.avatarUrl = $"/uploads/avatars/{fileName}";
+                await _context.SaveChangesAsync();
+
+                return Ok(new 
+                { 
+                    message = "Avatar uploaded successfully",
+                    avatarUrl = user.avatarUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error uploading file", error = ex.Message });
+            }
+        }
+
+        // POST: api/ManageUser/reset-avatar/{id}
+        [HttpPost("reset-avatar/{id}")]
+        public async Task<IActionResult> ResetAvatar(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            // Delete current avatar if it's not the default
+            if (!string.IsNullOrEmpty(user.avatarUrl) && 
+                !user.avatarUrl.Contains("default.png"))
+            {
+                var oldFilePath = Path.Combine(_env.WebRootPath, user.avatarUrl.TrimStart('/'));
+                if (System.IO.File.Exists(oldFilePath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue
+                        Console.WriteLine($"Error deleting file: {ex.Message}");
+                    }
+                }
+            }
+
+            // Set to default avatar
+            user.avatarUrl = "/uploads/default.png";
+            await _context.SaveChangesAsync();
+
+            return Ok(new 
+            { 
+                message = "Avatar reset to default",
+                avatarUrl = user.avatarUrl
+            });
         }
 
         // POST: api/ManageUser/update-role/{id}
@@ -46,7 +223,7 @@ namespace Server.Controllers
             user.role = newRole;
             await _context.SaveChangesAsync();
 
-            return Ok("User role updated.");
+            return Ok(new { message = "User role updated." });
         }
 
         // POST: api/ManageUser/ban/{id}
@@ -59,7 +236,7 @@ namespace Server.Controllers
             user.isBanned = true;
             await _context.SaveChangesAsync();
 
-            return Ok("User banned.");
+            return Ok(new { message = "User banned." });
         }
     }
 }
