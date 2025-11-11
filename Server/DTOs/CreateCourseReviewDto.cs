@@ -1,6 +1,6 @@
 namespace Server.DTOs
 {
-    public class CreateReviewDto
+    public class CreateCourseReviewDto
     {
         public int courseId { get; set; }
         public int rating { get; set; }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import chefProfile from "../assets/pfp.png"; // placeholder chef profile
 import sampleFood from "../assets/food.png"; // placeholder course image
-import { fetchReviewsByCourse, createReview } from "../api/reviewApi";
+import { fetchReviewsByCourse, createReview } from "../api/courseReviewApi";
 
 function CourseDetailPage() {
   const location = useLocation();

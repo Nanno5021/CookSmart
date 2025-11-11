@@ -11,7 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251111023122_InitialCreate")]
+    [Migration("20251111120039_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -19,6 +19,105 @@ namespace Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
+
+            modelBuilder.Entity("Chef", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("approvedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("biography")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("certificationImageUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("certificationName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("portfolioLink")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("rating")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("specialtyCuisine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("totalReviews")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("yearsOfExperience")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Chefs");
+                });
+
+            modelBuilder.Entity("Server.Models.ChefApplication", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("adminRemarks")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("biography")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("certificationImageUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("certificationName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("dateApplied")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("dateReviewed")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("portfolioLink")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("specialtyCuisine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("yearsOfExperience")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("ChefApplications");
+                });
 
             modelBuilder.Entity("Server.Models.Course", b =>
                 {
@@ -201,6 +300,77 @@ namespace Server.Migrations
                     b.ToTable("QuizQuestions");
                 });
 
+            modelBuilder.Entity("Server.Models.Recipe", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("chefId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("cuisine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ingredients")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("recipeImage")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("recipeName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("steps")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("chefId");
+
+                    b.ToTable("Recipes");
+                });
+
+            modelBuilder.Entity("Server.Models.RecipeReview", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("comment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("recipeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("reviewDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("userId");
+
+                    b.HasIndex("recipeId", "userId")
+                        .IsUnique();
+
+                    b.ToTable("RecipeReviews");
+                });
+
             modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Property<int>("id")
@@ -234,6 +404,17 @@ namespace Server.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Server.Models.ChefApplication", b =>
+                {
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Server.Models.Course", b =>
@@ -288,6 +469,36 @@ namespace Server.Migrations
                     b.Navigation("course");
                 });
 
+            modelBuilder.Entity("Server.Models.Recipe", b =>
+                {
+                    b.HasOne("Server.Models.User", "chef")
+                        .WithMany()
+                        .HasForeignKey("chefId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("chef");
+                });
+
+            modelBuilder.Entity("Server.Models.RecipeReview", b =>
+                {
+                    b.HasOne("Server.Models.Recipe", "recipe")
+                        .WithMany("reviews")
+                        .HasForeignKey("recipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "user")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("recipe");
+
+                    b.Navigation("user");
+                });
+
             modelBuilder.Entity("Server.Models.Course", b =>
                 {
                     b.Navigation("quizQuestions");
@@ -295,6 +506,11 @@ namespace Server.Migrations
                     b.Navigation("reviews");
 
                     b.Navigation("sections");
+                });
+
+            modelBuilder.Entity("Server.Models.Recipe", b =>
+                {
+                    b.Navigation("reviews");
                 });
 #pragma warning restore 612, 618
         }

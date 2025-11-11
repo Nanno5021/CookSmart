@@ -227,6 +227,15 @@ function CoursePage() {
           )}
         </div>
       </div>
+      {/* Request Chef Account Button */}
+      <div className="fixed bottom-6 right-6">
+        <button
+          onClick={() => navigate("/requestchef")}
+          className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-full shadow-lg font-semibold transition"
+        >
+          Request Chef Account
+        </button>
+      </div>
     </div>
   );
 }

@@ -16,6 +16,9 @@ namespace Server.Data
         public DbSet<CourseSection> CourseSections { get; set; }
         public DbSet<QuizQuestion> QuizQuestions { get; set; }
         public DbSet<CourseReview> CourseReviews { get; set; }
+        
+        public DbSet<Recipe> Recipes { get; set; }
+        public DbSet<RecipeReview> RecipeReviews { get; set; }  
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,7 +62,31 @@ namespace Server.Data
             modelBuilder.Entity<CourseReview>()
                 .HasIndex(r => new { r.courseId, r.userId })
                 .IsUnique();
-        }
+            
+            modelBuilder.Entity<Recipe>()
+                .HasOne(r => r.chef)
+                .WithMany()
+                .HasForeignKey(r => r.chefId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RecipeReview belongs to Recipe and User
+            modelBuilder.Entity<RecipeReview>()
+                .HasOne(r => r.recipe)
+                .WithMany(rec => rec.reviews)
+                .HasForeignKey(r => r.recipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeReview>()
+                .HasOne(r => r.user)
+                .WithMany()
+                .HasForeignKey(r => r.userId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Prevent duplicate reviews (one user can only review a recipe once)
+            modelBuilder.Entity<RecipeReview>()
+                .HasIndex(r => new { r.recipeId, r.userId })
+                .IsUnique();
+                }
         public DbSet<ChefApplication> ChefApplications { get; set; }
         public DbSet<Chef> Chefs { get; set; }
     }

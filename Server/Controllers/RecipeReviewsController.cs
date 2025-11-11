@@ -8,32 +8,32 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ReviewsController : ControllerBase
+    public class RecipeReviewsController : ControllerBase
     {
         private readonly AppDbContext _context;
 
-        public ReviewsController(AppDbContext context)
+        public RecipeReviewsController(AppDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/reviews/course/{courseId}
-        [HttpGet("course/{courseId}")]
-        public async Task<ActionResult<IEnumerable<ReviewResponseDto>>> GetReviewsByCourse(int courseId)
+        // GET: api/recipereviews/recipe/{recipeId}
+        [HttpGet("recipe/{recipeId}")]
+        public async Task<ActionResult<IEnumerable<RecipeReviewResponseDto>>> GetReviewsByRecipe(int recipeId)
         {
-            var reviews = await _context.CourseReviews
+            var reviews = await _context.RecipeReviews
                 .Include(r => r.user)
-                .Where(r => r.courseId == courseId)
+                .Where(r => r.recipeId == recipeId)
                 .OrderByDescending(r => r.reviewDate)
                 .ToListAsync();
 
-            var response = reviews.Select(r => new ReviewResponseDto
+            var response = reviews.Select(r => new RecipeReviewResponseDto
             {
                 id = r.id,
-                courseId = r.courseId,
+                recipeId = r.recipeId,
                 userId = r.userId,
-                username = r.user?.username ?? "Anonymous",
-                userProfileImage = "", // Temporarily removed until profile images are implemented
+                username = r.user?.username ?? "Unknown",
+                userProfileImage =  "",
                 rating = r.rating,
                 comment = r.comment,
                 reviewDate = r.reviewDate
@@ -42,24 +42,26 @@ namespace Server.Controllers
             return Ok(response);
         }
 
-        // POST: api/reviews
+        // POST: api/recipereviews
         [HttpPost]
-        public async Task<ActionResult<ReviewResponseDto>> CreateReview(CreateReviewDto dto, [FromQuery] int userId)
+        public async Task<ActionResult<RecipeReviewResponseDto>> CreateReview(
+            CreateRecipeReviewDto dto,
+            [FromQuery] int userId)
         {
-            // Check if user already reviewed this course
-            var existingReview = await _context.CourseReviews
-                .FirstOrDefaultAsync(r => r.courseId == dto.courseId && r.userId == userId);
+            // Check if user already reviewed this recipe
+            var existingReview = await _context.RecipeReviews
+                .FirstOrDefaultAsync(r => r.recipeId == dto.recipeId && r.userId == userId);
 
             if (existingReview != null)
             {
-                return BadRequest("You have already reviewed this course");
+                return BadRequest("You have already reviewed this recipe");
             }
 
-            // Validate course exists
-            var course = await _context.Courses.FindAsync(dto.courseId);
-            if (course == null)
+            // Validate recipe exists
+            var recipe = await _context.Recipes.FindAsync(dto.recipeId);
+            if (recipe == null)
             {
-                return NotFound("Course not found");
+                return NotFound("Recipe not found");
             }
 
             // Validate user exists
@@ -69,39 +71,39 @@ namespace Server.Controllers
                 return NotFound("User not found");
             }
 
-            var review = new CourseReview
+            var review = new RecipeReview
             {
-                courseId = dto.courseId,
+                recipeId = dto.recipeId,
                 userId = userId,
                 rating = dto.rating,
                 comment = dto.comment,
                 reviewDate = DateTime.UtcNow
             };
 
-            _context.CourseReviews.Add(review);
+            _context.RecipeReviews.Add(review);
             await _context.SaveChangesAsync();
 
-            var response = new ReviewResponseDto
+            var response = new RecipeReviewResponseDto
             {
                 id = review.id,
-                courseId = review.courseId,
+                recipeId = review.recipeId,
                 userId = review.userId,
                 username = user.username,
-                userProfileImage = "", // Temporarily removed until profile images are implemented
+                userProfileImage =  "",
                 rating = review.rating,
                 comment = review.comment,
                 reviewDate = review.reviewDate
             };
 
-            return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.courseId }, response);
+            return CreatedAtAction(nameof(GetReviewsByRecipe), new { recipeId = review.recipeId }, response);
         }
 
-        // DELETE: api/reviews/{id}
+        // DELETE: api/recipereviews/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReview(int id, [FromQuery] int userId)
         {
-            var review = await _context.CourseReviews.FindAsync(id);
-            
+            var review = await _context.RecipeReviews.FindAsync(id);
+
             if (review == null)
             {
                 return NotFound();
@@ -113,7 +115,7 @@ namespace Server.Controllers
                 return Forbid();
             }
 
-            _context.CourseReviews.Remove(review);
+            _context.RecipeReviews.Remove(review);
             await _context.SaveChangesAsync();
 
             return NoContent();
