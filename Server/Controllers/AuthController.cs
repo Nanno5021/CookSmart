@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.Data; 
-using Server.Models; 
-using Server.DTOs;   
+using Microsoft.IdentityModel.Tokens;
+using Server.Data;
+using Server.Models;
+using Server.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using BCrypt.Net;
 
 namespace Server.Controllers
 {
@@ -10,26 +15,41 @@ namespace Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
-        // ✅ REGISTER
+
         [HttpPost("register")]
         public IActionResult Register(RegisterDto dto)
         {
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            // Check if email already exists
+            if (_context.Users.Any(u => u.email == dto.email))
             {
-                return BadRequest("Email already registered.");
+                return BadRequest(new { message = "Email already registered." });
             }
+
+            // Check if username already exists
+            if (_context.Users.Any(u => u.username == dto.username))
+            {
+                return BadRequest(new { message = "Username already taken." });
+            }
+
+            // Hash the password before storing
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.password);
 
             var user = new User
             {
-                Username = dto.Username,
-                Email = dto.Email,
-                Password = dto.Password 
+                fullName = dto.fullName,
+                username = dto.username,
+                email = dto.email,
+                phone = dto.phone,
+                password = hashedPassword,  // Store hashed password
+                role = dto.role ?? "User"
             };
 
             _context.Users.Add(user);
@@ -38,24 +58,55 @@ namespace Server.Controllers
             return Ok(new { message = "User registered successfully!" });
         }
 
-        // ✅ LOGIN
+
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public IActionResult Login([FromBody] LoginDto dto)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Identifier) || string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest(new { message = "Invalid login data." });
 
-            if (user == null || user.Password != dto.Password)
-            {
-                return Unauthorized("Invalid email or password.");
-            }
+            var user = _context.Users
+                .FirstOrDefault(u => u.email == dto.Identifier || u.username == dto.Identifier);
 
-            // Right now: just return success + user info
-            // Later: we’ll return a JWT token
+            // Verify password using BCrypt
+            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.password))
+                return Unauthorized(new { message = "Invalid username/email or password." });
+
+            var token = GenerateJwtToken(user);
+
             return Ok(new
             {
                 message = "Login successful",
-                user = new { user.Id, user.Username, user.Email }
+                token = token,
+                user = new { user.id, user.username, user.email, user.fullName, user.phone }
             });
+        }
+
+
+        private string GenerateJwtToken(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.username),
+                new Claim(JwtRegisteredClaimNames.Email, user.email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("userId", user.id.ToString()),
+                new Claim("fullName", user.fullName ?? ""),
+                new Claim("role", user.role ?? "User")
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

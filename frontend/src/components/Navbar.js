@@ -5,7 +5,9 @@ import recipeIcon from "../assets/recipe.png";
 import notifIcon from "../assets/notification.png";
 import courseIcon from "../assets/course.png";
 import profileIcon from "../assets/profile.png";
-import logo from "../assets/logo.png"; 
+import logo from "../assets/logo.png";
+import logoutIcon from "../assets/logout.png";
+import { logoutUser } from "../api/auth";
 
 function Navbar() {
   const location = useLocation();
@@ -22,14 +24,12 @@ function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 h-full w-20 bg-black flex flex-col items-center py-6">
+      {/* Logo */}
       <div className="mb-10">
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-12 h-12 object-contain"
-        />
+        <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
       </div>
 
+      {/* Main Nav Icons */}
       <div className="flex flex-col justify-center flex-1">
         {icons.map(({ path, img, alt }) => (
           <Link key={path} to={path} className="my-10">
@@ -49,6 +49,22 @@ function Navbar() {
           </Link>
         ))}
       </div>
+
+      {/* ✅ Logout Button at Bottom */}
+      <button
+        onClick={logoutUser}
+        className="mb-4 text-gray-400 hover:text-red-500 transition font-semibold text-sm"
+      >
+        {logoutIcon ? (
+          <img
+            src={logoutIcon}
+            alt="Logout"
+            className="w-6 h-6 opacity-80 hover:opacity-100 transition"
+          />
+        ) : (
+          "Logout"
+        )}
+      </button>
     </nav>
   );
 }

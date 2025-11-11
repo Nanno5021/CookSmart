@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios"; // ✅ Add axios import
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
 import imageIcon from "../assets/picture.png";
+import { createPost } from "../api/post"; // ✅ Make sure file name matches (e.g., postApi.js)
 
 function PostBlogPage() {
   const navigate = useNavigate();
@@ -12,32 +12,33 @@ function PostBlogPage() {
   const [body, setBody] = useState("");
   const [image, setImage] = useState(null);
 
-  // ✅ Handle Post submission
-  const handlePost = async (e) => {
-    e.preventDefault();
 
-    try {
-      // Build the post object (match your backend model)
-      const postData = {
-        username: "ChefLiam", // replace with logged-in username later
-        title: title,
-        content: body,
-        createdAt: new Date().toISOString(),
-      };
+const handlePost = async (e) => {
+  e.preventDefault();
 
-      // Send POST request to backend
-      const res = await axios.post("http://localhost:5037/api/posts", postData);
+  try {
+    const postData = {
+      title,
+      content: body,
+      createdAt: new Date().toISOString(),
+    };
 
-      alert("✅ Post created successfully!");
-      console.log("Posted:", res.data);
+    console.log("🟢 Posting data:", postData);
 
-      // Redirect or clear after posting
-      navigate("/"); // go back to home page (adjust as needed)
-    } catch (error) {
-      console.error("❌ Error posting:", error);
-      alert("Failed to post. Check console for details.");
+    const res = await createPost(postData);
+
+    console.log("✅ Post created:", res);
+    alert("Post created successfully!");
+    navigate("/"); 
+  } catch (error) {
+    console.error("❌ Error creating post:", error);
+    alert(error.message); 
+
+    if (error.message.includes("Unauthorized")) {
+      navigate("/login");
     }
-  };
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
@@ -51,7 +52,7 @@ function PostBlogPage() {
             Cancel
           </button>
           <h2 className="text-xl font-bold">New Blog</h2>
-          <div className="w-16" /> {/* Spacer to center title */}
+          <div className="w-16" />
         </div>
 
         {/* Profile */}
