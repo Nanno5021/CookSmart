@@ -1,44 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import picture from "../assets/pfp.png";
 import imageIcon from "../assets/picture.png";
-import { createPost } from "../api/post"; // ✅ Make sure file name matches (e.g., postApi.js)
+import { createPost } from "../api/post";
+import { apiFetch } from "../api/apiClient"; // import apiFetch to call /profile/me
 
 function PostBlogPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [title, setTitle] = useState(location.state?.title || "");
   const [body, setBody] = useState("");
   const [image, setImage] = useState(null);
+  const [user, setUser] = useState({ username: "Anonymous", profilePic: picture });
+  const [loadingUser, setLoadingUser] = useState(true);
 
-
-const handlePost = async (e) => {
-  e.preventDefault();
-
-  try {
-    const postData = {
-      title,
-      content: body,
-      createdAt: new Date().toISOString(),
-    };
-
-    console.log("🟢 Posting data:", postData);
-
-    const res = await createPost(postData);
-
-    console.log("✅ Post created:", res);
-    alert("Post created successfully!");
-    navigate("/"); 
-  } catch (error) {
-    console.error("❌ Error creating post:", error);
-    alert(error.message); 
-
-    if (error.message.includes("Unauthorized")) {
-      navigate("/login");
+  // Fetch current logged-in user from backend
+  useEffect(() => {
+    let mounted = true;
+    async function fetchUser() {
+      setLoadingUser(true);
+      try {
+        const data = await apiFetch("/profile/me"); // GET api/profile/me
+        if (mounted) {
+          setUser({
+            username: data.username || "Anonymous",
+            profilePic: data.avatarUrl || picture,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        if (mounted) setUser({ username: "Anonymous", profilePic: picture });
+      } finally {
+        if (mounted) setLoadingUser(false);
+      }
     }
+
+    fetchUser();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handlePost = async (e) => {
+    e.preventDefault();
+
+    if (!title.trim() || !body.trim()) {
+      alert("Title and body cannot be empty.");
+      return;
+    }
+
+    try {
+      const postData = {
+        title,
+        content: body,
+        createdAt: new Date().toISOString(),
+        username: user.username, // attach logged-in user's username
+      };
+
+      console.log("🟢 Posting data:", postData);
+
+      const res = await createPost(postData);
+
+      console.log("✅ Post created:", res);
+      alert("Post created successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error("❌ Error creating post:", error);
+      alert(error.message);
+      if (error.message.includes("Unauthorized")) navigate("/login");
+    }
+  };
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-white bg-black">
+        Loading user info...
+      </div>
+    );
   }
-};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
@@ -58,11 +99,11 @@ const handlePost = async (e) => {
         {/* Profile */}
         <div className="flex items-center space-x-4 mb-6">
           <img
-            src={picture}
+            src={user.profilePic}
             alt="Profile"
             className="w-12 h-12 rounded-full object-cover"
           />
-          <span className="font-semibold text-lg">ChefLiam</span>
+          <span className="font-semibold text-lg">{user.username}</span>
         </div>
 
         {/* Image Placeholder */}

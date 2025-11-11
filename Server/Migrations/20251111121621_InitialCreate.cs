@@ -17,10 +17,14 @@ namespace Server.Migrations
                 {
                     id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
                     title = table.Column<string>(type: "TEXT", nullable: false),
                     content = table.Column<string>(type: "TEXT", nullable: false),
                     username = table.Column<string>(type: "TEXT", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    rating = table.Column<int>(type: "INTEGER", nullable: false),
+                    comments = table.Column<int>(type: "INTEGER", nullable: false),
+                    views = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -38,7 +42,8 @@ namespace Server.Migrations
                     email = table.Column<string>(type: "TEXT", nullable: false),
                     phone = table.Column<string>(type: "TEXT", nullable: false),
                     password = table.Column<string>(type: "TEXT", nullable: false),
-                    role = table.Column<string>(type: "TEXT", nullable: false)
+                    role = table.Column<string>(type: "TEXT", nullable: false),
+                    avatarUrl = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

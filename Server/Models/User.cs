@@ -9,5 +9,8 @@ namespace Server.Models
         public string phone { get; set; }
         public string password { get; set; } 
         public string role { get; set; } = "User";
+
+        // New: avatar URL (publicly accessible)
+        public string avatarUrl { get; set; } = string.Empty;
     }
 }
