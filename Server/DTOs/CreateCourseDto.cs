@@ -2,13 +2,13 @@ namespace Server.DTOs
 {
     public class CreateCourseDto
     {
-        public string CourseName { get; set; } = string.Empty;
-        public string CourseImage { get; set; } = string.Empty;
-        public string Ingredients { get; set; } = string.Empty;
-        public string Difficulty { get; set; } = string.Empty;
-        public string EstimatedTime { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public List<CreateCourseSectionDto> Sections { get; set; } = new List<CreateCourseSectionDto>();
-        public List<CreateQuizQuestionDto> QuizQuestions { get; set; } = new List<CreateQuizQuestionDto>();
+        public string courseName { get; set; } = string.Empty;
+        public string courseImage { get; set; } = string.Empty;
+        public string ingredients { get; set; } = string.Empty;
+        public string difficulty { get; set; } = string.Empty;
+        public string estimatedTime { get; set; } = string.Empty;
+        public string description { get; set; } = string.Empty;
+        public List<CreateCourseSectionDto> sections { get; set; } = new List<CreateCourseSectionDto>();
+        public List<CreateQuizQuestionDto> quizQuestions { get; set; } = new List<CreateQuizQuestionDto>();
     }
 }

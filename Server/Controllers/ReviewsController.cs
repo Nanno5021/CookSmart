@@ -29,14 +29,14 @@ namespace Server.Controllers
 
             var response = reviews.Select(r => new ReviewResponseDto
             {
-                Id = r.id,
-                CourseId = r.courseId,
-                UserId = r.userId,
-                Username = r.user?.username ?? "Anonymous",
-                UserProfileImage = "", // Temporarily removed until profile images are implemented
-                Rating = r.rating,
-                Comment = r.comment,
-                ReviewDate = r.reviewDate
+                id = r.id,
+                courseId = r.courseId,
+                userId = r.userId,
+                username = r.user?.username ?? "Anonymous",
+                userProfileImage = "", // Temporarily removed until profile images are implemented
+                rating = r.rating,
+                comment = r.comment,
+                reviewDate = r.reviewDate
             }).ToList();
 
             return Ok(response);
@@ -48,7 +48,7 @@ namespace Server.Controllers
         {
             // Check if user already reviewed this course
             var existingReview = await _context.CourseReviews
-                .FirstOrDefaultAsync(r => r.courseId == dto.CourseId && r.userId == userId);
+                .FirstOrDefaultAsync(r => r.courseId == dto.courseId && r.userId == userId);
 
             if (existingReview != null)
             {
@@ -56,7 +56,7 @@ namespace Server.Controllers
             }
 
             // Validate course exists
-            var course = await _context.Courses.FindAsync(dto.CourseId);
+            var course = await _context.Courses.FindAsync(dto.courseId);
             if (course == null)
             {
                 return NotFound("Course not found");
@@ -71,10 +71,10 @@ namespace Server.Controllers
 
             var review = new CourseReview
             {
-                courseId = dto.CourseId,
+                courseId = dto.courseId,
                 userId = userId,
-                rating = dto.Rating,
-                comment = dto.Comment,
+                rating = dto.rating,
+                comment = dto.comment,
                 reviewDate = DateTime.UtcNow
             };
 
@@ -83,14 +83,14 @@ namespace Server.Controllers
 
             var response = new ReviewResponseDto
             {
-                Id = review.id,
-                CourseId = review.courseId,
-                UserId = review.userId,
-                Username = user.username,
-                UserProfileImage = "", // Temporarily removed until profile images are implemented
-                Rating = review.rating,
-                Comment = review.comment,
-                ReviewDate = review.reviewDate
+                id = review.id,
+                courseId = review.courseId,
+                userId = review.userId,
+                username = user.username,
+                userProfileImage = "", // Temporarily removed until profile images are implemented
+                rating = review.rating,
+                comment = review.comment,
+                reviewDate = review.reviewDate
             };
 
             return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.courseId }, response);

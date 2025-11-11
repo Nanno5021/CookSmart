@@ -2,13 +2,13 @@ namespace Server.DTOs
 {
     public class ReviewResponseDto
     {
-        public int Id { get; set; }
-        public int CourseId { get; set; }
-        public int UserId { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string UserProfileImage { get; set; } = string.Empty;
-        public int Rating { get; set; }
-        public string Comment { get; set; } = string.Empty;
-        public DateTime ReviewDate { get; set; }
+        public int id { get; set; }
+        public int courseId { get; set; }
+        public int userId { get; set; }
+        public string username { get; set; } = string.Empty;
+        public string userProfileImage { get; set; } = string.Empty;
+        public int rating { get; set; }
+        public string comment { get; set; } = string.Empty;
+        public DateTime reviewDate { get; set; }
     }
 }
