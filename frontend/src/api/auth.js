@@ -13,9 +13,6 @@ export async function loginUser(formData) {
     body: JSON.stringify(formData),
   });
 
-    console.log("Full backend response:", data);
-  console.log("User object:", data.user);
-  console.log("Role from user:", data.user?.role);
 
   if (data.token) {
     setToken(data.token);

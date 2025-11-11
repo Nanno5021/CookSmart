@@ -60,7 +60,9 @@ namespace Server.Migrations
                     email = table.Column<string>(type: "TEXT", nullable: false),
                     phone = table.Column<string>(type: "TEXT", nullable: false),
                     password = table.Column<string>(type: "TEXT", nullable: false),
-                    role = table.Column<string>(type: "TEXT", nullable: false)
+                    role = table.Column<string>(type: "TEXT", nullable: false),
+                    isBanned = table.Column<bool>(type: "INTEGER", nullable: false),
+                    joinDate = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

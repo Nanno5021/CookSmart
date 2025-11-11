@@ -11,7 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251111121208_InitialCreate")]
+    [Migration("20251111135413_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -383,6 +383,12 @@ namespace Server.Migrations
 
                     b.Property<string>("fullName")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("isBanned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("joinDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("password")
