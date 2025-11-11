@@ -1,4 +1,3 @@
-
 import { apiFetch } from "./apiClient";
 
 export async function fetchPosts() {

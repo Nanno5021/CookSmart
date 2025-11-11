@@ -18,6 +18,7 @@ import PostBlogPage from "./pages/PostBlogPage.js";
 import ChefCoursePage from "./pages/chef/ChefCoursePage.js";
 import AddCoursePage from "./pages/chef/AddCoursePage.js";
 import AdminDashboard from "./pages/admin/MainPage.js";
+import EditProfilePage from "./pages/EditProfilePage.js";
 import RequireAdmin from './components/RequireAdmin';
 import EditCoursePage from "./pages/chef/EditCoursePage.js";
 import ChefMainPage from "./pages/chef/MainPage.js";
@@ -40,6 +41,7 @@ function App() {
         <Route path="/addrecipe" element={<AddRecipePage />} />
         <Route path="/editrecipe" element={<EditRecipePage />} />
         <Route path="/postblog" element={<PostBlogPage />} />
+        <Route path="/editprofile" element={<EditProfilePage />} />
         <Route path="/chefcourse" element={<ChefCoursePage />} />
         <Route path="/addcourse" element={<AddCoursePage />} />
         <Route path="/editcourse/:courseId" element={<EditCoursePage />} />
