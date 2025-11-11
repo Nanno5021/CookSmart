@@ -22,21 +22,21 @@ namespace Server.Controllers
         public async Task<ActionResult<IEnumerable<ReviewResponseDto>>> GetReviewsByCourse(int courseId)
         {
             var reviews = await _context.CourseReviews
-                .Include(r => r.User)
-                .Where(r => r.CourseId == courseId)
-                .OrderByDescending(r => r.ReviewDate)
+                .Include(r => r.user)
+                .Where(r => r.courseId == courseId)
+                .OrderByDescending(r => r.reviewDate)
                 .ToListAsync();
 
             var response = reviews.Select(r => new ReviewResponseDto
             {
-                Id = r.Id,
-                CourseId = r.CourseId,
-                UserId = r.UserId,
-                Username = r.User?.username ?? "Anonymous",
+                Id = r.id,
+                CourseId = r.courseId,
+                UserId = r.userId,
+                Username = r.user?.username ?? "Anonymous",
                 UserProfileImage = "", // Temporarily removed until profile images are implemented
-                Rating = r.Rating,
-                Comment = r.Comment,
-                ReviewDate = r.ReviewDate
+                Rating = r.rating,
+                Comment = r.comment,
+                ReviewDate = r.reviewDate
             }).ToList();
 
             return Ok(response);
@@ -48,7 +48,7 @@ namespace Server.Controllers
         {
             // Check if user already reviewed this course
             var existingReview = await _context.CourseReviews
-                .FirstOrDefaultAsync(r => r.CourseId == dto.CourseId && r.UserId == userId);
+                .FirstOrDefaultAsync(r => r.courseId == dto.CourseId && r.userId == userId);
 
             if (existingReview != null)
             {
@@ -71,11 +71,11 @@ namespace Server.Controllers
 
             var review = new CourseReview
             {
-                CourseId = dto.CourseId,
-                UserId = userId,
-                Rating = dto.Rating,
-                Comment = dto.Comment,
-                ReviewDate = DateTime.UtcNow
+                courseId = dto.CourseId,
+                userId = userId,
+                rating = dto.Rating,
+                comment = dto.Comment,
+                reviewDate = DateTime.UtcNow
             };
 
             _context.CourseReviews.Add(review);
@@ -83,17 +83,17 @@ namespace Server.Controllers
 
             var response = new ReviewResponseDto
             {
-                Id = review.Id,
-                CourseId = review.CourseId,
-                UserId = review.UserId,
+                Id = review.id,
+                CourseId = review.courseId,
+                UserId = review.userId,
                 Username = user.username,
                 UserProfileImage = "", // Temporarily removed until profile images are implemented
-                Rating = review.Rating,
-                Comment = review.Comment,
-                ReviewDate = review.ReviewDate
+                Rating = review.rating,
+                Comment = review.comment,
+                ReviewDate = review.reviewDate
             };
 
-            return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.CourseId }, response);
+            return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.courseId }, response);
         }
 
         // DELETE: api/reviews/{id}
@@ -108,7 +108,7 @@ namespace Server.Controllers
             }
 
             // Only allow the user who created the review to delete it
-            if (review.UserId != userId)
+            if (review.userId != userId)
             {
                 return Forbid();
             }

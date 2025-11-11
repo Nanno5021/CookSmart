@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { X, Plus, Image, Video, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import { createCourse } from "../api/courseApi";
+import Navbar from "../../components/Navbar";
+import { createCourse } from "../../api/courseApi";
 
 function AddCoursePage() {
   const navigate = useNavigate();

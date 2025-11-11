@@ -2,15 +2,15 @@ namespace Server.Models
 {
     public class CourseReview
     {
-        public int Id { get; set; }
-        public int CourseId { get; set; }
-        public int UserId { get; set; }
-        public int Rating { get; set; } // 1-5
-        public string Comment { get; set; } = string.Empty;
-        public DateTime ReviewDate { get; set; } = DateTime.UtcNow;
+        public int id { get; set; }
+        public int courseId { get; set; }
+        public int userId { get; set; }
+        public int rating { get; set; } // 1-5
+        public string comment { get; set; } = string.Empty;
+        public DateTime reviewDate { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
-        public Course? Course { get; set; }
-        public User? User { get; set; }
+        public Course? course { get; set; }
+        public User? user { get; set; }
     }
 }

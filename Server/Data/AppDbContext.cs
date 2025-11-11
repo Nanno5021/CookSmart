@@ -23,41 +23,41 @@ namespace Server.Data
 
             // Course belongs to a Chef (User)
             modelBuilder.Entity<Course>()
-                .HasOne(c => c.Chef)
+                .HasOne(c => c.chef)
                 .WithMany()
-                .HasForeignKey(c => c.ChefId)
+                .HasForeignKey(c => c.chefId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // CourseSection belongs to Course
             modelBuilder.Entity<CourseSection>()
-                .HasOne(cs => cs.Course)
-                .WithMany(c => c.Sections)
-                .HasForeignKey(cs => cs.CourseId)
+                .HasOne(cs => cs.course)
+                .WithMany(c => c.sections)
+                .HasForeignKey(cs => cs.courseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // QuizQuestion belongs to Course
             modelBuilder.Entity<QuizQuestion>()
-                .HasOne(q => q.Course)
-                .WithMany(c => c.QuizQuestions)
-                .HasForeignKey(q => q.CourseId)
+                .HasOne(q => q.course)
+                .WithMany(c => c.quizQuestions)
+                .HasForeignKey(q => q.courseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // CourseReview belongs to Course and User
             modelBuilder.Entity<CourseReview>()
-                .HasOne(r => r.Course)
-                .WithMany(c => c.Reviews)
-                .HasForeignKey(r => r.CourseId)
+                .HasOne(r => r.course)
+                .WithMany(c => c.reviews)
+                .HasForeignKey(r => r.courseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<CourseReview>()
-                .HasOne(r => r.User)
+                .HasOne(r => r.user)
                 .WithMany()
-                .HasForeignKey(r => r.UserId)
+                .HasForeignKey(r => r.userId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Prevent duplicate reviews (one user can only review a course once)
             modelBuilder.Entity<CourseReview>()
-                .HasIndex(r => new { r.CourseId, r.UserId })
+                .HasIndex(r => new { r.courseId, r.userId })
                 .IsUnique();
         }
     }

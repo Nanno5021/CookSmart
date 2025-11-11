@@ -11,8 +11,8 @@ import CourseDetailPage from "./pages/CourseDetailPage.js";
 import EnrolledDetail from "./pages/EnrolledDetail.js";
 import RecipePage from "./pages/RecipePage.js";
 import PostBlogPage from "./pages/PostBlogPage.js";
-import ChefCoursePage from "./pages/ChefCoursePage.js";
-import AddCoursePage from "./pages/AddCoursePage.js";
+import ChefCoursePage from "./pages/chef/ChefCoursePage.js";
+import AddCoursePage from "./pages/chef/AddCoursePage.js";
 import AdminDashboard from "./pages/admin/MainPage.js";
 import RequireAdmin from './components/RequireAdmin';
 

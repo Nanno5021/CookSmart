@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import postIcon from "../assets/post.png";
-import sampleFood from "../assets/food.png";
-import chefProfile from "../assets/pfp.png";
-import { fetchCoursesByChef, deleteCourse } from "../api/courseApi";
+import Navbar from "../../components/Navbar";
+import postIcon from "../../assets/post.png";
+import sampleFood from "../../assets/food.png";
+import chefProfile from "../../assets/pfp.png";
+import { fetchCoursesByChef, deleteCourse } from "../../api/courseApi";
 
 function ChefCoursePage() {
   const navigate = useNavigate();

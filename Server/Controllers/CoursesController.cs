@@ -22,39 +22,39 @@ namespace Server.Controllers
         public async Task<ActionResult<IEnumerable<CourseResponseDto>>> GetAllCourses()
         {
             var courses = await _context.Courses
-                .Include(c => c.Chef)
-                .Include(c => c.Sections)
-                .Include(c => c.QuizQuestions)
+                .Include(c => c.chef)
+                .Include(c => c.sections)
+                .Include(c => c.quizQuestions)
                 .ToListAsync();
 
             var response = courses.Select(c => new CourseResponseDto
             {
-                Id = c.Id,
-                ChefId = c.ChefId,
-                ChefName = c.Chef?.username ?? "Unknown Chef",
+                Id = c.id,
+                ChefId = c.chefId,
+                ChefName = c.chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
-                CourseName = c.CourseName,
-                CourseImage = c.CourseImage,
-                Ingredients = c.Ingredients,
-                Difficulty = c.Difficulty,
-                EstimatedTime = c.EstimatedTime,
-                Description = c.Description,
-                CreatedAt = c.CreatedAt,
-                Sections = c.Sections.OrderBy(s => s.SectionOrder).Select(s => new CourseSectionResponseDto
+                CourseName = c.courseName,
+                CourseImage = c.courseImage,
+                Ingredients = c.ingredients,
+                Difficulty = c.difficulty,
+                EstimatedTime = c.estimatedTime,
+                Description = c.description,
+                CreatedAt = c.createdAt,
+                Sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
                 {
-                    Id = s.Id,
-                    SectionTitle = s.SectionTitle,
-                    ContentType = s.ContentType,
-                    Content = s.Content,
-                    SectionOrder = s.SectionOrder
+                    Id = s.id,
+                    SectionTitle = s.sectionTitle,
+                    ContentType = s.contentType,
+                    Content = s.content,
+                    SectionOrder = s.sectionOrder
                 }).ToList(),
-                QuizQuestions = c.QuizQuestions.OrderBy(q => q.QuestionOrder).Select(q => new QuizQuestionResponseDto
+                QuizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
                 {
-                    Id = q.Id,
-                    Question = q.Question,
-                    Options = new List<string> { q.Option1, q.Option2, q.Option3, q.Option4 },
-                    Answer = q.CorrectAnswer,
-                    QuestionOrder = q.QuestionOrder
+                    Id = q.id,
+                    Question = q.question,
+                    Options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
+                    Answer = q.correctAnswer,
+                    QuestionOrder = q.questionOrder
                 }).ToList()
             }).ToList();
 
@@ -66,10 +66,10 @@ namespace Server.Controllers
         public async Task<ActionResult<CourseResponseDto>> GetCourse(int id)
         {
             var course = await _context.Courses
-                .Include(c => c.Chef)
-                .Include(c => c.Sections)
-                .Include(c => c.QuizQuestions)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .Include(c => c.chef)
+                .Include(c => c.sections)
+                .Include(c => c.quizQuestions)
+                .FirstOrDefaultAsync(c => c.id == id);
 
             if (course == null)
             {
@@ -78,32 +78,32 @@ namespace Server.Controllers
 
             var response = new CourseResponseDto
             {
-                Id = course.Id,
-                ChefId = course.ChefId,
-                ChefName = course.Chef?.username ?? "Unknown Chef",
+                Id = course.id,
+                ChefId = course.chefId,
+                ChefName = course.chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
-                CourseName = course.CourseName,
-                CourseImage = course.CourseImage,
-                Ingredients = course.Ingredients,
-                Difficulty = course.Difficulty,
-                EstimatedTime = course.EstimatedTime,
-                Description = course.Description,
-                CreatedAt = course.CreatedAt,
-                Sections = course.Sections.OrderBy(s => s.SectionOrder).Select(s => new CourseSectionResponseDto
+                CourseName = course.courseName,
+                CourseImage = course.courseImage,
+                Ingredients = course.ingredients,
+                Difficulty = course.difficulty,
+                EstimatedTime = course.estimatedTime,
+                Description = course.description,
+                CreatedAt = course.createdAt,
+                Sections = course.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
                 {
-                    Id = s.Id,
-                    SectionTitle = s.SectionTitle,
-                    ContentType = s.ContentType,
-                    Content = s.Content,
-                    SectionOrder = s.SectionOrder
-                }).ToList(),
-                QuizQuestions = course.QuizQuestions.OrderBy(q => q.QuestionOrder).Select(q => new QuizQuestionResponseDto
+                    Id = s.id,
+                    SectionTitle = s.sectionTitle,
+                    ContentType = s.contentType,
+                    Content = s.content,
+                    SectionOrder = s.sectionOrder
+                }).ToList(),    
+                QuizQuestions = course.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
                 {
-                    Id = q.Id,
-                    Question = q.Question,
-                    Options = new List<string> { q.Option1, q.Option2, q.Option3, q.Option4 },
-                    Answer = q.CorrectAnswer,
-                    QuestionOrder = q.QuestionOrder
+                    Id = q.id,
+                    Question = q.question,
+                    Options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
+                    Answer = q.correctAnswer,
+                    QuestionOrder = q.questionOrder
                 }).ToList()
             };
 
@@ -115,40 +115,40 @@ namespace Server.Controllers
         public async Task<ActionResult<IEnumerable<CourseResponseDto>>> GetCoursesByChef(int chefId)
         {
             var courses = await _context.Courses
-                .Include(c => c.Chef)
-                .Include(c => c.Sections)
-                .Include(c => c.QuizQuestions)
-                .Where(c => c.ChefId == chefId)
+                .Include(c => c.chef)
+                .Include(c => c.sections)
+                .Include(c => c.quizQuestions)
+                .Where(c => c.chefId == chefId)
                 .ToListAsync();
 
             var response = courses.Select(c => new CourseResponseDto
             {
-                Id = c.Id,
-                ChefId = c.ChefId,
-                ChefName = c.Chef?.username ?? "Unknown Chef",
+                Id = c.id,
+                ChefId = c.chefId,
+                ChefName = c.chef?.username ?? "Unknown Chef",
                 ChefImage = "", // Temporarily removed until profile images are implemented
-                CourseName = c.CourseName,
-                CourseImage = c.CourseImage,
-                Ingredients = c.Ingredients,
-                Difficulty = c.Difficulty,
-                EstimatedTime = c.EstimatedTime,
-                Description = c.Description,
-                CreatedAt = c.CreatedAt,
-                Sections = c.Sections.OrderBy(s => s.SectionOrder).Select(s => new CourseSectionResponseDto
+                CourseName = c.courseName,
+                CourseImage = c.courseImage,
+                Ingredients = c.ingredients,
+                Difficulty = c.difficulty,
+                EstimatedTime = c.estimatedTime,
+                Description = c.description,
+                CreatedAt = c.createdAt,
+                Sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
                 {
-                    Id = s.Id,
-                    SectionTitle = s.SectionTitle,
-                    ContentType = s.ContentType,
-                    Content = s.Content,
-                    SectionOrder = s.SectionOrder
+                    Id = s.id,
+                    SectionTitle = s.sectionTitle,
+                    ContentType = s.contentType,
+                    Content = s.content,
+                    SectionOrder = s.sectionOrder
                 }).ToList(),
-                QuizQuestions = c.QuizQuestions.OrderBy(q => q.QuestionOrder).Select(q => new QuizQuestionResponseDto
+                QuizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
                 {
-                    Id = q.Id,
-                    Question = q.Question,
-                    Options = new List<string> { q.Option1, q.Option2, q.Option3, q.Option4 },
-                    Answer = q.CorrectAnswer,
-                    QuestionOrder = q.QuestionOrder
+                    Id = q.id,
+                    Question = q.question,
+                    Options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
+                    Answer = q.correctAnswer,
+                    QuestionOrder = q.questionOrder
                 }).ToList()
             }).ToList();
 
@@ -168,14 +168,14 @@ namespace Server.Controllers
 
             var course = new Course
             {
-                ChefId = 1, // Use default ChefId of 1 if not provided
-                CourseName = dto.CourseName,
-                CourseImage = dto.CourseImage,
-                Ingredients = dto.Ingredients,
-                Difficulty = dto.Difficulty,
-                EstimatedTime = dto.EstimatedTime,
-                Description = dto.Description,
-                CreatedAt = DateTime.UtcNow
+                chefId = 1, // Use default ChefId of 1 if not provided
+                courseName = dto.CourseName,
+                courseImage = dto.CourseImage,
+                ingredients = dto.Ingredients,
+                difficulty = dto.Difficulty,
+                estimatedTime = dto.EstimatedTime,
+                description = dto.Description,
+                createdAt = DateTime.UtcNow
             };
 
             _context.Courses.Add(course);
@@ -186,11 +186,11 @@ namespace Server.Controllers
             {
                 var section = new CourseSection
                 {
-                    CourseId = course.Id,
-                    SectionTitle = sectionDto.SectionTitle,
-                    ContentType = sectionDto.ContentType,
-                    Content = sectionDto.Content,
-                    SectionOrder = sectionDto.SectionOrder
+                    courseId = course.id,
+                    sectionTitle = sectionDto.SectionTitle,
+                    contentType = sectionDto.ContentType,
+                    content = sectionDto.Content,
+                    sectionOrder = sectionDto.SectionOrder
                 };
                 _context.CourseSections.Add(section);
             }
@@ -200,14 +200,14 @@ namespace Server.Controllers
             {
                 var quiz = new QuizQuestion
                 {
-                    CourseId = course.Id,
-                    Question = quizDto.Question,
-                    Option1 = quizDto.Option1,
-                    Option2 = quizDto.Option2,
-                    Option3 = quizDto.Option3,
-                    Option4 = quizDto.Option4,
-                    CorrectAnswer = quizDto.CorrectAnswer,
-                    QuestionOrder = quizDto.QuestionOrder
+                    courseId = course.id,
+                    question = quizDto.Question,
+                    option1 = quizDto.Option1,
+                    option2 = quizDto.Option2,
+                    option3 = quizDto.Option3,
+                    option4 = quizDto.Option4,
+                    correctAnswer = quizDto.CorrectAnswer,
+                    questionOrder = quizDto.QuestionOrder
                 };
                 _context.QuizQuestions.Add(quiz);
             }
@@ -215,7 +215,7 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created course
-            return await GetCourse(course.Id);
+            return await GetCourse(course.id);
         }
 
         // PUT: api/courses/{id}
@@ -223,9 +223,9 @@ namespace Server.Controllers
         public async Task<IActionResult> UpdateCourse(int id, CreateCourseDto dto)
         {
             var course = await _context.Courses
-                .Include(c => c.Sections)
-                .Include(c => c.QuizQuestions)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .Include(c => c.sections)
+                .Include(c => c.quizQuestions)
+                .FirstOrDefaultAsync(c => c.id == id);
 
             if (course == null)
             {
@@ -233,27 +233,27 @@ namespace Server.Controllers
             }
 
             // Update course details
-            course.CourseName = dto.CourseName;
-            course.CourseImage = dto.CourseImage;
-            course.Ingredients = dto.Ingredients;
-            course.Difficulty = dto.Difficulty;
-            course.EstimatedTime = dto.EstimatedTime;
-            course.Description = dto.Description;
+            course.courseName = dto.CourseName;
+            course.courseImage = dto.CourseImage;
+            course.ingredients = dto.Ingredients;
+            course.difficulty = dto.Difficulty;
+            course.estimatedTime = dto.EstimatedTime;
+            course.description = dto.Description;
 
             // Remove old sections and quiz questions
-            _context.CourseSections.RemoveRange(course.Sections);
-            _context.QuizQuestions.RemoveRange(course.QuizQuestions);
+            _context.CourseSections.RemoveRange(course.sections);
+            _context.QuizQuestions.RemoveRange(course.quizQuestions);
 
             // Add new sections
             foreach (var sectionDto in dto.Sections)
             {
                 var section = new CourseSection
                 {
-                    CourseId = course.Id,
-                    SectionTitle = sectionDto.SectionTitle,
-                    ContentType = sectionDto.ContentType,
-                    Content = sectionDto.Content,
-                    SectionOrder = sectionDto.SectionOrder
+                    courseId = course.id,
+                    sectionTitle = sectionDto.SectionTitle,
+                    contentType = sectionDto.ContentType,
+                    content = sectionDto.Content,
+                    sectionOrder = sectionDto.SectionOrder
                 };
                 _context.CourseSections.Add(section);
             }
@@ -263,14 +263,14 @@ namespace Server.Controllers
             {
                 var quiz = new QuizQuestion
                 {
-                    CourseId = course.Id,
-                    Question = quizDto.Question,
-                    Option1 = quizDto.Option1,
-                    Option2 = quizDto.Option2,
-                    Option3 = quizDto.Option3,
-                    Option4 = quizDto.Option4,
-                    CorrectAnswer = quizDto.CorrectAnswer,
-                    QuestionOrder = quizDto.QuestionOrder
+                    courseId = course.id,
+                    question = quizDto.Question,
+                    option1 = quizDto.Option1,
+                    option2 = quizDto.Option2,
+                    option3 = quizDto.Option3,
+                    option4 = quizDto.Option4,
+                    correctAnswer = quizDto.CorrectAnswer,
+                    questionOrder = quizDto.QuestionOrder
                 };
                 _context.QuizQuestions.Add(quiz);
             }
