@@ -8,11 +8,11 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ChefApplicationsController : ControllerBase
+    public class ChefApplicationController : ControllerBase
     {
         private readonly AppDbContext _context;
 
-        public ChefApplicationsController(AppDbContext context)
+        public ChefApplicationController(AppDbContext context)
         {
             _context = context;
         }
@@ -297,3 +297,4 @@ namespace Server.Controllers
         }
     }
 }
+        
