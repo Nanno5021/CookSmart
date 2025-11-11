@@ -1,63 +1,270 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {getPendingApplications,approveApplication,rejectApplication,} from '../../api/chefApproval';
+import ApplicationDetails from './ApplicationDetailsPage';
+import { Eye } from 'lucide-react';
 
 function ChefApprovalPage() {
-  const [applications] = useState([
-    { id: 1, name: 'Mike Johnson', email: 'mike@example.com', experience: '5 years', status: 'pending' },
-    { id: 2, name: 'Sarah Williams', email: 'sarah@example.com', experience: '3 years', status: 'pending' },
-  ]);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState(null);
 
-  const handleApprove = (id) => {
-    alert(`Approved application ${id}`);
+  // Approve Dialog
+  const [approveId, setApproveId] = useState(null);
+  const [approving, setApproving] = useState(false);
+
+  // Reject Dialog
+  const [rejectId, setRejectId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejecting, setRejecting] = useState(false);
+
+  useEffect(() => {
+    loadApplications();
+  }, []);
+
+  const loadApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPendingApplications();
+      setApplications(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load applications');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (id) => {
-    alert(`Rejected application ${id}`);
+  // --- APPROVE ---
+  const openApproveDialog = (id) => {
+    setApproveId(id);
   };
+
+  const performApprove = async () => {
+    try {
+      setApproving(true);
+      await approveApplication(approveId);
+      setApplications((prev) => prev.filter((a) => a.id !== approveId));
+      setApproveId(null);
+      alert('Approved!');
+    } catch (err) {
+      alert(err.message || 'Failed to approve');
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  // --- REJECT ---
+  const openRejectDialog = (id) => {
+    setRejectId(id);
+    setRejectReason('');
+  };
+
+  const performReject = async () => {
+    if (!rejectReason.trim()) {
+      alert('Reason is required');
+      return;
+    }
+    try {
+      setRejecting(true);
+      await rejectApplication(rejectId, rejectReason);
+      setApplications((prev) => prev.filter((a) => a.id !== rejectId));
+      setRejectId(null);
+      alert('Rejected!');
+    } catch (err) {
+      alert(err.message || 'Failed to reject');
+    } finally {
+      setRejecting(false);
+    }
+  };
+
+  const handleViewDetails = (id) => setSelectedApplicationId(id);
+  const handleBackToList = () => {
+    setSelectedApplicationId(null);
+    loadApplications();
+  };
+
+  if (selectedApplicationId) {
+    return (
+      <ApplicationDetails
+        applicationId={selectedApplicationId}
+        onBack={handleBackToList}
+      />
+    );
+  }
+
+  if (loading) return <LoadingState title="Chef Approval" />;
+  if (error) return <ErrorState title="Chef Approval" error={error} onRetry={loadApplications} />;
 
   return (
-    <div>
+    <div className="p-6">
       <h2 className="text-3xl font-bold mb-8">Chef Approval</h2>
-      
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-zinc-800">
-            <tr>
-              <th className="text-left p-4 font-semibold">Name</th>
-              <th className="text-left p-4 font-semibold">Email</th>
-              <th className="text-left p-4 font-semibold">Experience</th>
-              <th className="text-left p-4 font-semibold">Status</th>
-              <th className="text-left p-4 font-semibold">Actions</th>
+
+      {applications.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <Table
+          applications={applications}
+          onView={handleViewDetails}
+          onApprove={openApproveDialog}
+          onReject={openRejectDialog}
+        />
+      )}
+
+      {/* ---------- APPROVE DIALOG ---------- */}
+      {approveId !== null && (
+        <Modal onClose={() => setApproveId(null)}>
+          <h3 className="text-xl font-bold mb-4">Approve Application</h3>
+          <p className="text-gray-400 mb-6">
+            Are you sure you want to approve this chef application?
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setApproveId(null)}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={performApprove}
+              disabled={approving}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition disabled:opacity-50"
+            >
+              {approving ? 'Approving…' : 'Yes, Approve'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ---------- REJECT DIALOG ---------- */}
+      {rejectId !== null && (
+        <Modal onClose={() => setRejectId(null)}>
+          <h3 className="text-xl font-bold mb-4">Reject Application</h3>
+          <p className="text-gray-400 mb-4">
+            Provide a reason (visible to the chef).
+          </p>
+          <textarea
+            rows={4}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Reason for rejection..."
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-orange-500 transition"
+          />
+          <div className="flex justify-end gap-3 mt-5">
+            <button
+              onClick={() => setRejectId(null)}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={performReject}
+              disabled={rejecting || !rejectReason.trim()}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition disabled:opacity-50"
+            >
+              {rejecting ? 'Submitting…' : 'Reject'}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function LoadingState({ title }) {
+  return (
+    <div className="p-6">
+      <h2 className="text-3xl font-bold mb-8">{title}</h2>
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+        <p className="text-gray-400">Loading applications…</p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ title, error, onRetry }) {
+  return (
+    <div className="p-6">
+      <h2 className="text-3xl font-bold mb-8">{title}</h2>
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+        <p className="text-red-400">{error}</p>
+        <button
+          onClick={onRetry}
+          className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition"
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+      <p className="text-gray-400">No pending applications</p>
+    </div>
+  );
+}
+
+function Table({ applications, onView, onApprove, onReject }) {
+  return (
+    <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-zinc-800">
+          <tr>
+            <th className="text-left p-4 font-semibold">Name</th>
+            <th className="text-left p-4 font-semibold">Email</th>
+            <th className="text-left p-4 font-semibold">Experience</th>
+            <th className="text-left p-4 font-semibold">Status</th>
+            <th className="text-left p-4 font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {applications.map((app) => (
+            <tr key={app.id} className="border-t border-zinc-800">
+              <td className="p-4">{app.fullName}</td>
+              <td className="p-4 text-gray-400">{app.email}</td>
+              <td className="p-4 text-gray-400">{app.yearsOfExperience} years</td>
+              <td className="p-4">
+                <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-500 rounded-full text-sm">
+                  {app.status}
+                </span>
+              </td>
+              <td className="p-4 space-x-2">
+                <button
+                  onClick={() => onView(app.id)}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
+                >
+                  <Eye size={16} />
+                  <span>View Details</span>
+                </button>
+                <button
+                  onClick={() => onApprove(app.id)}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => onReject(app.id)}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
+                >
+                  Reject
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {applications.map((app) => (
-              <tr key={app.id} className="border-t border-zinc-800">
-                <td className="p-4">{app.name}</td>
-                <td className="p-4 text-gray-400">{app.email}</td>
-                <td className="p-4 text-gray-400">{app.experience}</td>
-                <td className="p-4">
-                  <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-500 rounded-full text-sm">
-                    {app.status}
-                  </span>
-                </td>
-                <td className="p-4 space-x-2">
-                  <button
-                    onClick={() => handleApprove(app.id)}
-                    className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(app.id)}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Modal({ children, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 max-w-lg w-full p-6">
+        {children}
       </div>
     </div>
   );
