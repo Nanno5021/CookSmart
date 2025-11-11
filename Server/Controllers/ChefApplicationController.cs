@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
-using Server.DTOs;
 using Server.Models;
+using Server.DTO;
 
 namespace Server.Controllers
 {
@@ -17,284 +17,114 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // POST: api/chefapplications
-        [HttpPost]
-        public async Task<ActionResult<ChefApplicationResponseDto>> CreateApplication(
-            CreateChefApplicationDto dto, 
-            [FromQuery] int userId)
-        {
-            // Validate user exists
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-            {
-                return NotFound("User not found");
-            }
-
-            // Check if user already has a pending or approved application
-            var existingApplication = await _context.ChefApplications
-                .FirstOrDefaultAsync(a => a.userId == userId && 
-                    (a.status == "Pending" || a.status == "Approved"));
-
-            if (existingApplication != null)
-            {
-                if (existingApplication.status == "Approved")
-                {
-                    return BadRequest("You are already a chef");
-                }
-                return BadRequest("You already have a pending application");
-            }
-
-            // Check if user is already a chef
-            var existingChef = await _context.Chefs
-                .FirstOrDefaultAsync(c => c.userId == userId);
-
-            if (existingChef != null)
-            {
-                return BadRequest("You are already a chef");
-            }
-
-            var application = new ChefApplication
-            {
-                userId = userId,
-                specialtyCuisine = dto.specialtyCuisine,
-                yearsOfExperience = dto.yearsOfExperience,
-                certificationName = dto.certificationName,
-                certificationImageUrl = dto.certificationImageUrl,
-                portfolioLink = dto.portfolioLink ?? "",
-                biography = dto.biography,
-                status = "Pending",
-                adminRemarks = "", 
-                dateApplied = DateTime.UtcNow
-            };
-
-            _context.ChefApplications.Add(application);
-            await _context.SaveChangesAsync();
-
-            var response = new ChefApplicationResponseDto
-            {
-                id = application.id,
-                userId = application.userId,
-                username = user.username,
-                email = user.email,
-                specialtyCuisine = application.specialtyCuisine,
-                yearsOfExperience = application.yearsOfExperience,
-                certificationName = application.certificationName,
-                certificationImageUrl = application.certificationImageUrl,
-                portfolioLink = application.portfolioLink,
-                biography = application.biography,
-                status = application.status,
-                adminRemarks = application.adminRemarks,
-                dateApplied = application.dateApplied,
-                dateReviewed = application.dateReviewed
-            };
-
-            return CreatedAtAction(nameof(GetApplicationById), new { id = application.id }, response);
-        }
-
-        // GET: api/chefapplications/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ChefApplicationResponseDto>> GetApplicationById(int id)
-        {
-            var application = await _context.ChefApplications
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(a => a.id == id);
-
-            if (application == null)
-            {
-                return NotFound();
-            }
-
-            var response = new ChefApplicationResponseDto
-            {
-                id = application.id,
-                userId = application.userId,
-                username = application.User?.username ?? "Unknown",
-                email = application.User?.email ?? "Unknown",
-                specialtyCuisine = application.specialtyCuisine,
-                yearsOfExperience = application.yearsOfExperience,
-                certificationName = application.certificationName,
-                certificationImageUrl = application.certificationImageUrl,
-                portfolioLink = application.portfolioLink,
-                biography = application.biography,
-                status = application.status,
-                adminRemarks = application.adminRemarks,
-                dateApplied = application.dateApplied,
-                dateReviewed = application.dateReviewed
-            };
-
-            return Ok(response);
-        }
-
-        // GET: api/chefapplications/user/{userId}
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<ChefApplicationResponseDto>>> GetApplicationsByUser(int userId)
+        // GET: api/ChefApplication/pending
+        [HttpGet("pending")]
+        public async Task<ActionResult<IEnumerable<ChefApplicationDTO>>> GetPendingApplications()
         {
             var applications = await _context.ChefApplications
-                .Include(a => a.User)
-                .Where(a => a.userId == userId)
-                .OrderByDescending(a => a.dateApplied)
-                .ToListAsync();
-
-            var response = applications.Select(application => new ChefApplicationResponseDto
-            {
-                id = application.id,
-                userId = application.userId,
-                username = application.User?.username ?? "Unknown",
-                email = application.User?.email ?? "Unknown",
-                specialtyCuisine = application.specialtyCuisine,
-                yearsOfExperience = application.yearsOfExperience,
-                certificationName = application.certificationName,
-                certificationImageUrl = application.certificationImageUrl,
-                portfolioLink = application.portfolioLink,
-                biography = application.biography,
-                status = application.status,
-                adminRemarks = application.adminRemarks,
-                dateApplied = application.dateApplied,
-                dateReviewed = application.dateReviewed
-            }).ToList();
-
-            return Ok(response);
-        }
-
-        // GET: api/chefapplications
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ChefApplicationResponseDto>>> GetAllApplications(
-            [FromQuery] string status = null)
-        {
-            var query = _context.ChefApplications
-                .Include(a => a.User)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(status))
-            {
-                query = query.Where(a => a.status == status);
-            }
-
-            var applications = await query
-                .OrderByDescending(a => a.dateApplied)
-                .ToListAsync();
-
-            var response = applications.Select(application => new ChefApplicationResponseDto
-            {
-                id = application.id,
-                userId = application.userId,
-                username = application.User?.username ?? "Unknown",
-                email = application.User?.email ?? "Unknown",
-                specialtyCuisine = application.specialtyCuisine,
-                yearsOfExperience = application.yearsOfExperience,
-                certificationName = application.certificationName,
-                certificationImageUrl = application.certificationImageUrl,
-                portfolioLink = application.portfolioLink,
-                biography = application.biography,
-                status = application.status,
-                adminRemarks = application.adminRemarks,
-                dateApplied = application.dateApplied,
-                dateReviewed = application.dateReviewed
-            }).ToList();
-
-            return Ok(response);
-        }
-
-        // PUT: api/chefapplications/{id}/review
-        [HttpPut("{id}/review")]
-        public async Task<ActionResult<ChefApplicationResponseDto>> ReviewApplication(
-            int id, 
-            ReviewChefApplicationDto dto)
-        {
-            var application = await _context.ChefApplications
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(a => a.id == id);
-
-            if (application == null)
-            {
-                return NotFound("Application not found");
-            }
-
-            if (application.status != "Pending")
-            {
-                return BadRequest("Application has already been reviewed");
-            }
-
-            application.status = dto.status;
-            application.adminRemarks = dto.adminRemarks ?? "";
-            application.dateReviewed = DateTime.UtcNow;
-
-            // If approved, create a Chef record
-            if (dto.status == "Approved")
-            {
-                var existingChef = await _context.Chefs
-                    .FirstOrDefaultAsync(c => c.userId == application.userId);
-
-                if (existingChef == null)
-                {
-                    var newChef = new Chef
+                .Where(a => a.status == "Pending")
+                .Join(_context.Users,
+                    app => app.userId,
+                    user => user.id,
+                    (app, user) => new ChefApplicationDTO
                     {
-                        userId = application.userId,
-                        specialtyCuisine = application.specialtyCuisine,
-                        yearsOfExperience = application.yearsOfExperience,
-                        certificationName = application.certificationName,
-                        certificationImageUrl = application.certificationImageUrl,
-                        portfolioLink = application.portfolioLink,
-                        biography = application.biography,
-                        rating = 0.0,
-                        totalReviews = 0,
-                        approvedDate = DateTime.UtcNow
-                    };
+                        Id = app.id,
+                        UserId = user.id,
+                        FullName = user.fullName,
+                        Email = user.email,
+                        SpecialtyCuisine = app.specialtyCuisine,
+                        YearsOfExperience = app.yearsOfExperience,
+                        CertificationName = app.certificationName,
+                        PortfolioLink = app.portfolioLink,
+                        Biography = app.biography,
+                        Status = app.status,
+                        DateApplied = app.dateApplied
+                    }).ToListAsync();
 
-                    _context.Chefs.Add(newChef);
-                }
-            }
+            return Ok(applications);
+        }
 
-            await _context.SaveChangesAsync();
+        // POST: api/ChefApplication/approve/{id}
+        [HttpPost("approve/{id}")]
+        public async Task<IActionResult> ApproveApplication(int id)
+        {
+            var app = await _context.ChefApplications.FindAsync(id);
+            if (app == null) return NotFound();
 
-            var response = new ChefApplicationResponseDto
+            var user = await _context.Users.FindAsync(app.userId);
+            if (user == null) return NotFound();
+
+            // Update user role
+            user.role = "Chef";
+
+            // Insert into Chef table
+            var chef = new Chef
             {
-                id = application.id,
-                userId = application.userId,
-                username = application.User?.username ?? "Unknown",
-                email = application.User?.email ?? "Unknown",
-                specialtyCuisine = application.specialtyCuisine,
-                yearsOfExperience = application.yearsOfExperience,
-                certificationName = application.certificationName,
-                certificationImageUrl = application.certificationImageUrl,
-                portfolioLink = application.portfolioLink,
-                biography = application.biography,
-                status = application.status,
-                adminRemarks = application.adminRemarks,
-                dateApplied = application.dateApplied,
-                dateReviewed = application.dateReviewed
+                userId = user.id,
+                specialtyCuisine = app.specialtyCuisine,
+                yearsOfExperience = app.yearsOfExperience,
+                certificationName = app.certificationName,
+                certificationImageUrl = app.certificationImageUrl,
+                portfolioLink = app.portfolioLink,
+                biography = app.biography,
+                approvedDate = DateTime.Now
             };
 
-            return Ok(response);
+            _context.Chefs.Add(chef);
+
+            // Mark application approved
+            app.status = "Approved";
+            app.dateReviewed = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok("Application Approved");
         }
 
-        // DELETE: api/chefapplications/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteApplication(int id, [FromQuery] int userId)
+        // POST: api/ChefApplication/reject/{id}
+        [HttpPost("reject/{id}")]
+        public async Task<IActionResult> RejectApplication(int id, [FromBody] string remarks)
         {
-            var application = await _context.ChefApplications.FindAsync(id);
+            var app = await _context.ChefApplications.FindAsync(id);
+            if (app == null) return NotFound();
+
+            app.status = "Rejected";
+            app.adminRemarks = remarks;
+            app.dateReviewed = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok("Application Rejected");
+        }
+
+        // GET: api/ChefApplication/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ChefApplicationDTO>> GetApplicationById(int id)
+        {
+            var application = await _context.ChefApplications
+                .Where(a => a.id == id)
+                .Join(_context.Users,
+                    app => app.userId,
+                    user => user.id,
+                    (app, user) => new ChefApplicationDTO
+                    {
+                        Id = app.id,
+                        UserId = user.id,
+                        FullName = user.fullName,
+                        Email = user.email,
+                        SpecialtyCuisine = app.specialtyCuisine,
+                        YearsOfExperience = app.yearsOfExperience,
+                        CertificationName = app.certificationName,
+                        PortfolioLink = app.portfolioLink,
+                        Biography = app.biography,
+                        Status = app.status,
+                        DateApplied = app.dateApplied,
+                        DateReviewed = app.dateReviewed,
+                        AdminRemarks = app.adminRemarks
+                    }).FirstOrDefaultAsync();
 
             if (application == null)
-            {
-                return NotFound();
-            }
+                return NotFound(new { message = "Application not found" });
 
-            // Only allow the user who created the application to delete it (and only if pending)
-            if (application.userId != userId)
-            {
-                return Forbid();
-            }
-
-            if (application.status != "Pending")
-            {
-                return BadRequest("Cannot delete a reviewed application");
-            }
-
-            _context.ChefApplications.Remove(application);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(application);
         }
     }
 }
-        
