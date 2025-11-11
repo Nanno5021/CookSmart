@@ -17,7 +17,7 @@ function resolveImageUrl(raw) {
 }
 
 function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("Threads");
+  const [activeTab, setActiveTab] = useState("Posts");
   const [newPost, setNewPost] = useState("");
   const [userData, setUserData] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -73,7 +73,6 @@ function ProfilePage() {
     loadProfile();
   }, [isLoggedIn]);
 
-  // ... rest of your ProfilePage component remains the same
   const handleNewPost = () => {
     if (!isLoggedIn) return alert("Please log in to post.");
     navigate("/postblog", { state: { title: newPost } });
@@ -116,7 +115,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center">
       <Navbar />
 
-      <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818" }}>
+      <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818", border: "1px solid #2d2d2d" }}>
         
         {/* Profile Header */}
         <div className="mb-8">
@@ -134,15 +133,18 @@ function ProfilePage() {
 
           <button
             onClick={() => navigate("/editprofile")}
-            className="w-full border border-gray-600 rounded-lg py-2 hover:bg-gray-800 transition"
+            className="w-full border rounded-lg py-2 transition"
+            style={{ borderColor: "#2d2d2d" }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = "#2d2d2d"}
+            onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
           >
             Edit profile
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700 mb-6">
-          {["Threads", "Replies"].map((tab) => (
+        <div className="flex border-b mb-6" style={{ borderColor: "#2d2d2d" }}>
+          {["Posts", "Replies"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -156,7 +158,7 @@ function ProfilePage() {
         </div>
 
         {/* Create New Post */}
-        {activeTab === "Threads" && (
+        {activeTab === "Posts" && (
           <div className="mb-8 flex items-center space-x-3">
             <img src={displayUser.profilePic} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
             <input
@@ -171,11 +173,13 @@ function ProfilePage() {
           </div>
         )}
 
+        <hr className="mb-6" style={{ borderColor: "#2d2d2d", borderTop: "1px solid #2d2d2d", width: "100%" }} />
+
         {/* Posts */}
         <div className="space-y-6">
-          {activeTab === "Threads" && posts.length > 0 ? (
+          {activeTab === "Posts" && posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post.id} className="pb-6 border-b border-gray-800">
+              <div key={post.id} className="pb-6 border-b" style={{ borderColor: "#2d2d2d" }}>
                 <div className="flex items-center space-x-3 mb-2">
                   <img src={displayUser.profilePic} className="w-10 h-10 rounded-full object-cover" />
                   <h3 className="font-semibold">{post.username}</h3>
@@ -188,11 +192,7 @@ function ProfilePage() {
                     <img
                       src={post.imageUrl}
                       alt="Post"
-                      className="w-full rounded-lg object-cover max-h-96"
-                      onError={(e) => {
-                        console.error("Failed to load image:", post.imageUrl);
-                        e.target.style.display = 'none';
-                      }}
+                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" style={{ borderColor: "#2d2d2d" }}
                     />
                   </div>
                 )}
