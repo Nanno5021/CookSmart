@@ -170,15 +170,7 @@ function LoginPage() {
           </Link>
         </p>
 
-        <p style={{ marginTop: "10px", fontSize: "14px" }}>
-          Are you a chef?{" "}
-          <Link
-            to="/chef-login"
-            style={{ color: "white", textDecoration: "underline" }}
-          >
-            Log In here
-          </Link>
-        </p>
+        
       </div>
     </div>
   );
