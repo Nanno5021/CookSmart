@@ -143,7 +143,7 @@ namespace Server.Controllers
                 }
 
                 // Create uploads directory if it doesn't exist
-                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "avatars");
+                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads");
                 if (!Directory.Exists(uploadsDir))
                 {
                     Directory.CreateDirectory(uploadsDir);
@@ -160,7 +160,7 @@ namespace Server.Controllers
                 }
 
                 // Update user avatar URL
-                user.avatarUrl = $"/uploads/avatars/{fileName}";
+                user.avatarUrl = $"/uploads/{fileName}";
                 await _context.SaveChangesAsync();
 
                 return Ok(new 

@@ -242,7 +242,7 @@ function UsersTable({ users, onViewDetails, onEditRole, onBan , onEditUser }) {
             <th className="text-left p-4 font-semibold">Role</th>
             <th className="text-left p-4 font-semibold">Join Date</th>
             <th className="text-left p-4 font-semibold">Status</th>
-            <th className="text-left p-4 font-semibold">Actions</th>
+            <th className="text-center p-4 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
