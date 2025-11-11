@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ChefNavbar from "../components/ChefNavbar";
-import picture from "../assets/pfp.png";
-import ratingIcon from "../assets/rating.png";
-import commentIcon from "../assets/comment.png";
-import viewsIcon from "../assets/views.png";
-import postIcon from "../assets/post.png";
-import { fetchPosts } from "../api/post"; // this is your API call
+import { Star, MessageCircle, Eye, Plus, User } from "lucide-react";
+import Navbar from "../../components/Navbar";
+import { fetchPosts } from "../../api/post";
 
 function MainPage() {
   const [sortOption, setSortOption] = useState("Popular");
@@ -18,11 +14,10 @@ function MainPage() {
   const isLoggedIn = !!token;
 
   useEffect(() => {
-    // ⚠️ Don’t shadow the imported function name
     const loadPosts = async () => {
       try {
-        const data = await fetchPosts(); // call your API directly
-        setPosts(data); // your fetchPosts already returns json
+        const data = await fetchPosts();
+        setPosts(data);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
@@ -50,11 +45,10 @@ function MainPage() {
   const handleComment = (id) => {
     console.log(`Commented on post ${id}`);
   };
-  
 
   return (
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center relative">
-      <ChefNavbar />
+      <Navbar />
 
       {/* Main Content */}
       <div
@@ -77,11 +71,9 @@ function MainPage() {
         {/* New Post Input */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4 w-full">
-            <img
-              src={picture}
-              alt="Profile"
-              className="w-12 h-12 rounded-full object-cover"
-            />
+            <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+              <User className="w-6 h-6 text-gray-400" />
+            </div>
             <input
               type="text"
               placeholder="New Blog Post?"
@@ -98,7 +90,6 @@ function MainPage() {
           </button>
         </div>
 
-
         <hr className="border-gray-700 mb-6" />
 
         {/* Blog Posts */}
@@ -111,11 +102,9 @@ function MainPage() {
                   style={{ backgroundColor: "#1f1f1f" }}
                 >
                   <div className="flex items-center mb-3">
-                    <img
-                      src={picture}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
                     <div className="ml-3">
                       <h3 className="font-semibold text-white">
                         {post.username || "Anonymous"}
@@ -135,36 +124,24 @@ function MainPage() {
                         disabled={!isLoggedIn}
                         className={`flex items-center space-x-1 transition ${
                           isLoggedIn
-                            ? "hover:text-white"
+                            ? "hover:text-yellow-400"
                             : "opacity-50 cursor-not-allowed"
                         }`}
                       >
-                        <img
-                          src={ratingIcon}
-                          alt="Rating"
-                          className="w-5 h-5 invert"
-                        />
+                        <Star className="w-5 h-5" />
                         <span>{post.rating || 0}</span>
                       </button>
 
                       <button
                         onClick={() => handleComment(post.id)}
-                        className="flex items-center space-x-1 hover:text-white transition"
+                        className="flex items-center space-x-1 hover:text-blue-400 transition"
                       >
-                        <img
-                          src={commentIcon}
-                          alt="Comment"
-                          className="w-5 h-5 invert"
-                        />
+                        <MessageCircle className="w-5 h-5" />
                         <span>{post.comments || 0}</span>
                       </button>
 
                       <div className="flex items-center space-x-1">
-                        <img
-                          src={viewsIcon}
-                          alt="Views"
-                          className="w-5 h-5 invert"
-                        />
+                        <Eye className="w-5 h-5" />
                         <span>{post.views || 0}</span>
                       </div>
                     </div>
@@ -191,7 +168,7 @@ function MainPage() {
         </div>
       </div>
 
-
+      {/* Floating Action Button */}
       <button
         onClick={() =>
           isLoggedIn
@@ -201,7 +178,7 @@ function MainPage() {
         className="fixed bottom-10 right-10 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition"
         title="New Post"
       >
-        <img src={postIcon} alt="Post" className="w-8 h-8" />
+        <Plus className="w-8 h-8 text-black" />
       </button>
     </div>
   );
