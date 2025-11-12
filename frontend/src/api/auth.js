@@ -19,14 +19,14 @@ export async function loginUser(formData) {
     setToken(data.token);
 
     if (data.user) {
-      // Store individual user data fields
       setUserData({
         userId: data.user.id,
         username: data.user.username,
         email: data.user.email,
         fullName: data.user.fullName,
         phone: data.user.phone,
-        role: data.user.role
+        role: data.user.role,
+        chefId: data.user.chefId 
       });
       
       // IMPORTANT: Also store the complete user object for ProfilePage and EditProfilePage
@@ -37,7 +37,8 @@ export async function loginUser(formData) {
         fullName: data.user.fullName,
         phone: data.user.phone,
         role: data.user.role,
-        profilePic: data.user.avatarUrl || null
+        profilePic: data.user.avatarUrl || null,
+        chefId: data.user.chefId || null 
       };
       localStorage.setItem("user", JSON.stringify(userObj));
       
@@ -45,7 +46,8 @@ export async function loginUser(formData) {
         token: data.token,
         userId: data.user.id,
         username: data.user.username,
-        email: data.user.email
+        email: data.user.email,
+        chefId: data.user.chefId
       });
     }
   } else {
