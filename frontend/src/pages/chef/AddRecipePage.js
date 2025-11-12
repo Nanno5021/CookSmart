@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Upload, X } from "lucide-react";
 import Navbar from "../../components/Navbar";
-import { createRecipe } from "../../api/recipeApi";
+import { createRecipe, uploadRecipeImage } from "../../api/recipeApi";
 
 const CUISINE_TYPES = [
   "Italian",
@@ -25,13 +26,15 @@ function AddRecipePage() {
   // Recipe form states
   const [recipeName, setRecipeName] = useState("");
   const [recipeImage, setRecipeImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [cuisine, setCuisine] = useState("");
   const [customCuisine, setCustomCuisine] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Replace with actual logged-in chef ID
   const chefId = 2;
 
   const handleCuisineChange = (e) => {
@@ -46,6 +49,47 @@ function AddRecipePage() {
     return cuisine === "Other" ? customCuisine : cuisine;
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!imageFile) {
+      alert("Please select an image first");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const result = await uploadRecipeImage(imageFile);
+      setRecipeImage(result.imageUrl);
+      alert("Image uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setRecipeImage("");
+  };
+
   const handleSubmitRecipe = async () => {
     const finalCuisine = getFinalCuisine();
     
@@ -54,11 +98,17 @@ function AddRecipePage() {
       return;
     }
 
+    // Upload image if file is selected but not uploaded yet
+    if (imageFile && !recipeImage) {
+      alert("Please upload the selected image before submitting");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const recipeData = {
       recipeName,
-      recipeImage,
+      recipeImage: recipeImage || "",
       cuisine: finalCuisine,
       ingredients: ingredients.split(",").map((i) => i.trim()).join(","),
       steps: steps.split("\n").map((s) => s.trim()).filter((s) => s).join("\n"),
@@ -125,14 +175,47 @@ function AddRecipePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Recipe Image URL</label>
-              <input
-                type="text"
-                value={recipeImage}
-                onChange={(e) => setRecipeImage(e.target.value)}
-                className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                placeholder="https://example.com/image.jpg"
-              />
+              <label className="block text-sm font-medium mb-2">Recipe Image</label>
+              
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-48 object-cover rounded-lg mb-2"
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-2 rounded-full"
+                  >
+                    <X size={20} />
+                  </button>
+                  {!recipeImage && (
+                    <button
+                      onClick={handleUploadImage}
+                      disabled={isUploadingImage}
+                      className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    >
+                      {isUploadingImage ? "Uploading..." : "Upload Image"}
+                    </button>
+                  )}
+                  {recipeImage && (
+                    <p className="text-green-400 text-sm mt-2">✓ Image uploaded successfully</p>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-gray-600 transition-colors">
+                  <Upload size={40} className="text-gray-400 mb-2" />
+                  <span className="text-gray-400">Click to select image</span>
+                  <span className="text-gray-500 text-sm">Max 5MB</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
 
             <div>

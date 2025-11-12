@@ -1,4 +1,6 @@
-import { apiFetch } from "./apiClient";
+import { apiFetch, getToken } from "./apiClient";
+
+const API_BASE_URL = "http://localhost:5037/api";
 
 // GET: Fetch all recipes (with optional filters)
 export async function fetchAllRecipes(cuisine = null, ingredient = null) {
@@ -41,4 +43,29 @@ export async function deleteRecipe(id) {
   return await apiFetch(`/recipes/${id}`, {
     method: "DELETE",
   });
+}
+
+// POST: Upload recipe image
+export async function uploadRecipeImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = getToken();
+
+  // ✅ FIXED: Changed from /recipe/ to /recipes/
+  const response = await fetch(`${API_BASE_URL}/recipes/upload-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // Don't set Content-Type - browser will set it automatically with boundary
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: "Failed to upload image" }));
+    throw new Error(error.message || "Failed to upload image");
+  }
+
+  return await response.json();
 }

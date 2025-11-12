@@ -513,7 +513,6 @@ namespace Server.Migrations
                     b.Navigation("course");
                 });
 
-<<<<<<< HEAD
             modelBuilder.Entity("Server.Models.Enrollment", b =>
                 {
                     b.HasOne("Server.Models.Course", "Course")
@@ -524,21 +523,23 @@ namespace Server.Migrations
 
                     b.HasOne("Server.Models.User", "User")
                         .WithMany()
-=======
-            modelBuilder.Entity("Server.Models.Post", b =>
-                {
-                    b.HasOne("Server.Models.User", "User")
-                        .WithMany("Posts")
->>>>>>> main
                         .HasForeignKey("userId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-<<<<<<< HEAD
                     b.Navigation("Course");
 
-=======
->>>>>>> main
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Server.Models.Post", b =>
+                {
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany("Posts")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("User");
                 });
 

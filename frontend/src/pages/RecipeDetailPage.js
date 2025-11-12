@@ -1,42 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import chefProfile from "../assets/pfp.png";
 import sampleFood from "../assets/food.png";
+import { fetchRecipeById } from "../api/recipeApi";
 import { fetchReviewsByRecipe, createRecipeReview, updateRecipeReview, deleteRecipeReview } from "../api/recipeReviewApi";
 
 function RecipeDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { recipeId } = useParams();
 
-  // Get current user ID from localStorage (same as CourseDetailPage)
-  const currentUserId = parseInt(localStorage.getItem("userId")) || 1;
+  // Get current user ID from localStorage
+  const currentUserId = parseInt(localStorage.getItem("userId"));
 
-  // Get recipe data safely
-  const recipe = {
-    id: location.state?.recipe?.id || 1,
-    name: location.state?.recipe?.name || "Spaghetti Carbonara",
-    cuisine: location.state?.recipe?.cuisine || "Italian",
-    image: location.state?.recipe?.image || sampleFood,
-    ingredients:
-      location.state?.recipe?.ingredients || [
-        "Pasta",
-        "Egg",
-        "Bacon",
-        "Cheese",
-        "Pepper",
-      ],
-    steps:
-      location.state?.recipe?.steps || [
-        "Boil pasta until al dente.",
-        "Cook bacon until crispy, then remove excess oil.",
-        "Whisk eggs and cheese in a bowl.",
-        "Combine hot pasta with egg mixture and bacon.",
-        "Season with black pepper and serve.",
-      ],
-  };
+  // Recipe state
+  const [recipe, setRecipe] = useState(null);
+  const [isLoadingRecipe, setIsLoadingRecipe] = useState(true);
 
-  // Real reviews state
+  // Reviews state
   const [reviews, setReviews] = useState([]);
   const [myRating, setMyRating] = useState(0);
   const [myReview, setMyReview] = useState("");
@@ -50,12 +32,39 @@ function RecipeDetailPage() {
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
 
+  // Fetch recipe data
+  useEffect(() => {
+    const loadRecipe = async () => {
+      try {
+        setIsLoadingRecipe(true);
+        
+        // Try to get recipe from location state first (from navigation)
+        if (location.state?.recipe) {
+          setRecipe(location.state.recipe);
+        } 
+        // Otherwise fetch from API using recipeId from URL
+        else if (recipeId) {
+          const data = await fetchRecipeById(recipeId);
+          setRecipe(data);
+        }
+      } catch (error) {
+        console.error("Error loading recipe:", error);
+        alert("Failed to load recipe");
+        navigate("/recipes");
+      } finally {
+        setIsLoadingRecipe(false);
+      }
+    };
+
+    loadRecipe();
+  }, [recipeId, location.state, navigate]);
+
   // Fetch reviews from API
   useEffect(() => {
-    if (recipe.id) {
+    if (recipe?.id) {
       loadReviews();
     }
-  }, [recipe.id]);
+  }, [recipe?.id]);
 
   const loadReviews = async () => {
     try {
@@ -72,6 +81,12 @@ function RecipeDetailPage() {
 
   // Handle review submit
   const handleSubmitReview = async () => {
+    if (!currentUserId) {
+      alert("Please log in to submit a review");
+      navigate("/login");
+      return;
+    }
+
     if (myRating === 0 || myReview.trim() === "") {
       alert("Please provide both a rating and review!");
       return;
@@ -96,7 +111,6 @@ function RecipeDetailPage() {
     } catch (error) {
       console.error("Error submitting review:", error);
       
-      // Check if it's a duplicate review error
       if (error.message && error.message.includes("already reviewed")) {
         alert("You have already reviewed this recipe");
       } else {
@@ -181,6 +195,34 @@ function RecipeDetailPage() {
     });
   };
 
+  // Loading state
+  if (isLoadingRecipe) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 flex justify-center items-center">
+        <Navbar />
+        <p className="text-xl text-gray-400">Loading recipe...</p>
+      </div>
+    );
+  }
+
+  // No recipe found
+  if (!recipe) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 flex justify-center items-center">
+        <Navbar />
+        <div className="text-center">
+          <p className="text-xl text-gray-400 mb-4">Recipe not found</p>
+          <button
+            onClick={() => navigate("/recipes")}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+          >
+            Back to Recipes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center relative">
       <Navbar />
@@ -189,9 +231,12 @@ function RecipeDetailPage() {
         {/* Header Section */}
         <div className="relative mb-6">
           <img
-            src={recipe.image}
-            alt={recipe.name}
+            src={recipe.recipeImage || sampleFood}
+            alt={recipe.recipeName}
             className="w-full h-64 object-cover rounded-xl"
+            onError={(e) => {
+              e.target.src = sampleFood;
+            }}
           />
           <button
             onClick={() => navigate(-1)}
@@ -199,26 +244,43 @@ function RecipeDetailPage() {
           >
             Back
           </button>
-          <div className="bottom-5 left-4 text-2xl font-bold">
-            {recipe.name}
-          </div>
+        </div>
+
+        {/* Recipe Title and Chef Info */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-2">{recipe.recipeName}</h1>
+          <p className="text-gray-400">
+            By Chef: <span className="text-white font-medium">{recipe.chefName}</span>
+          </p>
         </div>
 
         {/* Cuisine + Ingredients */}
-        <p className="text-gray-400 mb-2">Cuisine: {recipe.cuisine}</p>
-        <p className="text-gray-400 mb-4">
-          Ingredients:{" "}
-          <span className="text-gray-300">
-            {recipe.ingredients.join(", ")}
-          </span>
+        <p className="text-gray-400 mb-2">
+          Cuisine: <span className="text-white">{recipe.cuisine}</span>
         </p>
+        <div className="mb-4">
+          <p className="text-gray-400 mb-2">Ingredients:</p>
+          <div className="text-gray-300 ml-4">
+            {recipe.ingredients && recipe.ingredients.length > 0 ? (
+              <ul className="list-disc ml-4 space-y-1">
+                {recipe.ingredients.map((ingredient, index) => (
+                  <li key={index}>{ingredient}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No ingredients listed</p>
+            )}
+          </div>
+        </div>
 
         {/* Steps */}
         <h2 className="text-xl font-semibold mb-2">Step-by-Step Guide</h2>
         <ol className="list-decimal ml-6 text-gray-300 space-y-2 mb-8">
-          {(recipe.steps || ["No steps provided."]).map((step, i) => (
-            <li key={i}>{step}</li>
-          ))}
+          {recipe.steps && recipe.steps.length > 0 ? (
+            recipe.steps.map((step, i) => <li key={i}>{step}</li>)
+          ) : (
+            <li className="text-gray-500">No steps provided</li>
+          )}
         </ol>
 
         {/* Rating Section */}
@@ -281,6 +343,9 @@ function RecipeDetailPage() {
                   src={r.userProfileImage || chefProfile}
                   alt={r.username}
                   className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.src = chefProfile;
+                  }}
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">

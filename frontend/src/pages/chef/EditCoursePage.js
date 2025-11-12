@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Image, Video, FileText } from "lucide-react";
+import { X, Plus, Image, Video, FileText, Upload, AlertCircle, CheckCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
-import { fetchCourseById, updateCourse } from "../../api/courseApi";
+import { fetchCourseById, updateCourse, uploadCourseImage, uploadSectionImage } from "../../api/courseApi";
+import { isValidVideoUrl, getVideoUrlError } from "../../utils/videoUtils";
 
 function EditCoursePage() {
   const navigate = useNavigate();
@@ -11,6 +12,9 @@ function EditCoursePage() {
   const [loading, setLoading] = useState(true);
   const [courseName, setCourseName] = useState("");
   const [courseImage, setCourseImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [ingredients, setIngredients] = useState("");
   const [difficulty, setDifficulty] = useState("Easy");
   const [time, setTime] = useState("");
@@ -26,6 +30,9 @@ function EditCoursePage() {
   const [sectionTitle, setSectionTitle] = useState("");
   const [sectionContentType, setSectionContentType] = useState("text");
   const [sectionContent, setSectionContent] = useState("");
+  const [sectionImageFile, setSectionImageFile] = useState(null);
+  const [sectionImagePreview, setSectionImagePreview] = useState("");
+  const [isUploadingSectionImage, setIsUploadingSectionImage] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   
   // Quiz form state
@@ -34,61 +41,149 @@ function EditCoursePage() {
   const [quizAnswer, setQuizAnswer] = useState("");
   const [editingQuiz, setEditingQuiz] = useState(null);
 
-  // Load existing course data
-  // Load existing course data
-useEffect(() => {
-    const loadCourseData = async () => {
-        if (!courseId) {
-            console.error("No courseId in params");
-            return;
-        }
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setCourseImage("");
+    }
+  };
 
-        try {
-            setLoading(true);
-            console.log("Loading course with ID:", courseId);
-            const data = await fetchCourseById(courseId);
-            
-            // Populate form with existing data
-            setCourseName(data.courseName);
-            setCourseImage(data.courseImage || "");
-            setIngredients(data.ingredients || "");
-            setDifficulty(data.difficulty || "Easy");
-            setTime(data.estimatedTime || "");
-            setDescription(data.description || "");
-            
-            // Map sections
-            const mappedSections = data.sections.map(section => ({
-                id: section.id,
-                title: section.sectionTitle,
-                contentType: section.contentType,
-                content: section.content
-            }));
-            setSections(mappedSections);
-            
-            // Map quiz questions
-            const mappedQuizzes = data.quizQuestions.map(quiz => ({
-                id: quiz.id,
-                question: quiz.question,
-                options: quiz.options,
-                answer: quiz.answer
-            }));
-            setQuizQuestions(mappedQuizzes);
-            
-        } catch (error) {
+  const handleUploadImage = async () => {
+    if (!imageFile) {
+      alert("Please select an image first");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const result = await uploadCourseImage(imageFile);
+      setCourseImage(result.imageUrl);
+      alert("Image uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setCourseImage("");
+  };
+
+  // Section image handlers
+  const handleSectionImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+      setSectionImageFile(file);
+      setSectionImagePreview(URL.createObjectURL(file));
+      setSectionContent("");
+    }
+  };
+
+  const handleUploadSectionImage = async () => {
+    if (!sectionImageFile) {
+      alert("Please select an image first");
+      return;
+    }
+
+    setIsUploadingSectionImage(true);
+    try {
+      const result = await uploadSectionImage(sectionImageFile);
+      setSectionContent(result.imageUrl);
+      alert("Section image uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading section image:", error);
+      alert("Failed to upload section image. Please try again.");
+    } finally {
+      setIsUploadingSectionImage(false);
+    }
+  };
+
+  const handleRemoveSectionImage = () => {
+    setSectionImageFile(null);
+    setSectionImagePreview("");
+    setSectionContent("");
+  };
+
+  useEffect(() => {
+    const loadCourseData = async () => {
+      if (!courseId) {
+        console.error("No courseId in params");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log("Loading course with ID:", courseId);
+        const data = await fetchCourseById(courseId);
+        
+        setCourseName(data.courseName);
+        setCourseImage(data.courseImage || "");
+        if (data.courseImage) {
+          setImagePreview(data.courseImage);
+        }
+        setIngredients(data.ingredients || "");
+        setDifficulty(data.difficulty || "Easy");
+        setTime(data.estimatedTime || "");
+        setDescription(data.description || "");
+        
+        const mappedSections = data.sections.map(section => ({
+          id: section.id,
+          title: section.sectionTitle,
+          contentType: section.contentType,
+          content: section.content
+        }));
+        setSections(mappedSections);
+        
+        const mappedQuizzes = data.quizQuestions.map(quiz => ({
+          id: quiz.id,
+          question: quiz.question,
+          options: quiz.options,
+          answer: quiz.answer
+        }));
+        setQuizQuestions(mappedQuizzes);
+        
+      } catch (error) {
         console.error("Error loading course:", error);
         alert("Failed to load course data");
         navigate("/chefcourse");
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     };
 
     loadCourseData();
-    }, [courseId, navigate]);
+  }, [courseId, navigate]);
 
   const addSection = () => {
     if (!sectionTitle || !sectionContent) {
       alert("Please fill in all section fields");
+      return;
+    }
+
+    if (sectionContentType === "image" && sectionImageFile && !sectionContent) {
+      alert("Please upload the selected image before adding the section");
       return;
     }
 
@@ -112,6 +207,8 @@ useEffect(() => {
     setSectionTitle("");
     setSectionContentType("text");
     setSectionContent("");
+    setSectionImageFile(null);
+    setSectionImagePreview("");
     setEditingSection(null);
     setShowSectionModal(false);
   };
@@ -120,6 +217,11 @@ useEffect(() => {
     setSectionTitle(section.title);
     setSectionContentType(section.contentType);
     setSectionContent(section.content);
+    
+    if (section.contentType === "image" && section.content) {
+      setSectionImagePreview(section.content);
+    }
+    
     setEditingSection(section.id);
     setShowSectionModal(true);
   };
@@ -176,12 +278,16 @@ useEffect(() => {
       return;
     }
 
+    if (imageFile && !courseImage) {
+      alert("Please upload the selected image before submitting");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Format data to match the API DTO structure
       const courseData = {
-        chefId: 2, // TODO: Get from auth
+        chefId: 2,
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",
@@ -218,7 +324,7 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+      <div className="min-h-screen bg-black text-white pl-24">
         <Navbar />
         <div className="flex items-center justify-center h-screen">
           <p className="text-xl text-gray-400">Loading course...</p>
@@ -232,11 +338,10 @@ useEffect(() => {
       <Navbar />
       <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Edit Course</h1>
-
+        
         {/* Basic Course Info */}
         <div className="bg-[#181818] rounded-xl p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Course Information</h2>
-          
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Course Name *</label>
@@ -250,21 +355,53 @@ useEffect(() => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Course Image URL</label>
-              <input
-                type="text"
-                value={courseImage}
-                onChange={(e) => setCourseImage(e.target.value)}
-                className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                placeholder="https://example.com/image.jpg"
-              />
+              <label className="block text-sm font-medium mb-2">Course Image</label>
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-48 object-cover rounded-lg mb-2"
+                  />
+                  <button 
+                    onClick={handleRemoveImage} 
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-2 rounded-full"
+                  >
+                    <X size={20} />
+                  </button>
+                  {imageFile && !courseImage && (
+                    <button 
+                      onClick={handleUploadImage} 
+                      disabled={isUploadingImage}
+                      className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:bg-gray-600"
+                    >
+                      {isUploadingImage ? "Uploading..." : "Upload New Image"}
+                    </button>
+                  )}
+                  {courseImage && imageFile && (
+                    <p className="text-green-400 text-sm mt-2">✓ New image uploaded</p>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-gray-600">
+                  <Upload size={40} className="text-gray-400 mb-2" />
+                  <span className="text-gray-400">Click to select image</span>
+                  <span className="text-gray-500 text-sm">Max 5MB</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageSelect} 
+                    className="hidden" 
+                  />
+                </label>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">Ingredients</label>
-              <input
-                type="text"
-                value={ingredients}
+              <input 
+                type="text" 
+                value={ingredients} 
                 onChange={(e) => setIngredients(e.target.value)}
                 className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                 placeholder="e.g., Beef, pastry, mushrooms, butter"
@@ -274,24 +411,23 @@ useEffect(() => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Difficulty</label>
-                <select
-                  value={difficulty}
+                <select 
+                  value={difficulty} 
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2"
                 >
                   <option>Easy</option>
                   <option>Medium</option>
                   <option>Hard</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2">Time</label>
-                <input
-                  type="text"
-                  value={time}
+                <input 
+                  type="text" 
+                  value={time} 
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2"
                   placeholder="e.g., 2 hrs"
                 />
               </div>
@@ -299,10 +435,10 @@ useEffect(() => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Description *</label>
-              <textarea
-                value={description}
+              <textarea 
+                value={description} 
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 h-24"
+                className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 h-24"
                 placeholder="Describe your course..."
               />
             </div>
@@ -399,17 +535,17 @@ useEffect(() => {
 
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
-          <button
+          <button 
             onClick={() => navigate("/chefcourse")}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg" 
             disabled={isSubmitting}
           >
             Cancel
           </button>
-          <button
-            onClick={handleUpdateCourse}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-semibold disabled:bg-gray-600 disabled:cursor-not-allowed"
+          <button 
+            onClick={handleUpdateCourse} 
             disabled={isSubmitting}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold disabled:bg-gray-600"
           >
             {isSubmitting ? "Updating..." : "Update Course"}
           </button>
@@ -445,7 +581,11 @@ useEffect(() => {
                 <label className="block text-sm font-medium mb-2">Content Type</label>
                 <div className="flex gap-4">
                   <button
-                    onClick={() => setSectionContentType("text")}
+                    onClick={() => {
+                      setSectionContentType("text");
+                      setSectionImageFile(null);
+                      setSectionImagePreview("");
+                    }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                       sectionContentType === "text"
                         ? "bg-blue-600"
@@ -456,7 +596,10 @@ useEffect(() => {
                     Text
                   </button>
                   <button
-                    onClick={() => setSectionContentType("image")}
+                    onClick={() => {
+                      setSectionContentType("image");
+                      setSectionContent("");
+                    }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                       sectionContentType === "image"
                         ? "bg-blue-600"
@@ -467,7 +610,11 @@ useEffect(() => {
                     Image
                   </button>
                   <button
-                    onClick={() => setSectionContentType("video")}
+                    onClick={() => {
+                      setSectionContentType("video");
+                      setSectionImageFile(null);
+                      setSectionImagePreview("");
+                    }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                       sectionContentType === "video"
                         ? "bg-blue-600"
@@ -484,8 +631,11 @@ useEffect(() => {
                 <label className="block text-sm font-medium mb-2">
                   {sectionContentType === "text"
                     ? "Content Text"
-                    : `${sectionContentType.charAt(0).toUpperCase() + sectionContentType.slice(1)} URL`}
+                    : sectionContentType === "image"
+                    ? "Upload Image"
+                    : "Video URL"}
                 </label>
+                
                 {sectionContentType === "text" ? (
                   <textarea
                     value={sectionContent}
@@ -493,14 +643,67 @@ useEffect(() => {
                     className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 h-32"
                     placeholder="Enter the lesson content..."
                   />
+                ) : sectionContentType === "image" ? (
+                  <div>
+                    {sectionImagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={sectionImagePreview} 
+                          alt="Section Preview" 
+                          className="w-full h-48 object-cover rounded-lg mb-2"
+                        />
+                        <button
+                          onClick={handleRemoveSectionImage}
+                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-2 rounded-full"
+                        >
+                          <X size={20} />
+                        </button>
+                        {sectionImageFile && !sectionContent && (
+                          <button
+                            onClick={handleUploadSectionImage}
+                            disabled={isUploadingSectionImage}
+                            className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed mt-2"
+                          >
+                            {isUploadingSectionImage ? "Uploading..." : "Upload Section Image"}
+                          </button>
+                        )}
+                        {sectionContent && (
+                          <p className="text-green-400 text-sm mt-2">✓ Image uploaded successfully</p>
+                        )}
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-gray-600 transition-colors">
+                        <Upload size={40} className="text-gray-400 mb-2" />
+                        <span className="text-gray-400">Click to select section image</span>
+                        <span className="text-gray-500 text-sm">Max 5MB</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleSectionImageSelect}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
                 ) : (
-                  <input
-                    type="text"
-                    value={sectionContent}
-                    onChange={(e) => setSectionContent(e.target.value)}
-                    className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                    placeholder={`https://example.com/${sectionContentType === "image" ? "image.jpg" : "video.mp4"}`}
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      value={sectionContent}
+                      onChange={(e) => setSectionContent(e.target.value)}
+                      className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                      placeholder="Paste video URL here..."
+                    />
+                    <div className="mt-2 text-sm text-gray-400">
+                      <p className="mb-1">Supported formats:</p>
+                      <ul className="list-disc list-inside space-y-1 text-xs">
+                        <li>YouTube: https://www.youtube.com/watch?v=...</li>
+                        <li>YouTube Short: https://youtu.be/...</li>
+                        <li>Vimeo: https://vimeo.com/...</li>
+                        <li>Direct video: https://example.com/video.mp4</li>
+                      </ul>
+                    </div>
+                  </div>
                 )}
               </div>
 

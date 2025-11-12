@@ -45,6 +45,8 @@ namespace Server.Migrations
                     phone = table.Column<string>(type: "TEXT", nullable: false),
                     password = table.Column<string>(type: "TEXT", nullable: false),
                     role = table.Column<string>(type: "TEXT", nullable: false),
+                    isBanned = table.Column<bool>(type: "INTEGER", nullable: false),
+                    joinDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     avatarUrl = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -211,6 +213,36 @@ namespace Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Enrollments",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
+                    courseId = table.Column<int>(type: "INTEGER", nullable: false),
+                    enrolledAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    progress = table.Column<double>(type: "REAL", precision: 3, scale: 2, nullable: false),
+                    completed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    completedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Enrollments", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Enrollments_Courses_courseId",
+                        column: x => x.courseId,
+                        principalTable: "Courses",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Enrollments_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "QuizQuestions",
                 columns: table => new
                 {
@@ -292,6 +324,17 @@ namespace Server.Migrations
                 column: "courseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Enrollments_courseId",
+                table: "Enrollments",
+                column: "courseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Enrollments_userId_courseId",
+                table: "Enrollments",
+                columns: new[] { "userId", "courseId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_userId",
                 table: "Posts",
                 column: "userId");
@@ -332,6 +375,9 @@ namespace Server.Migrations
 
             migrationBuilder.DropTable(
                 name: "CourseSections");
+
+            migrationBuilder.DropTable(
+                name: "Enrollments");
 
             migrationBuilder.DropTable(
                 name: "Posts");
