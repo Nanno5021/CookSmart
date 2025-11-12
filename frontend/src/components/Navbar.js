@@ -15,7 +15,7 @@ function Navbar() {
     { path: "/", Icon: Home, alt: "Home", roles: ["Chef", "User"] },
     { path: "/recipe", Icon: BookOpen, alt: "Recipe", roles: ["User"] },
     { path: "/chefrecipe", Icon: BookOpen, alt: "Recipe", roles: ["Chef"] },
-    { path: "/notification", Icon: Bell, alt: "Notification", roles: ["Chef", "User"] },
+    { path: "/checkstatus", Icon: Bell, alt: "Notification", roles: ["User", "Chef"] },
     { path: "/course", Icon: GraduationCap, alt: "Course", roles: ["User"] }, 
     { path: "/chefcourse", Icon: GraduationCap, alt: "Course", roles: ["Chef"] }, 
     { path: "/profile", Icon: User, alt: "Profile", roles: ["Chef", "User"] },

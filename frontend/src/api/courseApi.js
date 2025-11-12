@@ -1,4 +1,6 @@
-import { apiFetch } from "./apiClient";
+import { apiFetch, getToken } from "./apiClient";
+
+const API_BASE_URL = "http://localhost:5037/api";
 
 // GET: Fetch all courses
 export async function fetchAllCourses() {
@@ -36,4 +38,50 @@ export async function deleteCourse(id) {
   return await apiFetch(`/courses/${id}`, {
     method: "DELETE",
   });
+}
+
+// POST: Upload course image
+export async function uploadCourseImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = getToken();
+
+  const response = await fetch(`${API_BASE_URL}/courses/upload-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: "Failed to upload image" }));
+    throw new Error(error.message || "Failed to upload image");
+  }
+
+  return await response.json();
+}
+
+// POST: Upload section image
+export async function uploadSectionImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = getToken();
+
+  const response = await fetch(`${API_BASE_URL}/courses/upload-section-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: "Failed to upload section image" }));
+    throw new Error(error.message || "Failed to upload section image");
+  }
+
+  return await response.json();
 }

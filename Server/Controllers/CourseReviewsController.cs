@@ -96,6 +96,45 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.courseId }, response);
         }
 
+        // PUT: api/reviews/{id}
+        [HttpPut("{id}")]
+        public async Task<ActionResult<CourseReviewResponseDto>> UpdateReview(int id, UpdateCourseReviewDto dto, [FromQuery] int userId)
+        {
+            var review = await _context.CourseReviews
+                .Include(r => r.user)
+                .FirstOrDefaultAsync(r => r.id == id);
+
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            // Only allow the user who created the review to update it
+            if (review.userId != userId)
+            {
+                return Forbid();
+            }
+
+            review.rating = dto.rating;
+            review.comment = dto.comment;
+            review.reviewDate = DateTime.UtcNow; // Update the review date
+
+            await _context.SaveChangesAsync();
+
+            var response = new CourseReviewResponseDto
+            {
+                id = review.id,
+                courseId = review.courseId,
+                userId = review.userId,
+                username = review.user?.username ?? "Anonymous",
+                userProfileImage = "",
+                rating = review.rating,
+                comment = review.comment,
+                reviewDate = review.reviewDate
+            };
+
+            return Ok(response);
+        }
         // DELETE: api/reviews/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReview(int id, [FromQuery] int userId)

@@ -225,6 +225,41 @@ namespace Server.Migrations
                     b.ToTable("CourseSections");
                 });
 
+            modelBuilder.Entity("Server.Models.Enrollment", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("completed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("completedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("courseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("enrolledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("progress")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("courseId");
+
+                    b.HasIndex("userId", "courseId")
+                        .IsUnique();
+
+                    b.ToTable("Enrollments");
+                });
+
             modelBuilder.Entity("Server.Models.Post", b =>
                 {
                     b.Property<int>("id")
@@ -476,6 +511,25 @@ namespace Server.Migrations
                         .IsRequired();
 
                     b.Navigation("course");
+                });
+
+            modelBuilder.Entity("Server.Models.Enrollment", b =>
+                {
+                    b.HasOne("Server.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("courseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Server.Models.Post", b =>

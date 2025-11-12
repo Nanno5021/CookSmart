@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { X, Upload } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import { createChefApplication } from "../../api/chefApplicationApi";
+import { uploadCertificationImage } from "../../api/chefApplicationApi";
 
 function RequestChefAccountPage() {
   const navigate = useNavigate();
@@ -14,9 +16,53 @@ function RequestChefAccountPage() {
   const [yearsOfExperience, setYearsOfExperience] = useState("");
   const [certificationName, setCertificationName] = useState("");
   const [certificationImageUrl, setCertificationImageUrl] = useState("");
+  const [certImageFile, setCertImageFile] = useState(null);
+  const [certImagePreview, setCertImagePreview] = useState("");
+  const [isUploadingCertImage, setIsUploadingCertImage] = useState(false);
   const [portfolioLink, setPortfolioLink] = useState("");
   const [biography, setBiography] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCertImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+      setCertImageFile(file);
+      setCertImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadCertImage = async () => {
+    if (!certImageFile) {
+      alert("Please select an image first");
+      return;
+    }
+
+    setIsUploadingCertImage(true);
+    try {
+      const result = await uploadCertificationImage(certImageFile);
+      setCertificationImageUrl(result.imageUrl);
+      alert("Certification image uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading certification image:", error);
+      alert("Failed to upload certification image. Please try again.");
+    } finally {
+      setIsUploadingCertImage(false);
+    }
+  };
+
+  const handleRemoveCertImage = () => {
+    setCertImageFile(null);
+    setCertImagePreview("");
+    setCertificationImageUrl("");
+  };
 
   const handleSubmit = async () => {
     // Validation
@@ -28,6 +74,12 @@ function RequestChefAccountPage() {
       !biography
     ) {
       alert("Please fill in all required fields.");
+      return;
+    }
+
+    // Check if image file is selected but not uploaded
+    if (certImageFile && !certificationImageUrl) {
+      alert("Please upload the selected certification image before submitting");
       return;
     }
 
@@ -59,6 +111,8 @@ function RequestChefAccountPage() {
       setYearsOfExperience("");
       setCertificationName("");
       setCertificationImageUrl("");
+      setCertImageFile(null);
+      setCertImagePreview("");
       setPortfolioLink("");
       setBiography("");
       
@@ -125,15 +179,49 @@ function RequestChefAccountPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Certification Image URL *</label>
-            <input
-              type="text"
-              value={certificationImageUrl}
-              onChange={(e) => setCertificationImageUrl(e.target.value)}
-              className="w-full bg-[#1f1f1f] border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-              placeholder="https://example.com/certificate.jpg"
-              disabled={isSubmitting}
-            />
+            <label className="block text-sm font-medium mb-2">Certification Image *</label>
+            
+            {certImagePreview ? (
+              <div className="relative">
+                <img 
+                  src={certImagePreview} 
+                  alt="Certification Preview" 
+                  className="w-full h-48 object-cover rounded-lg mb-2"
+                />
+                <button
+                  onClick={handleRemoveCertImage}
+                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-2 rounded-full"
+                  disabled={isSubmitting}
+                >
+                  <X size={20} />
+                </button>
+                {!certificationImageUrl && (
+                  <button
+                    onClick={handleUploadCertImage}
+                    disabled={isUploadingCertImage || isSubmitting}
+                    className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  >
+                    {isUploadingCertImage ? "Uploading..." : "Upload Certification Image"}
+                  </button>
+                )}
+                {certificationImageUrl && (
+                  <p className="text-green-400 text-sm mt-2">✓ Certification image uploaded successfully</p>
+                )}
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-gray-600 transition-colors">
+                <Upload size={40} className="text-gray-400 mb-2" />
+                <span className="text-gray-400">Click to select certification image</span>
+                <span className="text-gray-500 text-sm">Max 5MB</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCertImageSelect}
+                  className="hidden"
+                  disabled={isSubmitting}
+                />
+              </label>
+            )}
           </div>
 
           <div>

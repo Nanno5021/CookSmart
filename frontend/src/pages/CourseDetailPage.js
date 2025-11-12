@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import chefProfile from "../assets/pfp.png"; // placeholder chef profile
-import sampleFood from "../assets/food.png"; // placeholder course image
-import { fetchReviewsByCourse, createReview } from "../api/courseReviewApi";
+import chefProfile from "../assets/pfp.png";
+import sampleFood from "../assets/food.png";
+import { fetchReviewsByCourse, createReview, updateReview, deleteReview } from "../api/courseReviewApi";
+import { enrollInCourse, getEnrollmentsByUser, deleteEnrollment } from "../api/enrollmentApi";
 
 function CourseDetailPage() {
   const location = useLocation();
@@ -21,7 +22,7 @@ function CourseDetailPage() {
     },
   };
 
-  // Get current user ID from localStorage or your auth system
+  // Get current user ID from localStorage
   const currentUserId = parseInt(localStorage.getItem("userId")) || 1;
 
   // Reviews
@@ -31,23 +32,28 @@ function CourseDetailPage() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Enrollment state
-  const [enrolledCourses, setEnrolledCourses] = useState(
-    JSON.parse(localStorage.getItem("enrolledCourses")) || []
-  );
+  // Edit state
+  const [editingReview, setEditingReview] = useState(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editComment, setEditComment] = useState("");
+
+  // ✅ FIXED: Enrollment state - check database enrollments
+  const [userEnrollments, setUserEnrollments] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(true);
 
-  // Check if this course is enrolled
-  const isEnrolled = enrolledCourses.some(
-    (c) => c.chefId === chef.chefId && c.courseName === course.name
+  // ✅ FIXED: Check if this course is enrolled FROM DATABASE
+  const isEnrolled = userEnrollments.some(
+    (enrollment) => enrollment.courseId === course.id
   );
 
-  // Fetch reviews from API
+  // Fetch reviews and enrollments from API
   useEffect(() => {
     if (course.id) {
       loadReviews();
+      loadUserEnrollments();
     }
   }, [course.id]);
 
@@ -58,45 +64,81 @@ function CourseDetailPage() {
       setReviews(data);
     } catch (error) {
       console.error("Error fetching reviews:", error);
-      // Don't show error to user, just log it
       setReviews([]);
     } finally {
       setIsLoadingReviews(false);
     }
   };
 
-  // Enroll / Unenroll handler
-  const toggleEnroll = () => {
+  // ✅ FIXED: Load user enrollments from database
+  const loadUserEnrollments = async () => {
+    if (!currentUserId) return;
+    
+    try {
+      setIsLoadingEnrollments(true);
+      const enrollments = await getEnrollmentsByUser(currentUserId);
+      setUserEnrollments(enrollments);
+    } catch (err) {
+      console.error("Error loading enrollments:", err);
+      setUserEnrollments([]);
+    } finally {
+      setIsLoadingEnrollments(false);
+    }
+  };
+  
+  const toggleEnroll = async () => {
     if (isEnrolled) {
-      // Unenroll
-      const newEnrolled = enrolledCourses.filter(
-        (c) => !(c.chefId === chef.chefId && c.courseName === course.name)
-      );
-      setEnrolledCourses(newEnrolled);
-      localStorage.setItem("enrolledCourses", JSON.stringify(newEnrolled));
-      setSuccessMessage("Unenrolled successfully!");
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
+      // Find the enrollment ID to delete
+      const enrollment = userEnrollments.find(e => e.courseId === course.id);
+      if (enrollment) {
+        if (window.confirm(`Are you sure you want to unenroll from "${course.name}"?`)) {
+          try {
+            await deleteEnrollment(enrollment.id);
+            // Refresh enrollments from database
+            await loadUserEnrollments();
+            setSuccessMessage("Unenrolled successfully!");
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 2000);
+          } catch (error) {
+            console.error("Error unenrolling from course:", error);
+            alert("Failed to unenroll from course: " + (error.message || "Please try again."));
+          }
+        }
+      } else {
+        alert("Enrollment record not found. Please try refreshing the page.");
+      }
     } else {
       // Show confirmation dialog to enroll
       setIsDialogOpen(true);
     }
   };
 
-  const confirmEnroll = () => {
-    const newEnrolled = [
-      ...enrolledCourses,
-      { chefId: chef.chefId, courseName: course.name },
-    ];
-    setEnrolledCourses(newEnrolled);
-    localStorage.setItem("enrolledCourses", JSON.stringify(newEnrolled));
-    setIsDialogOpen(false);
-    setSuccessMessage("Enrolled successfully!");
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+  // ✅ FIXED: Confirm enroll - CALL DATABASE API
+  const confirmEnroll = async () => {
+    if (!currentUserId) {
+      alert("Please log in to enroll in courses");
+      return;
+    }
+
+    try {
+      // Call the enrollment API
+      await enrollInCourse(currentUserId, course.id);
+      
+      // Refresh enrollments from database
+      await loadUserEnrollments();
+      
+      setIsDialogOpen(false);
+      setSuccessMessage("Enrolled successfully!");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error("Error enrolling in course:", error);
+      alert("Failed to enroll in course: " + (error.message || "Please try again."));
+      setIsDialogOpen(false);
+    }
   };
 
-  // Review submission
+  // Review submission (rest of the code remains the same)
   const handleSubmitReview = async () => {
     if (!isEnrolled) {
       alert("You must enroll in this course to submit a review.");
@@ -126,7 +168,6 @@ function CourseDetailPage() {
     } catch (error) {
       console.error("Error submitting review:", error);
       
-      // Check if it's a duplicate review error
       if (error.message && error.message.includes("already reviewed")) {
         alert("You have already reviewed this course");
       } else {
@@ -134,6 +175,65 @@ function CourseDetailPage() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // ... rest of your review functions remain the same
+  const handleEditReview = (review) => {
+    setEditingReview(review.id);
+    setEditRating(review.rating);
+    setEditComment(review.comment);
+  };
+
+  const handleUpdateReview = async () => {
+    if (editRating === 0 || editComment.trim() === "") {
+      alert("Please provide a rating and review.");
+      return;
+    }
+
+    try {
+      const reviewData = {
+        rating: editRating,
+        comment: editComment,
+      };
+      
+      const updatedReview = await updateReview(editingReview, reviewData, currentUserId);
+      
+      setReviews(reviews.map(review => 
+        review.id === editingReview ? updatedReview : review
+      ));
+      setEditingReview(null);
+      setEditRating(0);
+      setEditComment("");
+      setSuccessMessage("Review updated successfully!");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error("Error updating review:", error);
+      alert("Failed to update review. Please try again.");
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingReview(null);
+    setEditRating(0);
+    setEditComment("");
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) {
+      return;
+    }
+
+    try {
+      await deleteReview(reviewId, currentUserId);
+      setReviews(reviews.filter(review => review.id !== reviewId));
+      setSuccessMessage("Review deleted successfully!");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      alert("Failed to delete review. Please try again.");
     }
   };
 
@@ -152,6 +252,15 @@ function CourseDetailPage() {
       day: "numeric",
     });
   };
+
+  // Show loading while checking enrollment status
+  if (isLoadingEnrollments) {
+    return (
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <p className="text-xl">Loading course details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center items-start p-4">
@@ -178,7 +287,7 @@ function CourseDetailPage() {
             Back
           </button>
 
-          {/* Enroll / Unenroll Button */}
+          {/* ✅ FIXED: Enroll / Unenroll Button - based on database enrollment */}
           <button
             onClick={toggleEnroll}
             className={`absolute top-4 right-4 px-3 py-1 rounded-lg ${
@@ -272,14 +381,77 @@ function CourseDetailPage() {
                     className="w-10 h-10 rounded-full object-cover mt-1"
                   />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{rev.username}</span>
-                      <span className="text-yellow-400">{"★".repeat(rev.rating)}</span>
-                      <span className="text-gray-400 text-sm">
-                        ({formatDate(rev.reviewDate)})
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{rev.username}</span>
+                        <span className="text-yellow-400">{"★".repeat(rev.rating)}</span>
+                        <span className="text-gray-400 text-sm">
+                          ({formatDate(rev.reviewDate)})
+                        </span>
+                      </div>
+                      {/* Edit/Delete buttons for current user's reviews */}
+                      {rev.userId === currentUserId && (
+                        <div className="flex gap-2">
+                          {editingReview === rev.id ? (
+                            <>
+                              <button
+                                onClick={handleUpdateReview}
+                                className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white text-xs rounded"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEditReview(rev)}
+                                className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(rev.id)}
+                                className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-gray-300 mt-1">{rev.comment}</p>
+                    
+                    {editingReview === rev.id ? (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setEditRating(star)}
+                              className={`text-xl ${
+                                editRating >= star ? "text-yellow-400" : "text-gray-500"
+                              }`}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          value={editComment}
+                          onChange={(e) => setEditComment(e.target.value)}
+                          rows={3}
+                          className="w-full bg-gray-800 text-white p-2 rounded resize-none focus:outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-gray-300 mt-1">{rev.comment}</p>
+                    )}
                   </div>
                 </div>
               ))

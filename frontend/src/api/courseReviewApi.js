@@ -13,6 +13,14 @@ export async function createReview(reviewData, userId) {
   });
 }
 
+// PUT: Update a review
+export async function updateReview(reviewId, reviewData, userId) {
+  return await apiFetch(`/reviews/${reviewId}?userId=${userId}`, {
+    method: "PUT",
+    body: JSON.stringify(reviewData),
+  });
+}
+
 // DELETE: Delete a review
 export async function deleteReview(reviewId, userId) {
   return await apiFetch(`/reviews/${reviewId}?userId=${userId}`, {
