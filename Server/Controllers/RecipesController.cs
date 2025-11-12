@@ -14,7 +14,6 @@ namespace Server.Controllers
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
 
-        // ✅ FIXED: Added IWebHostEnvironment to constructor
         public RecipesController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
@@ -192,7 +191,7 @@ namespace Server.Controllers
             return NoContent();
         }
 
-        // ✅ POST: api/recipes/upload-image
+        // POST: api/recipes/upload-image
         [HttpPost("upload-image")]
         public async Task<IActionResult> UploadRecipeImage(IFormFile file)
         {
@@ -206,10 +205,9 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
-            // Ensure uploads folder exists
+            // Save directly to wwwroot/recipes
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
-                "uploads", 
                 "recipes"
             );
             
@@ -224,7 +222,7 @@ namespace Server.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/recipes/{fileName}";
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/recipes/{fileName}";
 
             return Ok(new { imageUrl = publicUrl });
         }

@@ -303,9 +303,9 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
+            // Save directly to wwwroot/courses
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
-                "uploads", 
                 "courses"
             );
             
@@ -320,7 +320,7 @@ namespace Server.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/courses/{fileName}";
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/courses/{fileName}";
 
             return Ok(new { imageUrl = publicUrl });
         }
@@ -339,9 +339,9 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
+            // Save directly to wwwroot/sections
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
-                "uploads", 
                 "sections"
             );
             
@@ -356,7 +356,7 @@ namespace Server.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/sections/{fileName}";
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/sections/{fileName}";
 
             return Ok(new { imageUrl = publicUrl });
         }
