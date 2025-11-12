@@ -24,6 +24,9 @@ export function setUserData(data) {
   if (data.fullName) {
     localStorage.setItem("fullName", data.fullName);
   }
+  if (data.chefId) {
+    localStorage.setItem("chefId", data.chefId.toString());
+  }
 }
 
 export function clearAllAuthData() {
@@ -48,7 +51,8 @@ export function clearAllAuthData() {
     "deliveryMethod",
     "sellHereflg",
     "redux_localstorage_simple",
-    "user" // Add this to clear the cached user object
+    "chefId",
+    "user" 
   ];
   
   authKeys.forEach(key => localStorage.removeItem(key));
