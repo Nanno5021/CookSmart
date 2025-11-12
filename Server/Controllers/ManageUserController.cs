@@ -160,7 +160,7 @@ namespace Server.Controllers
                 }
 
                 // Update user avatar URL
-                user.avatarUrl = $"/uploads/{fileName}";
+                user.avatarUrl = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
                 await _context.SaveChangesAsync();
 
                 return Ok(new 
@@ -203,7 +203,7 @@ namespace Server.Controllers
             }
 
             // Set to default avatar
-            user.avatarUrl = "/uploads/default.png";
+            user.avatarUrl = $"{Request.Scheme}://{Request.Host}/uploads/default.png";
             await _context.SaveChangesAsync();
 
             return Ok(new 
@@ -237,6 +237,38 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User banned." });
+        }
+
+        // POST: api/ManageUser/create-chef/{id}
+        [HttpPost("create-chef/{id}")]
+        public async Task<IActionResult> CreateChefProfile(int id, [FromBody] CreateChefDTO dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            // Check if user is already a chef
+            var existingChef = await _context.Chefs.FirstOrDefaultAsync(c => c.userId == id);
+            if (existingChef != null)
+                return BadRequest(new { message = "User already has a chef profile" });
+
+            // Create new chef entry
+            var chef = new Chef
+            {
+                userId = id,
+                specialtyCuisine = dto.specialtyCuisine,
+                yearsOfExperience = dto.yearsOfExperience,
+                certificationName = dto.certificationName,
+                certificationImageUrl = dto.certificationImageUrl,
+                portfolioLink = dto.portfolioLink,
+                biography = dto.biography,
+                approvedDate = DateTime.Now
+            };
+
+            _context.Chefs.Add(chef);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Chef profile created successfully" });
         }
     }
 }
