@@ -1,6 +1,5 @@
-// UserDetailsPage.js - FIXED
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, Calendar, Shield, Ban, CheckCircle, Edit } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Calendar, Shield, Ban, CheckCircle, Edit, Award, Briefcase, Star, ExternalLink } from 'lucide-react';
 import { fetchUserById } from '../../api/manageUserApi';
 
 function UserDetailsPage({ userId, onBack, onEdit }) {
@@ -84,7 +83,7 @@ function UserDetailsPage({ userId, onBack, onEdit }) {
 
   return (
     <div className="p-6">
-      {/* FIXED: Only ONE back button with Edit button */}
+      {/* Header with Edit buttons */}
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
@@ -94,13 +93,24 @@ function UserDetailsPage({ userId, onBack, onEdit }) {
           <span>Back to Users</span>
         </button>
         
-        <button
-          onClick={() => onEdit(userId)}
-          className="px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-lg transition inline-flex items-center space-x-2"
-        >
-          <Edit size={18} />
-          <span>Edit Profile</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {user.role === 'Chef' && user.chefProfile && (
+            <button
+              onClick={() => onEdit(userId, 'chef')}
+              className="px-6 py-3 bg-purple-500 hover:bg-purple-600 rounded-lg transition inline-flex items-center space-x-2"
+            >
+              <Award size={18} />
+              <span>Edit Chef Profile</span>
+            </button>
+          )}
+          <button
+            onClick={() => onEdit(userId, 'user')}
+            className="px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-lg transition inline-flex items-center space-x-2"
+          >
+            <Edit size={18} />
+            <span>Edit User Profile</span>
+          </button>
+        </div>
       </div>
 
       {/* Header */}
@@ -203,6 +213,94 @@ function UserDetailsPage({ userId, onBack, onEdit }) {
           </div>
         </div>
       </div>
+
+      {/* Chef Profile Section */}
+      {user.role === 'Chef' && user.chefProfile && (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 mb-6">
+          <h3 className="text-xl font-bold mb-6 flex items-center space-x-2">
+            <Award size={20} className="text-orange-500" />
+            <span>Chef Profile</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Chef Basic Info */}
+            <div className="space-y-4">
+              <InfoRow
+                icon={<Award size={18} />}
+                label="Specialty Cuisine"
+                value={user.chefProfile.specialtyCuisine || 'Not specified'}
+              />
+              <InfoRow
+                icon={<Calendar size={18} />}
+                label="Years of Experience"
+                value={user.chefProfile.yearsOfExperience || '0'}
+              />
+              <InfoRow
+                icon={<Briefcase size={18} />}
+                label="Certification"
+                value={user.chefProfile.certificationName || 'Not specified'}
+              />
+            </div>
+
+            {/* Chef Stats */}
+            <div className="space-y-4">
+              <InfoRow
+                icon={<Star size={18} />}
+                label="Rating"
+                value={
+                  <div className="flex items-center space-x-2">
+                    <span>{user.chefProfile.rating?.toFixed(1) || '0.0'}</span>
+                    <span className="text-gray-400 text-sm">
+                      ({user.chefProfile.totalReviews || 0} reviews)
+                    </span>
+                  </div>
+                }
+              />
+              <InfoRow
+                icon={<Calendar size={18} />}
+                label="Approved Date"
+                value={new Date(user.chefProfile.approvedDate).toLocaleDateString()}
+              />
+              {user.chefProfile.portfolioLink && (
+                <InfoRow
+                  icon={<ExternalLink size={18} />}
+                  label="Portfolio"
+                  value={
+                    <a 
+                      href={user.chefProfile.portfolioLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-orange-500 hover:text-orange-400 transition"
+                    >
+                      View Portfolio
+                    </a>
+                  }
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Biography */}
+          {user.chefProfile.biography && (
+            <div className="mt-6 pt-6 border-t border-zinc-800">
+              <h4 className="text-lg font-semibold mb-3">Biography</h4>
+              <p className="text-gray-400 leading-relaxed">{user.chefProfile.biography}</p>
+            </div>
+          )}
+
+          {/* Certification Image */}
+          {user.chefProfile.certificationImageUrl && (
+            <div className="mt-6 pt-6 border-t border-zinc-800">
+              <h4 className="text-lg font-semibold mb-3">Certification</h4>
+              <img 
+                src={user.chefProfile.certificationImageUrl} 
+                alt="Certification"
+                className="max-w-md rounded-lg border border-zinc-700"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bio Section (if available) */}
       {user.bio && (

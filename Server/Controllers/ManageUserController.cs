@@ -56,7 +56,24 @@ namespace Server.Controllers
                     role = u.role,
                     isBanned = u.isBanned,
                     joinDate = u.joinDate,
-                    avatarUrl = u.avatarUrl
+                    avatarUrl = u.avatarUrl,
+                    // Load chef profile if user is a chef
+                    chefProfile = u.role == "Chef" ? _context.Chefs
+                        .Where(c => c.userId == u.id)
+                        .Select(c => new ChefDTO
+                        {
+                            id = c.id,
+                            specialtyCuisine = c.specialtyCuisine,
+                            yearsOfExperience = c.yearsOfExperience,
+                            certificationName = c.certificationName,
+                            certificationImageUrl = c.certificationImageUrl,
+                            portfolioLink = c.portfolioLink,
+                            biography = c.biography,
+                            rating = c.rating,
+                            totalReviews = c.totalReviews,
+                            approvedDate = c.approvedDate
+                        })
+                        .FirstOrDefault() : null
                 })
                 .FirstOrDefaultAsync();
 
@@ -286,5 +303,89 @@ namespace Server.Controllers
 
             return Ok(new { message = "Chef profile deleted successfully" });
         }
+
+        // POST: api/ManageUser/upload-certification/{id}
+        [HttpPost("upload-certification/{id}")]
+        public async Task<IActionResult> UploadCertificationImage(int id, [FromForm] IFormFile file)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded" });
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new { message = "Invalid file type. Only images are allowed." });
+
+            // Validate file size (max 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "File size exceeds 5MB limit" });
+
+            try
+            {
+                var certDir = Path.Combine(_env.WebRootPath, "certifications");
+                if (!Directory.Exists(certDir))
+                    Directory.CreateDirectory(certDir);
+
+                // Generate unique filename
+                var fileName = $"cert_{id}_{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(certDir, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var fileUrl = $"{Request.Scheme}://{Request.Host}/certifications/{fileName}";
+
+                return Ok(new
+                {
+                    message = "Certification uploaded successfully",
+                    certificationImageUrl = fileUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error uploading file", error = ex.Message });
+            }
+        }
+
+        // PUT: api/ManageUser/update-chef/{userId}
+        [HttpPut("update-chef/{userId}")]
+        public async Task<IActionResult> UpdateChefProfile(int userId, [FromBody] UpdateChefDTO dto)
+        {
+            var chef = await _context.Chefs.FirstOrDefaultAsync(c => c.userId == userId);
+            if (chef == null)
+                return NotFound(new { message = "Chef profile not found" });
+
+            // Update chef fields
+            if (!string.IsNullOrWhiteSpace(dto.specialtyCuisine))
+                chef.specialtyCuisine = dto.specialtyCuisine;
+
+            if (dto.yearsOfExperience >= 0)
+                chef.yearsOfExperience = dto.yearsOfExperience;
+
+            if (dto.certificationName != null)
+                chef.certificationName = dto.certificationName;
+
+            if (dto.certificationImageUrl != null)
+                chef.certificationImageUrl = dto.certificationImageUrl;
+
+            if (dto.portfolioLink != null)
+                chef.portfolioLink = dto.portfolioLink;
+
+            if (!string.IsNullOrWhiteSpace(dto.biography))
+                chef.biography = dto.biography;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Chef profile updated successfully" });
+        }
+
     }
 }

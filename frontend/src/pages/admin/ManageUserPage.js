@@ -4,6 +4,7 @@ import UserDetailsPage from './UserDetailsPage';
 import { Eye } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
 import ChefApplicationForm from "./ChefApplicationForm"; 
+import EditChefProfile from "./EditChefProfile";
 
 function ManageUserPage() {
   const [users, setUsers] = useState([]);
@@ -11,6 +12,7 @@ function ManageUserPage() {
   const [error, setError] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [editingUserId, setEditingUserId] = useState(null);
+  const [editingChefUserId, setEditingChefUserId] = useState(null);
   
   // NEW: Chef Application Form State
   const [showChefForm, setShowChefForm] = useState(false);
@@ -49,7 +51,7 @@ function ManageUserPage() {
   };
 
   // UPDATED: Handle role update - check if changing to Chef
-const performRoleUpdate = async () => {
+  const performRoleUpdate = async () => {
     if (!selectedRole) {
       alert('Please select a role');
       return;
@@ -122,7 +124,6 @@ const performRoleUpdate = async () => {
     }
   };
 
-
   // NEW: Handle chef profile submission
   const handleChefProfileSubmit = async (chefData) => {
     try {
@@ -164,9 +165,20 @@ const performRoleUpdate = async () => {
 
   // --- VIEW DETAILS ---
   const handleViewDetails = (id) => setSelectedUserId(id);
+  
+  // --- EDIT USER ---
+  const handleEditUser = (userId, editType = 'user') => {
+    if (editType === 'chef') {
+      setEditingChefUserId(userId);
+    } else {
+      setEditingUserId(userId);
+    }
+  };
+
   const handleBackToList = () => {
     setSelectedUserId(null);
     setEditingUserId(null);
+    setEditingChefUserId(null);
     loadUsers();
   };
 
@@ -181,6 +193,17 @@ const performRoleUpdate = async () => {
     );
   }
 
+  // Show edit chef profile page
+  if (editingChefUserId) {
+    return (
+      <EditChefProfile
+        userId={editingChefUserId}
+        onBack={handleBackToList}
+        onSave={loadUsers}
+      />
+    );
+  }
+
   // Show edit or details page
   if (selectedUserId || editingUserId) {
     if (editingUserId) {
@@ -191,7 +214,7 @@ const performRoleUpdate = async () => {
         <UserDetailsPage
           userId={selectedUserId}
           onBack={handleBackToList}
-          onEdit={setEditingUserId}
+          onEdit={handleEditUser}
         />
       );
     }
