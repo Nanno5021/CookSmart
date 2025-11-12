@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, updateUserRole, createChefProfile } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
 import { Eye } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
@@ -49,7 +49,7 @@ function ManageUserPage() {
   };
 
   // UPDATED: Handle role update - check if changing to Chef
-  const performRoleUpdate = async () => {
+const performRoleUpdate = async () => {
     if (!selectedRole) {
       alert('Please select a role');
       return;
@@ -61,8 +61,31 @@ function ManageUserPage() {
       // Find the user being updated
       const user = users.find(u => u.id === editRoleUserId);
       
+      // Check if changing FROM Chef role to another role
+      if (user.role === 'Chef' && selectedRole !== 'Chef') {
+        if (!window.confirm('Changing from Chef role will delete all chef profile data. Are you sure?')) {
+          setUpdatingRole(false);
+          return;
+        }
+        
+        // Delete chef profile first
+        await deleteChefProfile(editRoleUserId);
+        
+        // Then update the role
+        await updateUserRole(editRoleUserId, selectedRole);
+        
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editRoleUserId ? { ...u, role: selectedRole } : u
+          )
+        );
+        
+        setEditRoleUserId(null);
+        alert('Chef profile deleted and role updated successfully!');
+      }
       // Check if changing TO Chef role
-      if (selectedRole === 'Chef' && user.role !== 'Chef') {
+      else if (selectedRole === 'Chef' && user.role !== 'Chef') {
         // Update the role first
         await updateUserRole(editRoleUserId, selectedRole);
         
@@ -82,7 +105,7 @@ function ManageUserPage() {
         
         alert('Role updated! Please complete the chef profile.');
       } else {
-        // Normal role update (not changing to Chef)
+        // Normal role update (not involving Chef role)
         await updateUserRole(editRoleUserId, selectedRole);
         setUsers((prev) =>
           prev.map((u) =>
@@ -98,6 +121,7 @@ function ManageUserPage() {
       setUpdatingRole(false);
     }
   };
+
 
   // NEW: Handle chef profile submission
   const handleChefProfileSubmit = async (chefData) => {

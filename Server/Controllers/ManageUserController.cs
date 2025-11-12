@@ -270,5 +270,21 @@ namespace Server.Controllers
 
             return Ok(new { message = "Chef profile created successfully" });
         }
+
+        [HttpDelete("delete-chef/{id}")]
+        public async Task<IActionResult> DeleteChefProfile(int id)
+        {
+            // Find the chef profile associated with this user
+            var chef = await _context.Chefs.FirstOrDefaultAsync(c => c.userId == id);
+            
+            if (chef == null)
+                return NotFound(new { message = "Chef profile not found" });
+
+            // Delete the chef profile
+            _context.Chefs.Remove(chef);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Chef profile deleted successfully" });
+        }
     }
 }

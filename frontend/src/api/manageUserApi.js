@@ -77,3 +77,9 @@ export async function createChefProfile(userId, chefData) {
     body: JSON.stringify(chefData),
   });
 }
+
+export async function deleteChefProfile(userId) {
+  return await apiFetch(`/ManageUser/delete-chef/${userId}`, {
+    method: "DELETE",
+  });
+}
