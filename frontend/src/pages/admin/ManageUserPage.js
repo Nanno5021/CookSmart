@@ -1,9 +1,9 @@
-// ManageUserPage.js
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, updateUserRole } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, updateUserRole, createChefProfile } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
 import { Eye } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
+import ChefApplicationForm from "./ChefApplicationForm"; 
 
 function ManageUserPage() {
   const [users, setUsers] = useState([]);
@@ -11,7 +11,10 @@ function ManageUserPage() {
   const [error, setError] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [editingUserId, setEditingUserId] = useState(null);
-
+  
+  // NEW: Chef Application Form State
+  const [showChefForm, setShowChefForm] = useState(false);
+  const [chefFormUser, setChefFormUser] = useState(null);
 
   // Edit Role Dialog
   const [editRoleUserId, setEditRoleUserId] = useState(null);
@@ -42,29 +45,76 @@ function ManageUserPage() {
   // --- EDIT ROLE ---
   const openEditRoleDialog = (user) => {
     setEditRoleUserId(user.id);
-    setSelectedRole(user.role); // Set current role as default
+    setSelectedRole(user.role);
   };
 
+  // UPDATED: Handle role update - check if changing to Chef
   const performRoleUpdate = async () => {
     if (!selectedRole) {
       alert('Please select a role');
       return;
     }
+
     try {
       setUpdatingRole(true);
-      await updateUserRole(editRoleUserId, selectedRole);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editRoleUserId ? { ...u, role: selectedRole } : u
-        )
-      );
-      setEditRoleUserId(null);
-      alert('Role updated successfully!');
+      
+      // Find the user being updated
+      const user = users.find(u => u.id === editRoleUserId);
+      
+      // Check if changing TO Chef role
+      if (selectedRole === 'Chef' && user.role !== 'Chef') {
+        // Update the role first
+        await updateUserRole(editRoleUserId, selectedRole);
+        
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editRoleUserId ? { ...u, role: selectedRole } : u
+          )
+        );
+        
+        // Close the role dialog
+        setEditRoleUserId(null);
+        
+        // Show chef application form
+        setChefFormUser(user);
+        setShowChefForm(true);
+        
+        alert('Role updated! Please complete the chef profile.');
+      } else {
+        // Normal role update (not changing to Chef)
+        await updateUserRole(editRoleUserId, selectedRole);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editRoleUserId ? { ...u, role: selectedRole } : u
+          )
+        );
+        setEditRoleUserId(null);
+        alert('Role updated successfully!');
+      }
     } catch (err) {
       alert(err.message || 'Failed to update role');
     } finally {
       setUpdatingRole(false);
     }
+  };
+
+  // NEW: Handle chef profile submission
+  const handleChefProfileSubmit = async (chefData) => {
+    try {
+      await createChefProfile(chefFormUser.id, chefData);
+      setShowChefForm(false);
+      setChefFormUser(null);
+      await loadUsers(); // Refresh the list
+    } catch (err) {
+      throw err; // Let the form handle the error
+    }
+  };
+
+  // NEW: Handle chef form cancellation
+  const handleChefFormCancel = () => {
+    setShowChefForm(false);
+    setChefFormUser(null);
   };
 
   // --- BAN USER ---
@@ -95,25 +145,36 @@ function ManageUserPage() {
     setEditingUserId(null);
     loadUsers();
   };
-if (selectedUserId || editingUserId) {
-  if (editingUserId) {
-    return <EditUserPage userId={editingUserId} onBack={handleBackToList} onSave={loadUsers} />;
-  }
-  if (selectedUserId) {
+
+  // NEW: Show Chef Application Form if needed
+  if (showChefForm && chefFormUser) {
     return (
-      <UserDetailsPage
-        userId={selectedUserId}
-        onBack={handleBackToList}
-        onEdit={setEditingUserId}
+      <ChefApplicationForm
+        user={chefFormUser}
+        onBack={handleChefFormCancel}
+        onSubmit={handleChefProfileSubmit}
       />
     );
   }
-}
+
+  // Show edit or details page
+  if (selectedUserId || editingUserId) {
+    if (editingUserId) {
+      return <EditUserPage userId={editingUserId} onBack={handleBackToList} onSave={loadUsers} />;
+    }
+    if (selectedUserId) {
+      return (
+        <UserDetailsPage
+          userId={selectedUserId}
+          onBack={handleBackToList}
+          onEdit={setEditingUserId}
+        />
+      );
+    }
+  }
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadUsers} />;
-
-
 
   return (
     <div className="p-6">

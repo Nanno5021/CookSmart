@@ -173,7 +173,7 @@ function EditUserPage({ userId, onBack, onSave }) {
   }
 
   const avatarUrl = user?.avatarUrl 
-    ? `http://localhost:5037${user.avatarUrl}` 
+    ? `${user.avatarUrl}` 
     : null;
 
   return (
