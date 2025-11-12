@@ -11,10 +11,12 @@ namespace Server.Controllers
     public class ChefApplicationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ChefApplicationController(AppDbContext context)
+        public ChefApplicationController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // POST: api/chefapplications
@@ -295,6 +297,58 @@ namespace Server.Controllers
 
             return NoContent();
         }
+        
+        [HttpPost("upload-certification")]
+        public async Task<ActionResult<object>> UploadCertificationImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Invalid file type. Only image files are allowed.");
+            }
+
+            // Validate file size (5MB max)
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return BadRequest("File size exceeds 5MB limit");
+            }
+
+            try
+            {
+                // Save directly to wwwroot/certifications
+                var uploadsFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
+                    "certifications"
+                );
+                Directory.CreateDirectory(uploadsFolder);
+
+                // Generate unique filename
+                var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Return the URL pointing to /certifications folder
+                var imageUrl = $"{Request.Scheme}://{Request.Host}/certifications/{uniqueFileName}";
+                
+                return Ok(new { imageUrl = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error uploading file: {ex.Message}");
+            }
+        }
     }
 }
-        

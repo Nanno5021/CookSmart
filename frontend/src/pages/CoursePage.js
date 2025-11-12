@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import sampleFood from "../assets/food.png";
 import chefProfile from "../assets/pfp.png";
 import { fetchAllCourses } from "../api/courseApi";
+import { enrollInCourse, getEnrollmentsByUser } from "../api/enrollmentApi";
 
 function CoursePage() {
   const navigate = useNavigate();
@@ -11,21 +12,27 @@ function CoursePage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("all"); // "all" or "enrolled"
-  const [enrolledCourses, setEnrolledCourses] = useState(
-    JSON.parse(localStorage.getItem("enrolledCourses")) || []
-  );
+  const [filter, setFilter] = useState("all");
+  const [userEnrollments, setUserEnrollments] = useState([]);
+
+  // Get current user ID from localStorage
+  const currentUserId = parseInt(localStorage.getItem("userId"));
 
   useEffect(() => {
-    loadCourses();
-  }, []);
+    if (currentUserId) {
+      loadCourses();
+      loadUserEnrollments();
+    } else {
+      setLoading(false);
+      setError("Please log in to view courses");
+    }
+  }, [currentUserId]);
 
   const loadCourses = async () => {
     try {
       setLoading(true);
       const data = await fetchAllCourses();
       
-      // Transform API response to match the component's expected format
       const groupedCourses = data.reduce((acc, course) => {
         const existingChef = acc.find(c => c.chefId === course.chefId);
         
@@ -65,9 +72,40 @@ function CoursePage() {
     }
   };
 
+  const loadUserEnrollments = async () => {
+    if (!currentUserId) return;
+    
+    try {
+      const enrollments = await getEnrollmentsByUser(currentUserId);
+      setUserEnrollments(enrollments);
+    } catch (err) {
+      console.error("Error loading enrollments:", err);
+    }
+  };
+
+  // ✅ FIXED: Handle course enrollment (separate from navigation)
+  const handleEnrollInCourse = async (courseId) => {
+    if (!currentUserId) {
+      setError("Please log in to enroll in courses");
+      return;
+    }
+
+    try {
+      await enrollInCourse(currentUserId, courseId);
+      await loadUserEnrollments(); // Refresh enrollments
+      alert("Successfully enrolled in the course!");
+    } catch (err) {
+      console.error("Error enrolling in course:", err);
+      setError(err.message || "Failed to enroll in course");
+    }
+  };
+
+  // ✅ FIXED: Navigation logic - check enrollment status first
   const goToCourseDetail = (chef, course) => {
-    if (filter === "enrolled") {
-      // Pass the full course object with id
+    const isEnrolled = userEnrollments.some(e => e.courseId === course.id);
+    
+    if (filter === "enrolled" && isEnrolled) {
+      // If in "Enrolled Courses" tab AND enrolled, go to enrolled detail page
       navigate("/enrolleddetail", { 
         state: { 
           chef: {
@@ -76,7 +114,7 @@ function CoursePage() {
             chefImage: chef.chefImage
           }, 
           course: {
-            id: course.id, // Make sure to pass the course ID
+            id: course.id,
             name: course.name,
             courseName: course.name,
             ...course
@@ -84,11 +122,26 @@ function CoursePage() {
         } 
       });
     } else {
-      navigate("/coursedetail", { state: { chef, course } });
+      // If in "All Courses" tab OR not enrolled, go to course detail page
+      navigate("/coursedetail", { 
+        state: { 
+          chef: {
+            chefId: chef.chefId,
+            chefName: chef.chefName,
+            chefImage: chef.chefImage
+          }, 
+          course: {
+            id: course.id,
+            name: course.name,
+            courseName: course.name,
+            ...course
+          } 
+        } 
+      });
     }
   };
 
-  // Filter displayed courses
+  // Filter displayed courses based on database enrollments
   const displayedCourses =
     filter === "all"
       ? courses
@@ -96,15 +149,14 @@ function CoursePage() {
           .map((chef) => ({
             ...chef,
             courses: chef.courses.filter((course) =>
-              enrolledCourses.some(
-                (enrolled) =>
-                  enrolled.chefId === chef.chefId &&
-                  enrolled.courseName === course.name
+              userEnrollments.some(
+                (enrollment) => enrollment.courseId === course.id
               )
             ),
           }))
           .filter((chef) => chef.courses.length > 0);
 
+  // ... rest of your component (loading, error, return JSX) remains the same
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
@@ -164,57 +216,91 @@ function CoursePage() {
                   : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
-              Enrolled Courses
+              Enrolled Courses ({userEnrollments.length})
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-12 items-center pb-16 w-full">
+        <div className="flex flex-col gap-12 items-center pb-16 w-full px-8">
           {displayedCourses.length > 0 ? (
             displayedCourses.map((chef) => (
               <div
                 key={chef.chefId}
-                className="w-11/12 rounded-2xl p-6 shadow-lg"
+                className="w-full max-w-6xl rounded-2xl p-8 shadow-lg"
                 style={{ backgroundColor: "#181818" }}
               >
                 {/* Chef Header */}
-                <div className="flex items-center mb-6">
+                <div className="flex items-center mb-8">
                   <img
                     src={chef.chefImage || chefProfile}
                     alt={chef.chefName}
-                    className="w-14 h-14 rounded-full object-cover"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-600"
                   />
-                  <div className="ml-4">
+                  <div className="ml-6">
                     <h2 className="text-2xl font-semibold">{chef.chefName}</h2>
                   </div>
                 </div>
 
                 {/* Chef Courses (Horizontal Scroll) */}
-                <div className="flex overflow-x-auto space-x-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4">
-                  {chef.courses.map((course, index) => (
-                    <div
-                      key={course.id || index}
-                      onClick={() => goToCourseDetail(chef, course)}
-                      className="min-w-[320px] bg-[#1f1f1f] rounded-xl shadow-md flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                    >
-                      <img
-                        src={course.image || sampleFood}
-                        alt={course.name}
-                        className="w-full h-48 object-cover rounded-t-xl"
-                      />
-                      <div className="p-4">
-                        <p className="text-sm text-gray-400 mb-2">
-                          Ingredients: {course.ingredients || "N/A"}
-                        </p>
-                        <h3 className="text-lg font-semibold mb-1">
-                          {course.name}
-                        </h3>
-                        <p className="text-gray-300 text-sm">
-                          {course.description || "No description provided."}
-                        </p>
+                <div className="flex overflow-x-auto space-x-8 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4 px-2">
+                  {chef.courses.map((course, index) => {
+                    const enrollment = userEnrollments.find(e => e.courseId === course.id);
+                    const isEnrolled = !!enrollment;
+                    
+                    return (
+                      <div
+                        key={course.id || index}
+                        onClick={() => goToCourseDetail(chef, course)}
+                        className="min-w-[340px] rounded-xl overflow-hidden shadow-md transition transform hover:scale-105 hover:shadow-lg flex-shrink-0 cursor-pointer flex flex-col"
+                        style={{ backgroundColor: "#1f1f1f" }}
+                      >
+                        <img
+                          src={course.image || sampleFood}
+                          alt={course.name}
+                          className="w-full h-52 object-cover"
+                        />
+                        <div className="p-5 flex-1 flex flex-col">
+                          <p className="text-sm text-gray-400 mb-3">
+                            Ingredients: {course.ingredients || "N/A"}
+                          </p>
+                          <h3 className="text-lg font-semibold mb-2">
+                            {course.name}
+                          </h3>
+                          <p className="text-gray-300 text-sm flex-1">
+                            {course.description || "No description provided."}
+                          </p>
+                          
+                          {/* Enrollment Status */}
+                          {isEnrolled && (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-green-400 font-semibold">
+                                  ✓ Enrolled
+                                </span>
+                                {enrollment.progress > 0 && (
+                                  <span className="text-blue-400">
+                                    Progress: {Math.round(enrollment.progress * 100)}%
+                                  </span>
+                                )}
+                              </div>
+                              {enrollment.completed && (
+                                <div className="mt-1 text-xs text-yellow-400 font-semibold">
+                                  🎉 Course Completed!
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="mt-4 pt-3 border-t border-gray-700">
+                            <div className="flex justify-between items-center text-xs text-gray-400">
+                              <span>Difficulty: {course.difficulty}</span>
+                              <span>Time: {course.time}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))
@@ -227,6 +313,7 @@ function CoursePage() {
           )}
         </div>
       </div>
+      
       {/* Request Chef Account Button */}
       <div className="fixed bottom-6 right-6">
         <button

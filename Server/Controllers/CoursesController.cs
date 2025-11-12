@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.DTOs;
@@ -11,10 +12,12 @@ namespace Server.Controllers
     public class CoursesController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public CoursesController(AppDbContext context)
+        public CoursesController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: api/courses
@@ -32,7 +35,7 @@ namespace Server.Controllers
                 id = c.id,
                 chefId = c.chefId,
                 chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = "", // Temporarily removed until profile images are implemented
+                chefImage = "",
                 courseName = c.courseName,
                 courseImage = c.courseImage,
                 ingredients = c.ingredients,
@@ -81,7 +84,7 @@ namespace Server.Controllers
                 id = course.id,
                 chefId = course.chefId,
                 chefName = course.chef?.username ?? "Unknown Chef",
-                chefImage = "", // Temporarily removed until profile images are implemented
+                chefImage = "",
                 courseName = course.courseName,
                 courseImage = course.courseImage,
                 ingredients = course.ingredients,
@@ -126,7 +129,7 @@ namespace Server.Controllers
                 id = c.id,
                 chefId = c.chefId,
                 chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = "", // Temporarily removed until profile images are implemented
+                chefImage = "",
                 courseName = c.courseName,
                 courseImage = c.courseImage,
                 ingredients = c.ingredients,
@@ -159,14 +162,12 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<ActionResult<CourseResponseDto>> CreateCourse(CreateCourseDto dto)
         {
-            // ✅ Validate chef exists
             var chef = await _context.Users.FindAsync(dto.chefId);
             if (chef == null)
             {
                 return BadRequest($"Chef with ID {dto.chefId} not found.");
             }
 
-            // ✅ Create main course entry
             var course = new Course
             {
                 chefId = dto.chefId,
@@ -180,9 +181,8 @@ namespace Server.Controllers
             };
 
             _context.Courses.Add(course);
-            await _context.SaveChangesAsync(); // saves to get course.id
+            await _context.SaveChangesAsync();
 
-            // ✅ Add course sections
             foreach (var sectionDto in dto.sections)
             {
                 _context.CourseSections.Add(new CourseSection
@@ -195,7 +195,6 @@ namespace Server.Controllers
                 });
             }
 
-            // ✅ Add quiz questions
             foreach (var quizDto in dto.quizQuestions)
             {
                 _context.QuizQuestions.Add(new QuizQuestion
@@ -213,10 +212,8 @@ namespace Server.Controllers
 
             await _context.SaveChangesAsync();
 
-            // ✅ Return the full course response
             return await GetCourse(course.id);
         }
-
 
         // PUT: api/courses/{id}
         [HttpPut("{id}")]
@@ -232,7 +229,6 @@ namespace Server.Controllers
                 return NotFound();
             }
 
-            // Update course details
             course.courseName = dto.courseName;
             course.courseImage = dto.courseImage;
             course.ingredients = dto.ingredients;
@@ -240,11 +236,9 @@ namespace Server.Controllers
             course.estimatedTime = dto.estimatedTime;
             course.description = dto.description;
 
-            // Remove old sections and quiz questions
             _context.CourseSections.RemoveRange(course.sections);
             _context.QuizQuestions.RemoveRange(course.quizQuestions);
 
-            // Add new sections
             foreach (var sectionDto in dto.sections)
             {
                 var section = new CourseSection
@@ -258,7 +252,6 @@ namespace Server.Controllers
                 _context.CourseSections.Add(section);
             }
 
-            // Add new quiz questions
             foreach (var quizDto in dto.quizQuestions)
             {
                 var quiz = new QuizQuestion
@@ -294,6 +287,78 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // POST: api/courses/upload-image
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadCourseImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
+            if (!file.ContentType.StartsWith("image/"))
+                return BadRequest(new { message = "Only image files are allowed." });
+
+            const long maxBytes = 5 * 1024 * 1024; // 5 MB
+            if (file.Length > maxBytes)
+                return BadRequest(new { message = "File too large. Max 5 MB." });
+
+            // Save directly to wwwroot/courses
+            var uploadsDir = Path.Combine(
+                _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
+                "courses"
+            );
+            
+            if (!Directory.Exists(uploadsDir))
+                Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/courses/{fileName}";
+
+            return Ok(new { imageUrl = publicUrl });
+        }
+
+        // POST: api/courses/upload-section-image
+        [HttpPost("upload-section-image")]
+        public async Task<IActionResult> UploadSectionImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
+            if (!file.ContentType.StartsWith("image/"))
+                return BadRequest(new { message = "Only image files are allowed." });
+
+            const long maxBytes = 5 * 1024 * 1024; // 5 MB
+            if (file.Length > maxBytes)
+                return BadRequest(new { message = "File too large. Max 5 MB." });
+
+            // Save directly to wwwroot/sections
+            var uploadsDir = Path.Combine(
+                _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
+                "sections"
+            );
+            
+            if (!Directory.Exists(uploadsDir))
+                Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/sections/{fileName}";
+
+            return Ok(new { imageUrl = publicUrl });
         }
     }
 }

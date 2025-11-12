@@ -24,6 +24,12 @@ namespace Server.Data
         public DbSet<RecipeReview> RecipeReviews { get; set; }
 
         public DbSet<PostView> PostViews { get; set; }
+        public DbSet<RecipeReview> RecipeReviews { get; set; }  
+        public DbSet<ChefApplication> ChefApplications { get; set; }
+        public DbSet<Chef> Chefs { get; set; }
+        
+        // Add this line for Enrollments
+        public DbSet<Enrollment> Enrollments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -170,5 +176,32 @@ namespace Server.Data
         }
         public DbSet<ChefApplication> ChefApplications { get; set; }
         public DbSet<Chef> Chefs { get; set; }
+            // --- ADD THESE CONFIGURATIONS FOR ENROLLMENTS ---
+
+            // Enrollment belongs to User
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.userId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Enrollment belongs to Course
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.courseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prevent duplicate enrollments (one user can only enroll in a course once)
+            modelBuilder.Entity<Enrollment>()
+                .HasIndex(e => new { e.userId, e.courseId })
+                .IsUnique();
+
+            // Configure decimal precision for progress
+            modelBuilder.Entity<Enrollment>()
+                .Property(e => e.progress)
+                .HasPrecision(3, 2); // 3 total digits, 2 decimal places (0.00 to 1.00)
+
+        }
     }
 }
