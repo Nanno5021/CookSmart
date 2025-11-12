@@ -1,19 +1,51 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Award, Calendar, FileText, Link as LinkIcon, Briefcase, Save, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Award, Calendar, FileText, Link as LinkIcon, Save, Upload } from 'lucide-react';
+import { fetchUserById, updateChefProfile, uploadCertificationImage } from '../../api/manageUserApi';
 
-function ChefApplicationForm({ user, onBack, onSubmit }) {
+function EditChefProfile({ userId, onBack, onSave }) {
+  const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [formData, setFormData] = useState({
     specialtyCuisine: '',
     yearsOfExperience: 0,
     certificationName: '',
-    certificationImage: null, // Changed from certificationImageUrl to certificationImage
+    certificationImage: null,
     portfolioLink: '',
     biography: '',
   });
 
   const [errors, setErrors] = useState({});
-  const [uploadingCert, setUploadingCert] = useState(false);
+
+  useEffect(() => {
+    loadUserDetails();
+  }, [userId]);
+
+  const loadUserDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchUserById(userId);
+      setUser(data);
+      
+      if (data.chefProfile) {
+        setFormData({
+          specialtyCuisine: data.chefProfile.specialtyCuisine || '',
+          yearsOfExperience: data.chefProfile.yearsOfExperience || 0,
+          certificationName: data.chefProfile.certificationName || '',
+          certificationImage: null,
+          portfolioLink: data.chefProfile.portfolioLink || '',
+          biography: data.chefProfile.biography || '',
+        });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load chef profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -26,7 +58,7 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: type === 'number' ? parseInt(value) || 0 : value
       }));
     }
     
@@ -43,7 +75,7 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
       newErrors.specialtyCuisine = 'Specialty cuisine is required';
     }
 
-    if (!formData.yearsOfExperience || formData.yearsOfExperience < 0) {
+    if (formData.yearsOfExperience < 0) {
       newErrors.yearsOfExperience = 'Years of experience must be a positive number';
     }
 
@@ -63,15 +95,75 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
 
     try {
       setSubmitting(true);
-      await onSubmit(formData);
-      alert('Chef profile created successfully!');
+      
+      let certificationImageUrl = user?.chefProfile?.certificationImageUrl || '';
+
+      // If there's a new certification image file, upload it first
+      if (formData.certificationImage) {
+        const uploadResult = await uploadCertificationImage(userId, formData.certificationImage);
+        certificationImageUrl = uploadResult.certificationImageUrl;
+      }
+
+      // Prepare the chef data for submission
+      const submissionData = {
+        specialtyCuisine: formData.specialtyCuisine,
+        yearsOfExperience: formData.yearsOfExperience,
+        certificationName: formData.certificationName,
+        certificationImageUrl: certificationImageUrl,
+        portfolioLink: formData.portfolioLink,
+        biography: formData.biography,
+      };
+
+      await updateChefProfile(userId, submissionData);
+      alert('Chef profile updated successfully!');
+      if (onSave) await onSave();
       onBack();
     } catch (err) {
-      alert(err.message || 'Failed to create chef profile');
+      alert(err.message || 'Failed to update chef profile');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-gray-400 hover:text-white mb-6 transition"
+        >
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          <p className="text-gray-400">Loading chef profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-gray-400 hover:text-white mb-6 transition"
+        >
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          <p className="text-red-400">{error}</p>
+          <button
+            onClick={loadUserDetails}
+            className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -81,15 +173,14 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
         className="flex items-center space-x-2 text-gray-400 hover:text-white mb-6 transition"
       >
         <ArrowLeft size={20} />
-        <span>Back to Users</span>
+        <span>Back to User Details</span>
       </button>
 
       {/* Header */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">Complete Chef Profile</h2>
+        <h2 className="text-3xl font-bold mb-2">Edit Chef Profile</h2>
         <p className="text-gray-400">
-          You've changed <span className="text-white font-semibold">{user.fullName}</span>'s role to Chef. 
-          Please complete the chef application details below.
+          Editing chef profile for <span className="text-white font-semibold">{user?.fullName}</span>
         </p>
       </div>
 
@@ -128,14 +219,14 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
             name="certificationName"
             value={formData.certificationName}
             onChange={handleInputChange}
-            placeholder="e.g., Culinary Arts Diploma (Optional)"
+            placeholder="e.g., Culinary Arts Diploma"
           />
 
           {/* Certification Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center space-x-2">
               <Upload size={20} />
-              <span>Certification Image (Optional)</span>
+              <span>Certification Image</span>
             </label>
             <div className="relative">
               <input
@@ -151,6 +242,11 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
                 Selected file: {formData.certificationImage.name}
               </p>
             )}
+            {user?.chefProfile?.certificationImageUrl && !formData.certificationImage && (
+              <p className="text-blue-400 text-sm mt-2">
+                Current certification image: <a href={user.chefProfile.certificationImageUrl} target="_blank" rel="noopener noreferrer" className="underline">View</a>
+              </p>
+            )}
             <p className="text-gray-500 text-sm mt-1">
               Accepted formats: JPG, PNG, GIF (Max 5MB)
             </p>
@@ -163,7 +259,7 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
             name="portfolioLink"
             value={formData.portfolioLink}
             onChange={handleInputChange}
-            placeholder="https://example.com/portfolio (Optional)"
+            placeholder="https://example.com/portfolio"
           />
 
           {/* Biography */}
@@ -203,7 +299,7 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
             className="px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-lg transition inline-flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={18} />
-            <span>{submitting ? 'Creating Profile...' : 'Create Chef Profile'}</span>
+            <span>{submitting ? 'Updating...' : 'Update Chef Profile'}</span>
           </button>
         </div>
       </div>
@@ -239,4 +335,4 @@ function FormField({ icon, label, name, type = 'text', value, onChange, placehol
   );
 }
 
-export default ChefApplicationForm;
+export default EditChefProfile;

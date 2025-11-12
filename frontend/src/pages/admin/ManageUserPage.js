@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, updateUserRole, createChefProfile } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
 import { Eye } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
 import ChefApplicationForm from "./ChefApplicationForm"; 
+import EditChefProfile from "./EditChefProfile";
 
 function ManageUserPage() {
   const [users, setUsers] = useState([]);
@@ -11,6 +12,7 @@ function ManageUserPage() {
   const [error, setError] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [editingUserId, setEditingUserId] = useState(null);
+  const [editingChefUserId, setEditingChefUserId] = useState(null);
   
   // NEW: Chef Application Form State
   const [showChefForm, setShowChefForm] = useState(false);
@@ -61,8 +63,31 @@ function ManageUserPage() {
       // Find the user being updated
       const user = users.find(u => u.id === editRoleUserId);
       
+      // Check if changing FROM Chef role to another role
+      if (user.role === 'Chef' && selectedRole !== 'Chef') {
+        if (!window.confirm('Changing from Chef role will delete all chef profile data. Are you sure?')) {
+          setUpdatingRole(false);
+          return;
+        }
+        
+        // Delete chef profile first
+        await deleteChefProfile(editRoleUserId);
+        
+        // Then update the role
+        await updateUserRole(editRoleUserId, selectedRole);
+        
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editRoleUserId ? { ...u, role: selectedRole } : u
+          )
+        );
+        
+        setEditRoleUserId(null);
+        alert('Chef profile deleted and role updated successfully!');
+      }
       // Check if changing TO Chef role
-      if (selectedRole === 'Chef' && user.role !== 'Chef') {
+      else if (selectedRole === 'Chef' && user.role !== 'Chef') {
         // Update the role first
         await updateUserRole(editRoleUserId, selectedRole);
         
@@ -82,7 +107,7 @@ function ManageUserPage() {
         
         alert('Role updated! Please complete the chef profile.');
       } else {
-        // Normal role update (not changing to Chef)
+        // Normal role update (not involving Chef role)
         await updateUserRole(editRoleUserId, selectedRole);
         setUsers((prev) =>
           prev.map((u) =>
@@ -140,9 +165,20 @@ function ManageUserPage() {
 
   // --- VIEW DETAILS ---
   const handleViewDetails = (id) => setSelectedUserId(id);
+  
+  // --- EDIT USER ---
+  const handleEditUser = (userId, editType = 'user') => {
+    if (editType === 'chef') {
+      setEditingChefUserId(userId);
+    } else {
+      setEditingUserId(userId);
+    }
+  };
+
   const handleBackToList = () => {
     setSelectedUserId(null);
     setEditingUserId(null);
+    setEditingChefUserId(null);
     loadUsers();
   };
 
@@ -157,6 +193,17 @@ function ManageUserPage() {
     );
   }
 
+  // Show edit chef profile page
+  if (editingChefUserId) {
+    return (
+      <EditChefProfile
+        userId={editingChefUserId}
+        onBack={handleBackToList}
+        onSave={loadUsers}
+      />
+    );
+  }
+
   // Show edit or details page
   if (selectedUserId || editingUserId) {
     if (editingUserId) {
@@ -167,7 +214,7 @@ function ManageUserPage() {
         <UserDetailsPage
           userId={selectedUserId}
           onBack={handleBackToList}
-          onEdit={setEditingUserId}
+          onEdit={handleEditUser}
         />
       );
     }
