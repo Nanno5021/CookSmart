@@ -110,7 +110,7 @@ function UserDetailsPage({ userId, onBack, onEdit }) {
             {/* Avatar */}
             {user.avatarUrl ? (
               <img
-                src={`http://localhost:5037${user.avatarUrl}`}
+                src={user.avatarUrl}
                 alt={user.fullName}
                 className="w-24 h-24 rounded-full object-cover"
               />

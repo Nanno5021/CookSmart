@@ -70,3 +70,10 @@ export async function resetAvatar(userId) {
     method: "POST",
   });
 }
+
+export async function createChefProfile(userId, chefData) {
+  return await apiFetch(`/ManageUser/create-chef/${userId}`, {
+    method: "POST",
+    body: JSON.stringify(chefData),
+  });
+}
