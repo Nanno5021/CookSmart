@@ -31,7 +31,7 @@ const handleSubmit = async (e) => {
 
   try {
     const { confirmPassword, ...dataToSend } = formData;
-    dataToSend.role = "User"; 
+    dataToSend.role = "Admin"; 
     
     const data = await registerUser(dataToSend);
     alert(data.message || "Registration successful!");
