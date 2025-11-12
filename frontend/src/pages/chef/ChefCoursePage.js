@@ -8,8 +8,8 @@ import { fetchCoursesByChef, deleteCourse } from "../../api/courseApi";
 
 function ChefCoursePage() {
   const navigate = useNavigate();
-  // TODO: Replace with actual logged-in chef ID from auth or localStorage
-  const chefId = 2;
+  // Get logged-in chef ID from localStorage
+  const chefId = parseInt(localStorage.getItem("chefId"));
 
   const [myCourses, setMyCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,12 @@ function ChefCoursePage() {
   }, [chefId]);
 
   const loadChefCourses = async () => {
+    if (!chefId) {
+      setError("You need to be a chef to view courses.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const data = await fetchCoursesByChef(chefId);
@@ -76,6 +82,26 @@ function ChefCoursePage() {
         <Navbar />
         <div className="flex items-center justify-center h-screen">
           <p className="text-xl text-gray-400">Loading your courses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is a chef
+  if (!chefId) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-xl text-red-400 mb-4">You need to be a chef to access this page.</p>
+            <button
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            >
+              Go Home
+            </button>
+          </div>
         </div>
       </div>
     );

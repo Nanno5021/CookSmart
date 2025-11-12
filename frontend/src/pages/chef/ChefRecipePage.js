@@ -7,11 +7,16 @@ function ChefRecipePage() {
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState([]);
   
-  // Replace with actual logged-in chef ID
-  const chefId = 2;
+  // Get logged-in chef ID from localStorage
+  const chefId = parseInt(localStorage.getItem("chefId"));
 
   useEffect(() => {
     const getChefRecipes = async () => {
+      if (!chefId) {
+        console.error("No chef ID found. User may not be a chef.");
+        return;
+      }
+
       try {
         const data = await fetchRecipesByChef(chefId);
         setRecipes(data);
@@ -40,6 +45,24 @@ function ChefRecipePage() {
   const handleAdd = () => {
     navigate("/addrecipe");
   };
+
+  // Check if user is a chef
+  if (!chefId) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 flex justify-center items-center">
+        <Navbar />
+        <div className="text-center">
+          <p className="text-xl text-red-400 mb-4">You need to be a chef to access this page.</p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center relative">

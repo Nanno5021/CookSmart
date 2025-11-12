@@ -41,6 +41,9 @@ function EditCoursePage() {
   const [quizAnswer, setQuizAnswer] = useState("");
   const [editingQuiz, setEditingQuiz] = useState(null);
 
+  // Get logged-in chef ID from localStorage
+  const chefId = parseInt(localStorage.getItem("chefId"));
+
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -273,6 +276,12 @@ function EditCoursePage() {
   };
 
   const handleUpdateCourse = async () => {
+    // Check if user is a chef
+    if (!chefId) {
+      alert("You need to be a chef to update courses");
+      return;
+    }
+
     if (!courseName || !description || sections.length === 0 || quizQuestions.length === 0) {
       alert("Please fill in course name, description, add at least one section, and at least one quiz question");
       return;
@@ -287,7 +296,7 @@ function EditCoursePage() {
 
     try {
       const courseData = {
-        chefId: 2,
+        chefId: chefId, // Use the actual chef ID from localStorage
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",
@@ -321,6 +330,26 @@ function EditCoursePage() {
       setIsSubmitting(false);
     }
   };
+
+  // Check if user is a chef
+  if (!chefId) {
+    return (
+      <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-xl text-red-400 mb-4">You need to be a chef to access this page.</p>
+            <button
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

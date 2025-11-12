@@ -35,7 +35,8 @@ function AddRecipePage() {
   const [steps, setSteps] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const chefId = 2;
+  // Get chef ID from localStorage
+  const chefId = parseInt(localStorage.getItem("chefId"));
 
   const handleCuisineChange = (e) => {
     const selectedCuisine = e.target.value;
@@ -91,6 +92,12 @@ function AddRecipePage() {
   };
 
   const handleSubmitRecipe = async () => {
+    // Check if user is a chef
+    if (!chefId) {
+      alert("You need to be a chef to add recipes");
+      return;
+    }
+
     const finalCuisine = getFinalCuisine();
     
     if (!recipeName || !ingredients || !steps.trim() || !finalCuisine) {
