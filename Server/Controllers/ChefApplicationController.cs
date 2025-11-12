@@ -11,10 +11,12 @@ namespace Server.Controllers
     public class ChefApplicationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ChefApplicationController(AppDbContext context)
+        public ChefApplicationController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // POST: api/chefapplications
@@ -321,8 +323,11 @@ namespace Server.Controllers
 
             try
             {
-                // Create uploads directory if it doesn't exist
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "certifications");
+                // Save directly to wwwroot/certifications
+                var uploadsFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
+                    "certifications"
+                );
                 Directory.CreateDirectory(uploadsFolder);
 
                 // Generate unique filename
@@ -335,8 +340,8 @@ namespace Server.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                // Return the URL
-                var imageUrl = $"/uploads/certifications/{uniqueFileName}";
+                // Return the URL pointing to /certifications folder
+                var imageUrl = $"{Request.Scheme}://{Request.Host}/certifications/{uniqueFileName}";
                 
                 return Ok(new { imageUrl = imageUrl });
             }
@@ -347,4 +352,3 @@ namespace Server.Controllers
         }
     }
 }
-        
