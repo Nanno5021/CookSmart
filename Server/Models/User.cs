@@ -14,5 +14,7 @@ namespace Server.Models
 
         // New: avatar URL (publicly accessible)
         public string avatarUrl { get; set; } = string.Empty;
+
+        public List<Post> Posts { get; set; } = new();
     }
 }

@@ -7,7 +7,7 @@ import viewsIcon from "../assets/views.png";
 import postIcon from "../assets/post.png";
 import { fetchPosts } from "../api/post";
 import { apiFetch } from "../api/apiClient";
-import { fetchMyProfile } from "../api/profileapi";
+import { fetchMyProfile, fetchProfileByUsername } from "../api/profileapi";
 
 /* Helper: convert relative -> absolute and accept many field names */
 function resolveAvatarUrl(raw) {
@@ -28,7 +28,7 @@ function pickAvatarFromPost(post) {
     post.author?.avatarUrl,
     post.user?.avatarUrl,
   ];
-  const first = candidates.flat().find(Boolean);
+  const first = candidates.flat?.().find(Boolean) ?? candidates.find(Boolean);
   return first ? resolveAvatarUrl(first) : null;
 }
 
@@ -47,7 +47,14 @@ function pickAvatarFromProfile(data) {
 
 function Avatar({ src, name, size = 40 }) {
   if (src) {
-    return <img src={src} alt={name || "avatar"} className={`w-${size} h-${size} rounded-full object-cover`} style={{ width: size, height: size }} />;
+    return (
+      <img
+        src={src}
+        alt={name || "avatar"}
+        className={`rounded-full object-cover`}
+        style={{ width: size, height: size }}
+      />
+    );
   }
   // fallback: initials circle
   const initials = (name || "U").split(" ").map(n => n[0]).slice(0,2).join("").toUpperCase();
@@ -71,7 +78,7 @@ function Avatar({ src, name, size = 40 }) {
   );
 }
 
-function MainPage() {
+export default function MainPage() {
   const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
   const [posts, setPosts] = useState([]);
@@ -86,53 +93,60 @@ function MainPage() {
   useEffect(() => {
     let mounted = true;
 
-    const load = async () => {
+    const loadPosts = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // load current user (for small avatar & username)
+        // 1️⃣ Fetch current user profile
+        let currentUser = null;
         try {
           const profile = await fetchMyProfile();
           if (!mounted) return;
-          setMe({
+
+          currentUser = {
             username: profile.username ?? profile.fullName ?? "You",
             fullName: profile.fullName ?? profile.username ?? "You",
             avatar: pickAvatarFromProfile(profile),
-          });
+          };
+          setMe(currentUser);
         } catch (err) {
-          // quietly ignore; me can be null (anonymous)
           console.warn("Failed to load current profile:", err);
           if (mounted) setMe(null);
         }
 
-        // load posts
+        // 2️⃣ Fetch posts
         const data = await fetchPosts();
-        const arr = Array.isArray(data) ? data : data?.posts ?? [];
+        console.log(data); // check that each post has imageUrl
+        const postsArray = Array.isArray(data) ? data : data?.posts ?? [];
         if (!mounted) return;
 
-        const mapped = arr.map((p) => ({
+        const mappedPosts = postsArray.map((p) => ({
           id: p.id,
-          username: p.username ?? p.author?.username ?? p.user?.username ?? "Anonymous",
+          username: p.username || p.author?.username || p.user?.username || "Anonymous",
           content: p.content ?? p.title ?? "",
           createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-          rating: typeof p.rating === "number" ? p.rating : 0,
+          rating: p.rating ?? 0,
           comments: p.comments ?? 0,
           views: p.views ?? 0,
-          avatar: pickAvatarFromPost(p),
+          avatar: pickAvatarFromPost(p) || null,
+          imageUrl: resolveAvatarUrl(p.imageUrl ?? p.image ?? p.filePath ?? p.postImage ?? null), // ← updated
         }));
 
-        setPosts(mapped);
+        if (!mounted) return;
+        setPosts(mappedPosts);
       } catch (err) {
-        console.error("Error loading main feed:", err);
+        console.error("Error loading posts:", err);
         if (mounted) setError(err.message || "Failed to load posts");
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    load();
-    return () => { mounted = false; };
+    loadPosts();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleNewPost = () => {
@@ -176,7 +190,7 @@ function MainPage() {
     <div className="min-h-screen bg-black text-white pl-24 flex justify-center relative">
       <Navbar />
 
-      <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818" }}>
+      <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818", border: "1px solid #2d2d2d" }}>
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Main Feed</h2>
@@ -186,29 +200,25 @@ function MainPage() {
           </select>
         </div>
 
-        {/* New Post Input */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4 w-full">
-            {/* show current user's avatar if available, otherwise initials */}
-            <div>
-              <Avatar src={me?.avatar} name={me?.fullName || me?.username} size={48} />
-            </div>
-
-            <input
-              type="text"
-              placeholder={isLoggedIn ? `What's on your mind, ${me?.username ?? "you"}?` : "New Blog Post?"}
-              value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
-              className="w-full bg-transparent border-b border-gray-600 text-gray-300 focus:outline-none focus:border-white pb-1"
-            />
-          </div>
-
-          <button onClick={handleNewPost} className="bg-white text-black font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 transition ml-4">
+        {/* New Post Input - Updated to match Profile Page style */}
+        <div className="mb-8 flex items-center space-x-3">
+          <Avatar 
+            src={me?.avatar} 
+            name={me?.fullName || me?.username} 
+            size={40} 
+          />
+          <input
+            placeholder={isLoggedIn ? `What's on your mind, ${me?.username ?? "you"}?` : "New Blog Post?"}
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
+            className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none"
+          />
+          <button onClick={handleNewPost} className="px-4 py-1.5 border border-gray-600 rounded-lg hover:bg-gray-900">
             Post
           </button>
         </div>
 
-        <hr className="border-gray-700 mb-6" />
+        <hr className="mb-6" style={{ borderColor: "#2d2d2d", borderTop: "1px solid #2d2d2d", width: "100%" }} />
 
         {error && <div className="text-red-400 mb-4">{error}</div>}
 
@@ -216,7 +226,8 @@ function MainPage() {
           {posts.length > 0 ? (
             posts.map((post, index) => (
               <React.Fragment key={post.id}>
-                <div className="w-full p-6 rounded-lg" style={{ backgroundColor: "#1f1f1f" }}>
+                {/* Post Container - Removed gray background */}
+                <div className="w-full pb-6 border-b" style={{ borderColor: "#2d2d2d" }}>
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       <Avatar src={post.avatar} name={post.username} size={40} />
@@ -229,7 +240,15 @@ function MainPage() {
 
                   <p className="text-gray-200 mb-4">{post.content}</p>
 
-                  <div className="flex items-center justify-between text-gray-400 text-sm">
+                  {post.imageUrl && (
+                    <img
+                      src={post.imageUrl}
+                      alt="Post"
+                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" style={{ borderColor: "#2d2d2d" }}
+                    />
+                  )}
+
+                  <div className="flex items-center justify-between text-gray-400 text-sm mt-4">
                     <div className="flex space-x-6 items-center">
                       <button onClick={() => handleRate(post.id)} disabled={!isLoggedIn} className={`flex items-center space-x-1 transition ${isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"}`}>
                         <img src={ratingIcon} alt="Rating" className="w-5 h-5 invert" />
@@ -248,10 +267,6 @@ function MainPage() {
                     </div>
                   </div>
                 </div>
-
-                {index < posts.length - 1 && (
-                  <hr className="border-t" style={{ borderColor: "#2a2a2a", marginTop: "2rem", marginBottom: "2rem" }} />
-                )}
               </React.Fragment>
             ))
           ) : (
@@ -266,5 +281,3 @@ function MainPage() {
     </div>
   );
 }
-
-export default MainPage;
