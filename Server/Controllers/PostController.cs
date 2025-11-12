@@ -126,6 +126,159 @@ namespace Server.Controllers
             var publicUrl = $"{Request.Scheme}://{Request.Host}/post_uploads/{fileName}";
             return Ok(new { imageUrl = publicUrl });
         }
+
+        [HttpPost("{id}/rate")]
+        [Authorize]
+        public async Task<ActionResult> RatePost(int id)
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "id" || c.Type == "sub")?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Invalid user ID" });
+
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+                return NotFound(new { message = "Post not found" });
+
+            // Check if user already liked this post
+            var existingLike = await _context.PostLikes
+                .FirstOrDefaultAsync(pl => pl.postId == id && pl.userId == userId);
+
+            if (existingLike != null)
+            {
+                // User already liked - unlike (remove the like)
+                _context.PostLikes.Remove(existingLike);
+                post.rating -= 1;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Post unliked", rating = post.rating, liked = false });
+            }
+            else
+            {
+                // User hasn't liked - add like
+                var newLike = new PostLike
+                {
+                    userId = userId,
+                    postId = id
+                };
+                _context.PostLikes.Add(newLike);
+                post.rating += 1;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Post liked", rating = post.rating, liked = true });
+            }
+        }
+
+        // Replace the simple view endpoint with this
+        [HttpPost("{id}/view")]
+        [Authorize]
+        public async Task<ActionResult> TrackUserView(int id)
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "id" || c.Type == "sub")?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Invalid user ID" });
+
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+                return NotFound(new { message = "Post not found" });
+
+            // Check if user already viewed this post
+            var existingView = await _context.PostViews
+                .FirstOrDefaultAsync(pv => pv.postId == id && pv.userId == userId);
+
+            if (existingView != null)
+            {
+                // User already viewed - update timestamp but don't increment count
+                existingView.viewedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "View timestamp updated", views = post.views, isNewView = false });
+            }
+            else
+            {
+                // First time viewing - create view record and increment count
+                var newView = new PostView
+                {
+                    userId = userId,
+                    postId = id
+                };
+                _context.PostViews.Add(newView);
+                post.views += 1;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "View counted", views = post.views, isNewView = true });
+            }
+        }
+
+
+
+        // Update GetPost to handle both logged-in and anonymous users
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PostDto>> GetPost(int id)
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "id" || c.Type == "sub")?.Value;
+            int? userId = userIdClaim != null && int.TryParse(userIdClaim, out var uid) ? uid : null;
+
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PostLikes)
+                .Include(p => p.PostViews)
+                .FirstOrDefaultAsync(p => p.id == id);
+
+            if (post == null)
+                return NotFound(new { message = "Post not found" });
+
+            // Track view for logged-in users
+            if (userId.HasValue)
+            {
+                var existingView = await _context.PostViews
+                    .FirstOrDefaultAsync(pv => pv.postId == id && pv.userId == userId.Value);
+
+                if (existingView == null)
+                {
+                    // First time viewing - create view record and increment count
+                    var newView = new PostView
+                    {
+                        userId = userId.Value,
+                        postId = id
+                    };
+                    _context.PostViews.Add(newView);
+                    post.views += 1;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    // Update timestamp for existing view (no count increment)
+                    existingView.viewedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+            }
+            else
+            {
+                post.views += 1;
+                await _context.SaveChangesAsync();
+            }
+
+            var postDto = new PostDto
+            {
+                id = post.id,
+                title = post.title,
+                content = post.content,
+                createdAt = post.createdAt,
+                rating = post.rating,
+                comments = post.comments,
+                views = post.views,
+                username = post.User != null
+                    ? (!string.IsNullOrWhiteSpace(post.User.username)
+                        ? post.User.username
+                        : (!string.IsNullOrWhiteSpace(post.User.fullName)
+                            ? post.User.fullName
+                            : $"user{post.User.id}"))
+                    : "Anonymous",
+                avatarUrl = post.User != null && !string.IsNullOrWhiteSpace(post.User.avatarUrl)
+                    ? post.User.avatarUrl
+                    : string.Empty,
+                imageUrl = post.imageUrl,
+                isLikedByCurrentUser = userId.HasValue && post.PostLikes.Any(pl => pl.userId == userId.Value)
+            };
+
+            return Ok(postDto);
+        }
         
     }
 }

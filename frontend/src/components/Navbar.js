@@ -26,33 +26,40 @@ function Navbar() {
   );
 
   return (
-    <nav className="fixed top-0 left-0 h-full w-20 bg-black flex flex-col items-center py-6">
-      <div className="mb-10">
-        <img src={logo} alt="Logo" className="w-12 h-12" />
-        {/* <ChefHat className="w-12 h-12 text-white" /> */}
+    <nav className="fixed top-0 left-0 h-full w-16 bg-black flex flex-col items-center py-8">
+      {/* Logo Section */}
+      <div className="mb-16">
+        <img src={logo} alt="Logo" className="w-10 h-10" />
       </div>
 
       {/* Main Nav Icons */}
-      <div className="flex flex-col justify-center flex-1">
+      <div className="flex flex-col items-center justify-center flex-1 space-y-12">
         {icons.map(({ path, Icon, alt }) => (
-          <Link key={path} to={path} className="my-10">
+          <Link 
+            key={path} 
+            to={path} 
+            className="group flex items-center justify-center"
+          >
             <Icon
-              className={`w-8 h-8 transition duration-300 ${
+              className={`w-6 h-6 transition-all duration-200 ${
                 isActive(path) 
-                  ? "text-white scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" 
-                  : "text-gray-500"
+                  ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                  : "text-gray-400 group-hover:text-gray-300"
               }`}
             />
           </Link>
         ))}
       </div>
 
-      <button
-        onClick={logoutUser}
-        className="mb-4 text-gray-400 hover:text-red-500 transition font-semibold text-sm"
-      >
-        <LogOut className="w-6 h-6 opacity-80 hover:opacity-100 transition" />
-      </button>
+      {/* Logout Button */}
+      <div className="mt-auto pt-8">
+        <button
+          onClick={logoutUser}
+          className="text-gray-400 hover:text-red-400 transition-colors duration-200 group"
+        >
+          <LogOut className="w-5 h-5 group-hover:scale-105 transition-transform" />
+        </button>
+      </div>
     </nav>
   );
 }

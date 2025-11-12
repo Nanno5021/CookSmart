@@ -9,7 +9,10 @@ namespace Server.Data
             : base(options)
         {
         }
-
+        // In your AppDbContext.cs
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<CommentLike> CommentLikes { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Course> Courses { get; set; }
@@ -18,6 +21,9 @@ namespace Server.Data
         public DbSet<CourseReview> CourseReviews { get; set; }
         
         public DbSet<Recipe> Recipes { get; set; }
+        public DbSet<RecipeReview> RecipeReviews { get; set; }
+
+        public DbSet<PostView> PostViews { get; set; }
         public DbSet<RecipeReview> RecipeReviews { get; set; }  
         public DbSet<ChefApplication> ChefApplications { get; set; }
         public DbSet<Chef> Chefs { get; set; }
@@ -67,7 +73,7 @@ namespace Server.Data
             modelBuilder.Entity<CourseReview>()
                 .HasIndex(r => new { r.courseId, r.userId })
                 .IsUnique();
-            
+
             modelBuilder.Entity<Recipe>()
                 .HasOne(r => r.chef)
                 .WithMany()
@@ -92,6 +98,84 @@ namespace Server.Data
                 .HasIndex(r => new { r.recipeId, r.userId })
                 .IsUnique();
 
+            // Post-Comment relationship
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.postId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // User-Comment relationship
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.userId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Self-referencing Comment (for replies)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.parentCommentId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete for replies
+
+                            // PostLike relationships
+            modelBuilder.Entity<PostLike>()
+                .HasOne(pl => pl.Post)
+                .WithMany(p => p.PostLikes)
+                .HasForeignKey(pl => pl.postId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostLike>()
+                .HasOne(pl => pl.User)
+                .WithMany()
+                .HasForeignKey(pl => pl.userId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prevent duplicate post likes
+            modelBuilder.Entity<PostLike>()
+                .HasIndex(pl => new { pl.userId, pl.postId })
+                .IsUnique();
+
+            // CommentLike relationships
+            modelBuilder.Entity<CommentLike>()
+                .HasOne(cl => cl.Comment)
+                .WithMany(c => c.CommentLikes)
+                .HasForeignKey(cl => cl.commentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CommentLike>()
+                .HasOne(cl => cl.User)
+                .WithMany()
+                .HasForeignKey(cl => cl.userId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prevent duplicate comment likes
+            modelBuilder.Entity<CommentLike>()
+                .HasIndex(cl => new { cl.userId, cl.commentId })
+                .IsUnique();
+
+                // PostView relationships
+            modelBuilder.Entity<PostView>()
+                .HasOne(pv => pv.Post)
+                .WithMany(p => p.PostViews)
+                .HasForeignKey(pv => pv.postId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostView>()
+                .HasOne(pv => pv.User)
+                .WithMany()
+                .HasForeignKey(pv => pv.userId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prevent duplicate views from same user
+            modelBuilder.Entity<PostView>()
+                .HasIndex(pv => new { pv.userId, pv.postId })
+                .IsUnique();
+
+        }
+        public DbSet<ChefApplication> ChefApplications { get; set; }
+        public DbSet<Chef> Chefs { get; set; }
             // --- ADD THESE CONFIGURATIONS FOR ENROLLMENTS ---
 
             // Enrollment belongs to User

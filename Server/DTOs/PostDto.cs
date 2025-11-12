@@ -14,6 +14,9 @@ namespace Server.DTOs
 
         // ✅ Add this
         public string? imageUrl { get; set; }
+
+        public bool isLikedByCurrentUser { get; set; }
+
     }
 
 }
