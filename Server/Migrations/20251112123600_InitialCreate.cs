@@ -238,6 +238,96 @@ namespace Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    content = table.Column<string>(type: "TEXT", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    likes = table.Column<int>(type: "INTEGER", nullable: false),
+                    postId = table.Column<int>(type: "INTEGER", nullable: false),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
+                    parentCommentId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Comments_Comments_parentCommentId",
+                        column: x => x.parentCommentId,
+                        principalTable: "Comments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Comments_Posts_postId",
+                        column: x => x.postId,
+                        principalTable: "Posts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Comments_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostLikes",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
+                    postId = table.Column<int>(type: "INTEGER", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostLikes", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Posts_postId",
+                        column: x => x.postId,
+                        principalTable: "Posts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostViews",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
+                    postId = table.Column<int>(type: "INTEGER", nullable: false),
+                    viewedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostViews", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_PostViews_Posts_postId",
+                        column: x => x.postId,
+                        principalTable: "Posts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostViews_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RecipeReviews",
                 columns: table => new
                 {
@@ -265,9 +355,62 @@ namespace Server.Migrations
                         principalColumn: "id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CommentLikes",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false),
+                    commentId = table.Column<int>(type: "INTEGER", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CommentLikes", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_CommentLikes_Comments_commentId",
+                        column: x => x.commentId,
+                        principalTable: "Comments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CommentLikes_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ChefApplications_userId",
                 table: "ChefApplications",
+                column: "userId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommentLikes_commentId",
+                table: "CommentLikes",
+                column: "commentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommentLikes_userId_commentId",
+                table: "CommentLikes",
+                columns: new[] { "userId", "commentId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_parentCommentId",
+                table: "Comments",
+                column: "parentCommentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_postId",
+                table: "Comments",
+                column: "postId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_userId",
+                table: "Comments",
                 column: "userId");
 
             migrationBuilder.CreateIndex(
@@ -292,9 +435,31 @@ namespace Server.Migrations
                 column: "courseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PostLikes_postId",
+                table: "PostLikes",
+                column: "postId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostLikes_userId_postId",
+                table: "PostLikes",
+                columns: new[] { "userId", "postId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_userId",
                 table: "Posts",
                 column: "userId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostViews_postId",
+                table: "PostViews",
+                column: "postId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostViews_userId_postId",
+                table: "PostViews",
+                columns: new[] { "userId", "postId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_courseId",
@@ -328,13 +493,19 @@ namespace Server.Migrations
                 name: "Chefs");
 
             migrationBuilder.DropTable(
+                name: "CommentLikes");
+
+            migrationBuilder.DropTable(
                 name: "CourseReviews");
 
             migrationBuilder.DropTable(
                 name: "CourseSections");
 
             migrationBuilder.DropTable(
-                name: "Posts");
+                name: "PostLikes");
+
+            migrationBuilder.DropTable(
+                name: "PostViews");
 
             migrationBuilder.DropTable(
                 name: "QuizQuestions");
@@ -343,10 +514,16 @@ namespace Server.Migrations
                 name: "RecipeReviews");
 
             migrationBuilder.DropTable(
+                name: "Comments");
+
+            migrationBuilder.DropTable(
                 name: "Courses");
 
             migrationBuilder.DropTable(
                 name: "Recipes");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "Users");

@@ -23,6 +23,7 @@ import RequireAdmin from './components/RequireAdmin';
 import EditCoursePage from "./pages/chef/EditCoursePage.js";
 import ChefMainPage from "./pages/chef/MainPage.js";
 import RequestChefAccountPage from "./pages/chef/RequestChefAccountPage.js";
+import BlogDetails from "./pages/BlogDetails.js";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="/addcourse" element={<AddCoursePage />} />
         <Route path="/editcourse/:courseId" element={<EditCoursePage />} />
         <Route path="/requestchef" element={<RequestChefAccountPage />} />
+        <Route path="/posts/:id" element={<BlogDetails />} />
 
         <Route path="/chef" element={<ChefMainPage />} />
         <Route

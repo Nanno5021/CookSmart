@@ -11,7 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251111181551_InitialCreate")]
+    [Migration("20251112123600_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -117,6 +117,67 @@ namespace Server.Migrations
                     b.HasIndex("userId");
 
                     b.ToTable("ChefApplications");
+                });
+
+            modelBuilder.Entity("Server.Models.Comment", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("likes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("parentCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("postId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("parentCommentId");
+
+                    b.HasIndex("postId");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Server.Models.CommentLike", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("commentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("commentId");
+
+                    b.HasIndex("userId", "commentId")
+                        .IsUnique();
+
+                    b.ToTable("CommentLikes");
                 });
 
             modelBuilder.Entity("Server.Models.Course", b =>
@@ -265,6 +326,56 @@ namespace Server.Migrations
                     b.HasIndex("userId");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Server.Models.PostLike", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("postId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("postId");
+
+                    b.HasIndex("userId", "postId")
+                        .IsUnique();
+
+                    b.ToTable("PostLikes");
+                });
+
+            modelBuilder.Entity("Server.Models.PostView", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("postId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("viewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("postId");
+
+                    b.HasIndex("userId", "postId")
+                        .IsUnique();
+
+                    b.ToTable("PostViews");
                 });
 
             modelBuilder.Entity("Server.Models.QuizQuestion", b =>
@@ -434,6 +545,51 @@ namespace Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Server.Models.Comment", b =>
+                {
+                    b.HasOne("Server.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("parentCommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Server.Models.Post", "Post")
+                        .WithMany("Comments")
+                        .HasForeignKey("postId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentComment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Server.Models.CommentLike", b =>
+                {
+                    b.HasOne("Server.Models.Comment", "Comment")
+                        .WithMany("CommentLikes")
+                        .HasForeignKey("commentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Server.Models.Course", b =>
                 {
                     b.HasOne("Server.Models.User", "chef")
@@ -486,6 +642,44 @@ namespace Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Server.Models.PostLike", b =>
+                {
+                    b.HasOne("Server.Models.Post", "Post")
+                        .WithMany("PostLikes")
+                        .HasForeignKey("postId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Server.Models.PostView", b =>
+                {
+                    b.HasOne("Server.Models.Post", "Post")
+                        .WithMany("PostViews")
+                        .HasForeignKey("postId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Server.Models.QuizQuestion", b =>
                 {
                     b.HasOne("Server.Models.Course", "course")
@@ -527,6 +721,13 @@ namespace Server.Migrations
                     b.Navigation("user");
                 });
 
+            modelBuilder.Entity("Server.Models.Comment", b =>
+                {
+                    b.Navigation("CommentLikes");
+
+                    b.Navigation("Replies");
+                });
+
             modelBuilder.Entity("Server.Models.Course", b =>
                 {
                     b.Navigation("quizQuestions");
@@ -534,6 +735,15 @@ namespace Server.Migrations
                     b.Navigation("reviews");
 
                     b.Navigation("sections");
+                });
+
+            modelBuilder.Entity("Server.Models.Post", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("PostLikes");
+
+                    b.Navigation("PostViews");
                 });
 
             modelBuilder.Entity("Server.Models.Recipe", b =>
