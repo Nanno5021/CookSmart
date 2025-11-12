@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
 
 namespace Server.Controllers
 {
@@ -62,35 +63,48 @@ namespace Server.Controllers
 
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Identifier) || string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest(new { message = "Invalid login data." });
 
-            var user = _context.Users
-                .FirstOrDefault(u => u.email == dto.Identifier || u.username == dto.Identifier);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.email == dto.Identifier || u.username == dto.Identifier);
 
-            // Verify password using BCrypt
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.password))
                 return Unauthorized(new { message = "Invalid username/email or password." });
 
             var token = GenerateJwtToken(user);
 
+            int? chefId = null;
+            if (user.role.Equals("Chef", StringComparison.OrdinalIgnoreCase))
+            {
+                var chef = await _context.Chefs
+                    .FirstOrDefaultAsync(c => c.userId == user.id);
+                
+                if (chef != null)
+                {
+                    chefId = chef.id;
+                }
+            }
+
             return Ok(new
             {
                 message = "Login successful",
                 token = token,
-                user = new { 
-                    user.id, 
-                    user.username, 
-                    user.email, 
-                    user.fullName, 
+                user = new
+                {
+                    user.id,
+                    user.username,
+                    user.email,
+                    user.fullName,
                     user.phone,
-                    user.role  
+                    user.role,
+                    user.avatarUrl,
+                    chefId = chefId 
                 }
             });
         }
-
 
         private string GenerateJwtToken(User user)
         {
