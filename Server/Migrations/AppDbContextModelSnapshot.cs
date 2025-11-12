@@ -266,6 +266,9 @@ namespace Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("comments")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("content")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -273,15 +276,25 @@ namespace Server.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("imageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("views")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("id");
+
+                    b.HasIndex("userId");
 
                     b.ToTable("Posts");
                 });
@@ -409,12 +422,22 @@ namespace Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("avatarUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("email")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("fullName")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("isBanned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("joinDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("password")
@@ -490,6 +513,7 @@ namespace Server.Migrations
                     b.Navigation("course");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("Server.Models.Enrollment", b =>
                 {
                     b.HasOne("Server.Models.Course", "Course")
@@ -500,12 +524,21 @@ namespace Server.Migrations
 
                     b.HasOne("Server.Models.User", "User")
                         .WithMany()
+=======
+            modelBuilder.Entity("Server.Models.Post", b =>
+                {
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany("Posts")
+>>>>>>> main
                         .HasForeignKey("userId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+<<<<<<< HEAD
                     b.Navigation("Course");
 
+=======
+>>>>>>> main
                     b.Navigation("User");
                 });
 
@@ -562,6 +595,11 @@ namespace Server.Migrations
             modelBuilder.Entity("Server.Models.Recipe", b =>
                 {
                     b.Navigation("reviews");
+                });
+
+            modelBuilder.Entity("Server.Models.User", b =>
+                {
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }

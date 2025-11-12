@@ -11,11 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-<<<<<<<< HEAD:Server/Migrations/20251111160820_InitialCreate.Designer.cs
-    [Migration("20251111160820_InitialCreate")]
-========
-    [Migration("20251111145056_InitialCreate")]
->>>>>>>> main:Server/Migrations/20251111145056_InitialCreate.Designer.cs
+    [Migration("20251111181551_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -68,44 +64,6 @@ namespace Server.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Chefs");
-                });
-
-            modelBuilder.Entity("Post", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("comments")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("content")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("createdAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("rating")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("views")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("Server.Models.ChefApplication", b =>
@@ -270,46 +228,13 @@ namespace Server.Migrations
                     b.ToTable("CourseSections");
                 });
 
-<<<<<<<< HEAD:Server/Migrations/20251111160820_InitialCreate.Designer.cs
-            modelBuilder.Entity("Server.Models.Enrollment", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("completed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("completedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("courseId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("enrolledAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<double>("progress")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("REAL");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("courseId");
-
-                    b.HasIndex("userId", "courseId")
-                        .IsUnique();
-
-                    b.ToTable("Enrollments");
-                });
-
             modelBuilder.Entity("Server.Models.Post", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("comments")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("content")
@@ -319,21 +244,29 @@ namespace Server.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("imageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("views")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("id");
+
+                    b.HasIndex("userId");
 
                     b.ToTable("Posts");
                 });
 
-========
->>>>>>>> main:Server/Migrations/20251111145056_InitialCreate.Designer.cs
             modelBuilder.Entity("Server.Models.QuizQuestion", b =>
                 {
                     b.Property<int>("id")
@@ -469,12 +402,6 @@ namespace Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("isBanned")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("joinDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -548,21 +475,13 @@ namespace Server.Migrations
                     b.Navigation("course");
                 });
 
-            modelBuilder.Entity("Server.Models.Enrollment", b =>
+            modelBuilder.Entity("Server.Models.Post", b =>
                 {
-                    b.HasOne("Server.Models.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("courseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Server.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Posts")
                         .HasForeignKey("userId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Course");
 
                     b.Navigation("User");
                 });
@@ -620,6 +539,11 @@ namespace Server.Migrations
             modelBuilder.Entity("Server.Models.Recipe", b =>
                 {
                     b.Navigation("reviews");
+                });
+
+            modelBuilder.Entity("Server.Models.User", b =>
+                {
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }

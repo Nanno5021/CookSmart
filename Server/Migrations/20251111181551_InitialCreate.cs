@@ -34,26 +34,6 @@ namespace Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Posts",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    userId = table.Column<int>(type: "INTEGER", nullable: false),
-                    title = table.Column<string>(type: "TEXT", nullable: false),
-                    content = table.Column<string>(type: "TEXT", nullable: false),
-                    username = table.Column<string>(type: "TEXT", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    rating = table.Column<int>(type: "INTEGER", nullable: false),
-                    comments = table.Column<int>(type: "INTEGER", nullable: false),
-                    views = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Posts", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -65,8 +45,6 @@ namespace Server.Migrations
                     phone = table.Column<string>(type: "TEXT", nullable: false),
                     password = table.Column<string>(type: "TEXT", nullable: false),
                     role = table.Column<string>(type: "TEXT", nullable: false),
-                    isBanned = table.Column<bool>(type: "INTEGER", nullable: false),
-                    joinDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     avatarUrl = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -124,6 +102,32 @@ namespace Server.Migrations
                     table.ForeignKey(
                         name: "FK_Courses_Users_chefId",
                         column: x => x.chefId,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    title = table.Column<string>(type: "TEXT", nullable: false),
+                    content = table.Column<string>(type: "TEXT", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    rating = table.Column<int>(type: "INTEGER", nullable: false),
+                    comments = table.Column<int>(type: "INTEGER", nullable: false),
+                    views = table.Column<int>(type: "INTEGER", nullable: false),
+                    imageUrl = table.Column<string>(type: "TEXT", nullable: true),
+                    userId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Posts_Users_userId",
+                        column: x => x.userId,
                         principalTable: "Users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -202,36 +206,6 @@ namespace Server.Migrations
                         name: "FK_CourseSections_Courses_courseId",
                         column: x => x.courseId,
                         principalTable: "Courses",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Enrollments",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    userId = table.Column<int>(type: "INTEGER", nullable: false),
-                    courseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    enrolledAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    progress = table.Column<double>(type: "REAL", precision: 3, scale: 2, nullable: false),
-                    completed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    completedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Enrollments", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Enrollments_Courses_courseId",
-                        column: x => x.courseId,
-                        principalTable: "Courses",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Enrollments_Users_userId",
-                        column: x => x.userId,
-                        principalTable: "Users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -318,15 +292,9 @@ namespace Server.Migrations
                 column: "courseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Enrollments_courseId",
-                table: "Enrollments",
-                column: "courseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Enrollments_userId_courseId",
-                table: "Enrollments",
-                columns: new[] { "userId", "courseId" },
-                unique: true);
+                name: "IX_Posts_userId",
+                table: "Posts",
+                column: "userId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_courseId",
@@ -364,9 +332,6 @@ namespace Server.Migrations
 
             migrationBuilder.DropTable(
                 name: "CourseSections");
-
-            migrationBuilder.DropTable(
-                name: "Enrollments");
 
             migrationBuilder.DropTable(
                 name: "Posts");

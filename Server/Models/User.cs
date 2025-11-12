@@ -9,5 +9,12 @@ namespace Server.Models
         public string phone { get; set; }
         public string password { get; set; } 
         public string role { get; set; } = "User";
+        public bool isBanned { get; set; } = false;
+        public DateTime joinDate { get; set; } = DateTime.Now;
+
+        // New: avatar URL (publicly accessible)
+        public string avatarUrl { get; set; } = string.Empty;
+
+        public List<Post> Posts { get; set; } = new();
     }
 }

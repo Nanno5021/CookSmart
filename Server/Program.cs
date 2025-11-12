@@ -65,6 +65,7 @@ builder.Services.AddOpenApi();
 // ---------------------------
 var app = builder.Build();
 
+app.UseStaticFiles(); // enable serving files from wwwroot
 
 // ---------------------------
 // 6️⃣ Middleware Order (important!)
