@@ -1,4 +1,29 @@
-import { apiFetch } from "./apiClient";
+import { apiFetch, getToken } from "./apiClient";
+
+const API_BASE_URL = "http://localhost:5037/api";
+
+// POST: Upload certification image
+export async function uploadCertificationImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = getToken();
+
+  const response = await fetch(`${API_BASE_URL}/ChefApplication/upload-certification`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: "Failed to upload certification image" }));
+    throw new Error(error.message || "Failed to upload certification image");
+  }
+
+  return await response.json();
+}
 
 // POST: Create a new chef application
 export async function createChefApplication(applicationData, userId) {

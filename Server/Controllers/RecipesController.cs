@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.DTOs;
@@ -11,10 +12,13 @@ namespace Server.Controllers
     public class RecipesController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public RecipesController(AppDbContext context)
+        // ✅ FIXED: Added IWebHostEnvironment to constructor
+        public RecipesController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: api/recipes
@@ -186,6 +190,43 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // ✅ POST: api/recipes/upload-image
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadRecipeImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
+            if (!file.ContentType.StartsWith("image/"))
+                return BadRequest(new { message = "Only image files are allowed." });
+
+            const long maxBytes = 5 * 1024 * 1024; // 5 MB
+            if (file.Length > maxBytes)
+                return BadRequest(new { message = "File too large. Max 5 MB." });
+
+            // Ensure uploads folder exists
+            var uploadsDir = Path.Combine(
+                _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
+                "uploads", 
+                "recipes"
+            );
+            
+            if (!Directory.Exists(uploadsDir))
+                Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/recipes/{fileName}";
+
+            return Ok(new { imageUrl = publicUrl });
         }
     }
 }
