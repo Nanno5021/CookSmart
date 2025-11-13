@@ -21,13 +21,13 @@ namespace Server.Controllers
         }
 
         // GET: api/recipes
+        // GET: api/recipes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecipeResponseDto>>> GetAllRecipes(
             [FromQuery] string? cuisine = null,
             [FromQuery] string? ingredient = null)
         {
             var query = _context.Recipes
-                .Include(r => r.chef)
                 .Include(r => r.reviews)
                 .AsQueryable();
 
@@ -45,11 +45,21 @@ namespace Server.Controllers
 
             var recipes = await query.ToListAsync();
 
+            // Get all chef IDs and their corresponding user details
+            var chefIds = recipes.Select(r => r.chefId).Distinct().ToList();
+            var chefsWithUsers = await _context.Chefs
+                .Where(c => chefIds.Contains(c.id))
+                .Join(_context.Users,
+                    chef => chef.userId,
+                    user => user.id,
+                    (chef, user) => new { ChefId = chef.id, UserName = user.username })
+                .ToDictionaryAsync(x => x.ChefId, x => x.UserName);
+
             var response = recipes.Select(r => new RecipeResponseDto
             {
                 id = r.id,
                 chefId = r.chefId,
-                chefName = r.chef?.username ?? "Unknown",
+                chefName = chefsWithUsers.GetValueOrDefault(r.chefId) ?? "Unknown",
                 recipeName = r.recipeName,
                 cuisine = r.cuisine,
                 recipeImage = r.recipeImage,
@@ -62,7 +72,6 @@ namespace Server.Controllers
 
             return Ok(response);
         }
-
         // GET: api/recipes/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<RecipeResponseDto>> GetRecipe(int id)
@@ -123,32 +132,34 @@ namespace Server.Controllers
             return Ok(response);
         }
 
+
         // POST: api/recipes
         [HttpPost]
-        public async Task<ActionResult<RecipeResponseDto>> CreateRecipe(
-            CreateRecipeDto dto,
-            [FromQuery] int chefId)
+        public async Task<ActionResult<RecipeResponseDto>> CreateRecipe(CreateRecipeDto dto)
         {
-            // ✅ FIX: Validate chef exists in Chefs table
-            var chef = await _context.Chefs.FindAsync(chefId);
-            if (chef == null)
+            // Get chefId from the DTO
+            if (dto.chefId <= 0)
+            {
+                return BadRequest("Invalid chef ID");
+            }
+
+            // ✅ SIMPLIFIED: Just check if chef exists without including user
+            var chefExists = await _context.Chefs.AnyAsync(c => c.id == dto.chefId);
+            
+            if (!chefExists)
             {
                 return BadRequest("Chef not found");
             }
 
-            // Get the user associated with this chef for the navigation property
-            var chefUser = await _context.Users.FindAsync(chef.userId);
-
             var recipe = new Recipe
             {
-                chefId = chefId,
+                chefId = dto.chefId, // ✅ Use the chefId from DTO
                 recipeName = dto.recipeName,
                 cuisine = dto.cuisine,
                 recipeImage = dto.recipeImage,
                 ingredients = dto.ingredients,
                 steps = dto.steps,
-                createdAt = DateTime.UtcNow,
-                chef = chefUser  // ✅ Set navigation property
+                createdAt = DateTime.UtcNow
             };
 
             _context.Recipes.Add(recipe);
@@ -156,7 +167,6 @@ namespace Server.Controllers
 
             return await GetRecipe(recipe.id);
         }
-
         // PUT: api/recipes/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRecipe(int id, CreateRecipeDto dto)

@@ -21,44 +21,58 @@ namespace Server.Controllers
         }
 
         // GET: api/courses
+        // GET: api/courses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CourseResponseDto>>> GetAllCourses()
         {
             var courses = await _context.Courses
-                .Include(c => c.chef) // This loads the User who is the chef
                 .Include(c => c.sections)
                 .Include(c => c.quizQuestions)
                 .ToListAsync();
 
-            var response = courses.Select(c => new CourseResponseDto
+            // Get all chef IDs and their corresponding user details
+            var chefIds = courses.Select(c => c.chefId).Distinct().ToList();
+            var chefsWithUsers = await _context.Chefs
+                .Where(c => chefIds.Contains(c.id))
+                .Join(_context.Users,
+                    chef => chef.userId,
+                    user => user.id,
+                    (chef, user) => new { ChefId = chef.id, UserName = user.username, AvatarUrl = user.avatarUrl })
+                .ToDictionaryAsync(x => x.ChefId, x => new { x.UserName, x.AvatarUrl });
+
+            var response = courses.Select(c => 
             {
-                id = c.id,
-                chefId = c.chefId,
-                chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = c.chef?.avatarUrl ?? "",
-                courseName = c.courseName,
-                courseImage = c.courseImage,
-                ingredients = c.ingredients,
-                difficulty = c.difficulty,
-                estimatedTime = c.estimatedTime,
-                description = c.description,
-                createdAt = c.createdAt,
-                sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
+                var chefInfo = chefsWithUsers.GetValueOrDefault(c.chefId);
+                return new CourseResponseDto
                 {
-                    id = s.id,
-                    sectionTitle = s.sectionTitle,
-                    contentType = s.contentType,
-                    content = s.content,
-                    sectionOrder = s.sectionOrder
-                }).ToList(),
-                quizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
-                {
-                    id = q.id,
-                    question = q.question,
-                    options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
-                    answer = q.correctAnswer,
-                    questionOrder = q.questionOrder
-                }).ToList()
+                    id = c.id,
+                    chefId = c.chefId,
+                    chefName = chefInfo?.UserName ?? "Unknown Chef",
+                    chefImage = chefInfo?.AvatarUrl ?? "",
+                    courseName = c.courseName,
+                    courseImage = c.courseImage,
+                    ingredients = c.ingredients,
+                    difficulty = c.difficulty,
+                    estimatedTime = c.estimatedTime,
+                    description = c.description,
+                    createdAt = c.createdAt,
+                    sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
+                    {
+                        id = s.id,
+                        sectionTitle = s.sectionTitle,
+                        contentType = s.contentType,
+                        content = s.content,
+                        sectionOrder = s.sectionOrder
+                    }).ToList(),
+                    quizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
+                    {
+                        id = q.id,
+                        question = q.question,
+                        options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
+                        answer = q.correctAnswer,
+                        questionOrder = q.questionOrder
+                    }).ToList()
+                };
             }).ToList();
 
             return Ok(response);
@@ -84,7 +98,7 @@ namespace Server.Controllers
                 id = course.id,
                 chefId = course.chefId,
                 chefName = course.chef?.username ?? "Unknown Chef",
-                chefImage = course.chef?.avatarUrl ?? "",
+                chefImage = "",
                 courseName = course.courseName,
                 courseImage = course.courseImage,
                 ingredients = course.ingredients,
@@ -129,7 +143,7 @@ namespace Server.Controllers
                 id = c.id,
                 chefId = c.chefId,
                 chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = c.chef?.avatarUrl ?? "",
+                chefImage = "",
                 courseName = c.courseName,
                 courseImage = c.courseImage,
                 ingredients = c.ingredients,
@@ -162,16 +176,11 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<ActionResult<CourseResponseDto>> CreateCourse(CreateCourseDto dto)
         {
-            // ✅ FIX: Validate chef exists in Chefs table
-            var chef = await _context.Chefs.FindAsync(dto.chefId);
-            
+            var chef = await _context.Users.FindAsync(dto.chefId);
             if (chef == null)
             {
                 return BadRequest($"Chef with ID {dto.chefId} not found.");
             }
-
-            // Get the user associated with this chef for the navigation property
-            var chefUser = await _context.Users.FindAsync(chef.userId);
 
             var course = new Course
             {
@@ -182,8 +191,7 @@ namespace Server.Controllers
                 difficulty = dto.difficulty,
                 estimatedTime = dto.estimatedTime,
                 description = dto.description,
-                createdAt = DateTime.UtcNow,
-                chef = chefUser // Set the navigation property
+                createdAt = DateTime.UtcNow
             };
 
             _context.Courses.Add(course);
@@ -309,6 +317,7 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
+            // Save directly to wwwroot/courses
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
                 "courses"
@@ -344,6 +353,7 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
+            // Save directly to wwwroot/sections
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
                 "sections"
