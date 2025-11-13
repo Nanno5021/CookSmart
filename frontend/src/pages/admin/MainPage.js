@@ -5,7 +5,7 @@ import ChefApprovalPage from './ChefApprovalPage';
 import ManageBlogPage from './ManageBlogPage';
 import ManageRecipePage from './ManageRecipePage';
 import ManageUserPage from './ManageUserPage';
-import ManageQuizPage from './ManageQuizPage';
+import ManageCoursePage from './ManageCoursePage';
 import { logoutUser } from '../../api/auth';
 
 function AdminDashboard() {
@@ -24,7 +24,7 @@ function AdminDashboard() {
     { id: 'manage-blog', name: 'Manage Blogs', icon: FileText },
     { id: 'manage-recipe', name: 'Manage Recipes', icon: BookOpen },
     { id: 'manage-user', name: 'Manage Users', icon: Users },
-    { id: 'manage-quiz', name: 'Manage Quiz', icon: Award },
+    { id: 'manage-course', name: 'Manage Courses', icon: Award },
   ];
 
   const renderContent = () => {
@@ -39,8 +39,8 @@ function AdminDashboard() {
         return <ManageRecipePage />;
       case 'manage-user':
         return <ManageUserPage />;
-      case 'manage-quiz':
-        return <ManageQuizPage />;
+      case 'manage-course':
+        return <ManageCoursePage />;
       default:
         return <DashboardPage />;
     }
