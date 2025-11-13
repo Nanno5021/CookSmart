@@ -21,44 +21,58 @@ namespace Server.Controllers
         }
 
         // GET: api/courses
+        // GET: api/courses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CourseResponseDto>>> GetAllCourses()
         {
             var courses = await _context.Courses
-                .Include(c => c.chef)
                 .Include(c => c.sections)
                 .Include(c => c.quizQuestions)
                 .ToListAsync();
 
-            var response = courses.Select(c => new CourseResponseDto
+            // Get all chef IDs and their corresponding user details
+            var chefIds = courses.Select(c => c.chefId).Distinct().ToList();
+            var chefsWithUsers = await _context.Chefs
+                .Where(c => chefIds.Contains(c.id))
+                .Join(_context.Users,
+                    chef => chef.userId,
+                    user => user.id,
+                    (chef, user) => new { ChefId = chef.id, UserName = user.username, AvatarUrl = user.avatarUrl })
+                .ToDictionaryAsync(x => x.ChefId, x => new { x.UserName, x.AvatarUrl });
+
+            var response = courses.Select(c => 
             {
-                id = c.id,
-                chefId = c.chefId,
-                chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = "",
-                courseName = c.courseName,
-                courseImage = c.courseImage,
-                ingredients = c.ingredients,
-                difficulty = c.difficulty,
-                estimatedTime = c.estimatedTime,
-                description = c.description,
-                createdAt = c.createdAt,
-                sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
+                var chefInfo = chefsWithUsers.GetValueOrDefault(c.chefId);
+                return new CourseResponseDto
                 {
-                    id = s.id,
-                    sectionTitle = s.sectionTitle,
-                    contentType = s.contentType,
-                    content = s.content,
-                    sectionOrder = s.sectionOrder
-                }).ToList(),
-                quizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
-                {
-                    id = q.id,
-                    question = q.question,
-                    options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
-                    answer = q.correctAnswer,
-                    questionOrder = q.questionOrder
-                }).ToList()
+                    id = c.id,
+                    chefId = c.chefId,
+                    chefName = chefInfo?.UserName ?? "Unknown Chef",
+                    chefImage = chefInfo?.AvatarUrl ?? "",
+                    courseName = c.courseName,
+                    courseImage = c.courseImage,
+                    ingredients = c.ingredients,
+                    difficulty = c.difficulty,
+                    estimatedTime = c.estimatedTime,
+                    description = c.description,
+                    createdAt = c.createdAt,
+                    sections = c.sections.OrderBy(s => s.sectionOrder).Select(s => new CourseSectionResponseDto
+                    {
+                        id = s.id,
+                        sectionTitle = s.sectionTitle,
+                        contentType = s.contentType,
+                        content = s.content,
+                        sectionOrder = s.sectionOrder
+                    }).ToList(),
+                    quizQuestions = c.quizQuestions.OrderBy(q => q.questionOrder).Select(q => new QuizQuestionResponseDto
+                    {
+                        id = q.id,
+                        question = q.question,
+                        options = new List<string> { q.option1, q.option2, q.option3, q.option4 },
+                        answer = q.correctAnswer,
+                        questionOrder = q.questionOrder
+                    }).ToList()
+                };
             }).ToList();
 
             return Ok(response);

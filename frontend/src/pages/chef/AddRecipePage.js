@@ -114,6 +114,7 @@ function AddRecipePage() {
     setIsSubmitting(true);
 
     const recipeData = {
+      chefId: chefId, 
       recipeName,
       recipeImage: recipeImage || "",
       cuisine: finalCuisine,
@@ -122,7 +123,8 @@ function AddRecipePage() {
     };
 
     try {
-      await createRecipe(recipeData, chefId);
+      console.log("Submitting recipe with chefId:", chefId);
+      await createRecipe(recipeData); 
       alert("Recipe added successfully!");
       navigate("/chefrecipe");
     } catch (error) {
@@ -207,7 +209,7 @@ function AddRecipePage() {
                     </button>
                   )}
                   {recipeImage && (
-                    <p className="text-green-400 text-sm mt-2">✓ Image uploaded successfully</p>
+                    <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
                   )}
                 </div>
               ) : (

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import postIcon from "../../assets/post.png";
 import sampleFood from "../../assets/food.png";
-import chefProfile from "../../assets/pfp.png";
 import { fetchCoursesByChef, deleteCourse } from "../../api/courseApi";
 
 function ChefCoursePage() {
@@ -16,7 +15,11 @@ function ChefCoursePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadChefCourses();
+    if (chefId) {
+      loadChefCourses();
+    } else {
+      setLoading(false);
+    }
   }, [chefId]);
 
   const loadChefCourses = async () => {
@@ -159,20 +162,6 @@ function ChefCoursePage() {
               className="w-11/12 rounded-2xl p-6 shadow-lg"
               style={{ backgroundColor: "#181818" }}
             >
-              {/* Chef Header */}
-              <div className="flex items-center mb-6">
-                <img
-                  src={chefProfile}
-                  alt="Chef Profile"
-                  className="w-14 h-14 rounded-full object-cover"
-                />
-                <div className="ml-4">
-                  <h2 className="text-2xl font-semibold">
-                    My Courses
-                  </h2>
-                </div>
-              </div>
-
               {/* Course List */}
               <div className="flex overflow-x-auto space-x-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4">
                 {myCourses.map((course) => (

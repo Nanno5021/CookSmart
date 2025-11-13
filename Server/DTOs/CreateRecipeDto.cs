@@ -2,6 +2,7 @@ namespace Server.DTOs
 {
     public class CreateRecipeDto
     {
+        public int chefId { get; set; }
         public string recipeName { get; set; } = string.Empty;
         public string cuisine { get; set; } = string.Empty;
         public string recipeImage { get; set; } = string.Empty;

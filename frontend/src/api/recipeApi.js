@@ -23,8 +23,8 @@ export async function fetchRecipesByChef(chefId) {
 }
 
 // POST: Create a new recipe
-export async function createRecipe(recipeData, chefId) {
-  return await apiFetch(`/recipes?chefId=${chefId}`, {
+export async function createRecipe(recipeData) {
+  return await apiFetch("/recipes", {
     method: "POST",
     body: JSON.stringify(recipeData),
   });
@@ -52,7 +52,7 @@ export async function uploadRecipeImage(file) {
 
   const token = getToken();
 
-  // ✅ FIXED: Changed from /recipe/ to /recipes/
+  // âœ… FIXED: Changed from /recipe/ to /recipes/
   const response = await fetch(`${API_BASE_URL}/recipes/upload-image`, {
     method: "POST",
     headers: {

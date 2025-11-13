@@ -245,7 +245,7 @@ function AddCoursePage() {
 
     try {
       const courseData = {
-        chefId: chefId, // Use the actual chef ID from localStorage
+        chefId: chefId, // This should be the chef ID, not user ID
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",
@@ -269,6 +269,8 @@ function AddCoursePage() {
         }))
       };
 
+      console.log("Submitting course with chefId:", chefId); // Debug log
+      
       const response = await createCourse(courseData);
       console.log("Course created:", response);
       alert("Course created successfully!");
@@ -349,7 +351,7 @@ function AddCoursePage() {
                     </button>
                   )}
                   {courseImage && (
-                    <p className="text-green-400 text-sm mt-2">✓ Image uploaded successfully</p>
+                    <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
                   )}
                 </div>
               ) : (
@@ -639,7 +641,7 @@ function AddCoursePage() {
                           </button>
                         )}
                         {sectionContent && (
-                          <p className="text-green-400 text-sm mt-2">✓ Image uploaded successfully</p>
+                          <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
                         )}
                       </div>
                     ) : (
