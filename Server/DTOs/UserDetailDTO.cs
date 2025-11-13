@@ -11,11 +11,20 @@ namespace Server.DTO
         public bool isBanned { get; set; }
         public DateTime joinDate { get; set; }
         public string avatarUrl { get; set; }
-        
+        public ChefDTO chefProfile { get; set; }
 
-        // public int? totalPosts { get; set; }
-        // public int? totalComments { get; set; }
-        // public int? totalViews { get; set; }
-        // public string bio { get; set; }
+    }
+    public class ChefDTO
+    {
+        public int id { get; set; }
+        public string specialtyCuisine { get; set; }
+        public int yearsOfExperience { get; set; }
+        public string certificationName { get; set; }
+        public string certificationImageUrl { get; set; }
+        public string portfolioLink { get; set; }
+        public string biography { get; set; }
+        public double rating { get; set; }
+        public int totalReviews { get; set; }
+        public DateTime approvedDate { get; set; }
     }
 }

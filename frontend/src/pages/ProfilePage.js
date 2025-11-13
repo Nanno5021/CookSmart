@@ -16,6 +16,40 @@ function resolveImageUrl(raw) {
   return `${window.location.origin}/${raw}`;
 }
 
+/* Avatar component from MainPage */
+function Avatar({ src, name, size = 40 }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name || "avatar"}
+        className={`rounded-full object-cover`}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  // fallback: initials circle
+  const initials = (name || "U").split(" ").map(n => n[0]).slice(0,2).join("").toUpperCase();
+  return (
+    <div
+      title={name || "User"}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "9999px",
+        backgroundColor: "#2a2a2a",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontWeight: 700,
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Posts");
   const [newPost, setNewPost] = useState("");
@@ -36,7 +70,7 @@ function ProfilePage() {
 
       try {
         const data = await fetchMyProfile();
-        console.log("Profile API response:", data); // Debug log
+        console.log("Profile API response:", data);
 
         // Set user info
         setUserData({
@@ -45,23 +79,26 @@ function ProfilePage() {
           profilePic: data.avatarUrl ? resolveImageUrl(data.avatarUrl) : picture,
         });
 
-        // Map posts from API - use the same logic as MainPage
+        // Map posts from API - using MainPage style mapping
         const mappedPosts = (data.posts || []).map((p) => {
-          console.log("Raw post data from profile:", p); // Debug each post
+          console.log("Raw post data from profile:", p);
           
           return {
             id: p.id,
             username: data.username,
-            content: p.content ?? p.title ?? "",
-            createdAt: new Date(p.createdAt),
+            title: p.title ?? "",
+            content: p.content ?? "",
+            createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
             rating: p.rating ?? 0,
             comments: p.comments ?? 0,
             views: p.views ?? 0,
-            imageUrl: p.imageUrl ? resolveImageUrl(p.imageUrl) : null, // Use the imageUrl directly
+            avatar: data.avatarUrl ? resolveImageUrl(data.avatarUrl) : picture,
+            imageUrl: p.imageUrl ? resolveImageUrl(p.imageUrl) : null,
+            isLikedByCurrentUser: p.isLikedByCurrentUser ?? false, // Add this
           };
         });
 
-        console.log("Mapped posts with images:", mappedPosts); // Debug log
+        console.log("Mapped posts with images:", mappedPosts);
         setPosts(mappedPosts);
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -78,23 +115,57 @@ function ProfilePage() {
     navigate("/postblog", { state: { title: newPost } });
   };
 
-  const handleRate = async (id) => {
+  const handleRate = async (id, e) => {
+    e.stopPropagation();
+    
     if (!isLoggedIn) return alert("Please log in to rate.");
     
-    // Optimistic update
-    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, rating: p.rating + 1 } : p));
+    // Find the post to check current like status
+    const post = posts.find(p => p.id === id);
+    const wasLiked = post?.isLikedByCurrentUser || false;
+
+    // Toggle optimistic update
+    setPosts((prev) => prev.map((p) => 
+      p.id === id ? { 
+        ...p, 
+        rating: wasLiked ? Math.max(p.rating - 1, 0) : p.rating + 1,
+        isLikedByCurrentUser: !wasLiked
+      } : p
+    ));
     
     try {
       await apiFetch(`/posts/${id}/rate`, { method: "POST" });
     } catch (err) {
       console.error("Failed to rate post:", err);
       // Revert on error
-      setPosts((prev) => prev.map((p) => p.id === id ? { ...p, rating: Math.max(p.rating - 1, 0) } : p));
+      setPosts((prev) => prev.map((p) => 
+        p.id === id ? { 
+          ...p, 
+          rating: wasLiked ? p.rating + 1 : Math.max(p.rating - 1, 0),
+          isLikedByCurrentUser: wasLiked
+        } : p
+      ));
       alert("Failed to rate post. Please try again.");
     }
   };
 
-  const handleComment = (id) => navigate(`/posts/${id}`);
+  const handleComment = (id, e) => {
+    e.stopPropagation();
+    navigate(`/posts/${id}`);
+  };
+
+  const handlePostClick = async (id) => {
+    // Track view for logged-in users (same logic as BlogDetails)
+    if (isLoggedIn) {
+      try {
+        await apiFetch(`/posts/${id}/view`, { method: "POST" });
+      } catch (viewErr) {
+        console.warn("Failed to track view:", viewErr);
+      }
+    }
+    
+    navigate(`/posts/${id}`);
+  };
 
   if (loading) {
     return (
@@ -160,7 +231,11 @@ function ProfilePage() {
         {/* Create New Post */}
         {activeTab === "Posts" && (
           <div className="mb-8 flex items-center space-x-3">
-            <img src={displayUser.profilePic} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+            <Avatar 
+              src={displayUser.profilePic} 
+              name={displayUser.fullName} 
+              size={40} 
+            />
             <input
               placeholder="What's new?"
               value={newPost}
@@ -175,42 +250,72 @@ function ProfilePage() {
 
         <hr className="mb-6" style={{ borderColor: "#2d2d2d", borderTop: "1px solid #2d2d2d", width: "100%" }} />
 
-        {/* Posts */}
-        <div className="space-y-6">
+        {/* Posts - Updated to match MainPage style */}
+        <div className="space-y-8">
           {activeTab === "Posts" && posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post.id} className="pb-6 border-b" style={{ borderColor: "#2d2d2d" }}>
-                <div className="flex items-center space-x-3 mb-2">
-                  <img src={displayUser.profilePic} className="w-10 h-10 rounded-full object-cover" />
-                  <h3 className="font-semibold">{post.username}</h3>
-                  <span className="text-sm text-gray-400">{post.createdAt.toLocaleDateString()}</span>
-                </div>
+              <React.Fragment key={post.id}>
+                {/* Post Container - Clickable like MainPage */}
+                <div 
+                  onClick={() => handlePostClick(post.id)}
+                  className="w-full pb-6 border-b cursor-pointer hover:bg-gray-900 hover:bg-opacity-30 transition-colors rounded-lg p-4 -m-4" 
+                  style={{ borderColor: "#2d2d2d" }}
+                >
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <Avatar src={post.avatar} name={post.username} size={40} />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="font-semibold text-white">{post.username}</h3>
+                      <p className="text-sm text-gray-400">{post.createdAt.toLocaleString()}</p>
+                    </div>
+                  </div>
 
-                {/* Post image (if exists) */}
-                {post.imageUrl && (
-                  <div className="mb-4">
+                  {/* Show Title only like MainPage */}
+                  <h2 className="text-xl font-bold text-white mb-4">{post.title || "Untitled Post"}</h2>
+
+                  {post.imageUrl && (
                     <img
                       src={post.imageUrl}
                       alt="Post"
-                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" style={{ borderColor: "#2d2d2d" }}
+                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" 
+                      style={{ borderColor: "#2d2d2d" }}
                     />
-                  </div>
-                )}
+                  )}
 
-                <p className="text-gray-200 mb-4 whitespace-pre-wrap">{post.content}</p>
+                  <div className="flex items-center justify-between text-gray-400 text-sm mt-4">
+                    <div className="flex space-x-6 items-center">
+                      <button 
+                        onClick={(e) => handleRate(post.id, e)} 
+                        disabled={!isLoggedIn} 
+                        className={`flex items-center space-x-1 transition ${
+                          isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"
+                        } ${post.isLikedByCurrentUser ? "text-blue-400" : "text-gray-400"}`}
+                      >
+                        <img 
+                          src={ratingIcon} 
+                          alt="Rating" 
+                          className={`w-5 h-5 ${post.isLikedByCurrentUser ? "" : "invert"}`} 
+                        />
+                        <span>{post.rating || 0}</span>
+                      </button>
 
-                <div className="flex items-center space-x-6 text-gray-400 text-sm">
-                  <button onClick={() => handleRate(post.id)} className="flex items-center space-x-1 hover:text-white">
-                    <img src={ratingIcon} className="w-5 h-5 invert" /><span>{post.rating}</span>
-                  </button>
-                  <button onClick={() => handleComment(post.id)} className="flex items-center space-x-1 hover:text-white">
-                    <img src={commentIcon} className="w-5 h-5 invert" /><span>{post.comments}</span>
-                  </button>
-                  <div className="flex items-center space-x-1">
-                    <img src={viewsIcon} className="w-5 h-5 invert" /><span>{post.views}</span>
+                      <button 
+                        onClick={(e) => handleComment(post.id, e)} 
+                        className="flex items-center space-x-1 hover:text-white transition"
+                      >
+                        <img src={commentIcon} alt="Comment" className="w-5 h-5 invert" />
+                        <span>{post.comments || 0}</span>
+                      </button>
+
+                      <div className="flex items-center space-x-1">
+                        <img src={viewsIcon} alt="Views" className="w-5 h-5 invert" />
+                        <span>{post.views || 0}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </React.Fragment>
             ))
           ) : (
             <p className="text-center text-gray-500">No posts yet.</p>

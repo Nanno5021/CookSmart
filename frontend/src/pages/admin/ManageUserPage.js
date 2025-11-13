@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, updateUserRole, createChefProfile } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
-import { Eye } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
 import ChefApplicationForm from "./ChefApplicationForm"; 
+import EditChefProfile from "./EditChefProfile";
 
 function ManageUserPage() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [editingUserId, setEditingUserId] = useState(null);
+  const [editingChefUserId, setEditingChefUserId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // NEW: Chef Application Form State
   const [showChefForm, setShowChefForm] = useState(false);
@@ -29,12 +33,27 @@ function ManageUserPage() {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(user =>
+        user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  }, [searchTerm, users]);
+
   const loadUsers = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchAllUsers();
       setUsers(data);
+      setFilteredUsers(data);
     } catch (err) {
       setError(err.message || 'Failed to load users');
     } finally {
@@ -61,8 +80,31 @@ function ManageUserPage() {
       // Find the user being updated
       const user = users.find(u => u.id === editRoleUserId);
       
+      // Check if changing FROM Chef role to another role
+      if (user.role === 'Chef' && selectedRole !== 'Chef') {
+        if (!window.confirm('Changing from Chef role will delete all chef profile data. Are you sure?')) {
+          setUpdatingRole(false);
+          return;
+        }
+        
+        // Delete chef profile first
+        await deleteChefProfile(editRoleUserId);
+        
+        // Then update the role
+        await updateUserRole(editRoleUserId, selectedRole);
+        
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editRoleUserId ? { ...u, role: selectedRole } : u
+          )
+        );
+        
+        setEditRoleUserId(null);
+        alert('Chef profile deleted and role updated successfully!');
+      }
       // Check if changing TO Chef role
-      if (selectedRole === 'Chef' && user.role !== 'Chef') {
+      else if (selectedRole === 'Chef' && user.role !== 'Chef') {
         // Update the role first
         await updateUserRole(editRoleUserId, selectedRole);
         
@@ -82,7 +124,7 @@ function ManageUserPage() {
         
         alert('Role updated! Please complete the chef profile.');
       } else {
-        // Normal role update (not changing to Chef)
+        // Normal role update (not involving Chef role)
         await updateUserRole(editRoleUserId, selectedRole);
         setUsers((prev) =>
           prev.map((u) =>
@@ -140,10 +182,25 @@ function ManageUserPage() {
 
   // --- VIEW DETAILS ---
   const handleViewDetails = (id) => setSelectedUserId(id);
+  
+  // --- EDIT USER ---
+  const handleEditUser = (userId, editType = 'user') => {
+    if (editType === 'chef') {
+      setEditingChefUserId(userId);
+    } else {
+      setEditingUserId(userId);
+    }
+  };
+
   const handleBackToList = () => {
     setSelectedUserId(null);
     setEditingUserId(null);
+    setEditingChefUserId(null);
     loadUsers();
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   // NEW: Show Chef Application Form if needed
@@ -153,6 +210,17 @@ function ManageUserPage() {
         user={chefFormUser}
         onBack={handleChefFormCancel}
         onSubmit={handleChefProfileSubmit}
+      />
+    );
+  }
+
+  // Show edit chef profile page
+  if (editingChefUserId) {
+    return (
+      <EditChefProfile
+        userId={editingChefUserId}
+        onBack={handleBackToList}
+        onSave={loadUsers}
       />
     );
   }
@@ -167,7 +235,7 @@ function ManageUserPage() {
         <UserDetailsPage
           userId={selectedUserId}
           onBack={handleBackToList}
-          onEdit={setEditingUserId}
+          onEdit={handleEditUser}
         />
       );
     }
@@ -178,17 +246,46 @@ function ManageUserPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-8">Manage Users</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Manage Users</h2>
+        <div className="relative w-80">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name, email, role, or username..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+          />
+        </div>
+      </div>
 
-      {users.length === 0 ? (
-        <EmptyState />
+      {filteredUsers.length === 0 ? (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          {searchTerm ? (
+            <div>
+              <p className="text-gray-400 mb-2">No users found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-orange-500 hover:text-orange-400 transition"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-400">No users found</p>
+          )}
+        </div>
       ) : (
         <UsersTable
-          users={users}
+          users={filteredUsers}
           onViewDetails={handleViewDetails}
           onEditRole={openEditRoleDialog}
           onBan={openBanDialog}
           onEditUser={setEditingUserId}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -284,17 +381,16 @@ function ErrorState({ error, onRetry }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
-      <p className="text-gray-400">No users found</p>
-    </div>
-  );
-}
-
-function UsersTable({ users, onViewDetails, onEditRole, onBan , onEditUser }) {
+function UsersTable({ users, onViewDetails, onEditRole, onBan, onEditUser, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {searchTerm && (
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="text-sm text-gray-400">
+            Showing {users.length} user{users.length !== 1 ? 's' : ''} for "{searchTerm}"
+          </p>
+        </div>
+      )}
       <table className="w-full">
         <thead className="bg-zinc-800">
           <tr>
@@ -308,8 +404,8 @@ function UsersTable({ users, onViewDetails, onEditRole, onBan , onEditUser }) {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-t border-zinc-800">
-              <td className="p-4">{user.fullName}</td>
+            <tr key={user.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
+              <td className="p-4 font-medium">{user.fullName}</td>
               <td className="p-4 text-gray-400">{user.email}</td>
               <td className="p-4">
                 <span
@@ -338,37 +434,39 @@ function UsersTable({ users, onViewDetails, onEditRole, onBan , onEditUser }) {
                   </span>
                 )}
               </td>
-              <td className="p-4 space-x-2">
-                <button
-                  onClick={() => onViewDetails(user.id)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
-                >
-                  <Eye size={16} />
-                  <span>View</span>
-                </button>
+              <td className="p-4">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => onViewDetails(user.id)}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
+                  >
+                    <Eye size={16} />
+                    <span>View</span>
+                  </button>
 
-                <button
-                  onClick={() => onEditUser(user.id)}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
-                >
-                  Edit
-                </button>
+                  <button
+                    onClick={() => onEditUser(user.id)}
+                    className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  onClick={() => onEditRole(user)}
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg transition"
-                  disabled={user.isBanned}
-                >
-                  Edit Role
-                </button>
+                  <button
+                    onClick={() => onEditRole(user)}
+                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg transition"
+                    disabled={user.isBanned}
+                  >
+                    Edit Role
+                  </button>
 
-                <button
-                  onClick={() => onBan(user.id)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
-                  disabled={user.isBanned}
-                >
-                  {user.isBanned ? 'Banned' : 'Ban'}
-                </button>
+                  <button
+                    onClick={() => onBan(user.id)}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
+                    disabled={user.isBanned}
+                  >
+                    {user.isBanned ? 'Banned' : 'Ban'}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

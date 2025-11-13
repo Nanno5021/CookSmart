@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, Upload, RotateCcw, Save } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Upload, RotateCcw, Save, Award } from 'lucide-react';
 import { fetchUserById, updateUser, uploadAvatar, resetAvatar } from '../../api/manageUserApi';
+import EditChefProfile from './EditChefProfile';
 
 function EditUserPage({ userId, onBack, onSave }) {
   const [user, setUser] = useState(null);
@@ -8,6 +9,7 @@ function EditUserPage({ userId, onBack, onSave }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [editingChef, setEditingChef] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -48,22 +50,20 @@ function EditUserPage({ userId, onBack, onSave }) {
     }));
   };
 
-
-    const handleSaveChanges = async () => {
+  const handleSaveChanges = async () => {
     try {
-        setSaving(true);
-        await updateUser(userId, formData);
-        alert('User profile updated successfully!');
-        if (onSave) await onSave(); 
-        onBack(); // This should now work with the fixed state management
+      setSaving(true);
+      await updateUser(userId, formData);
+      alert('User profile updated successfully!');
+      if (onSave) await onSave(); 
+      onBack();
     } catch (err) {
-        console.error('Save error:', err);
-        alert(err.message || 'Failed to update user');
+      console.error('Save error:', err);
+      alert(err.message || 'Failed to update user');
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
-    };
-
+  };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -102,35 +102,51 @@ function EditUserPage({ userId, onBack, onSave }) {
   };
 
   // FIXED: Reset avatar function
- const handleResetAvatar = async () => {
-  if (!window.confirm('Are you sure you want to reset the avatar to default?')) {
-    return;
-  }
+  const handleResetAvatar = async () => {
+    if (!window.confirm('Are you sure you want to reset the avatar to default?')) {
+      return;
+    }
 
-  try {
-    setUploadingAvatar(true);
-    const response = await resetAvatar(userId);
-    
-    // Update the user state with new avatar URL
-    setUser(prev => ({ 
-      ...prev, 
-      avatarUrl: response.avatarUrl 
-    }));
-    
-    alert('Avatar reset to default!');
-  } catch (err) {
-    console.error('Reset avatar error:', err);
-    alert(err.message || 'Failed to reset avatar');
-  } finally {
-    setUploadingAvatar(false);
-  }
-};
+    try {
+      setUploadingAvatar(true);
+      const response = await resetAvatar(userId);
+      
+      // Update the user state with new avatar URL
+      setUser(prev => ({ 
+        ...prev, 
+        avatarUrl: response.avatarUrl 
+      }));
+      
+      alert('Avatar reset to default!');
+    } catch (err) {
+      console.error('Reset avatar error:', err);
+      alert(err.message || 'Failed to reset avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   // FIXED: Back button handler
   const handleBack = () => {
     if (onBack) {
       onBack();
     }
   };
+
+  // Show EditChefProfile component if editing chef profile
+  if (editingChef && user) {
+    return (
+      <EditChefProfile
+        user={user}
+        chefProfile={user.chefProfile}
+        onBack={() => setEditingChef(false)}
+        onSave={async () => {
+          await loadUserDetails(); // Reload user data
+          if (onSave) await onSave();
+        }}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -190,6 +206,25 @@ function EditUserPage({ userId, onBack, onSave }) {
         <h2 className="text-3xl font-bold">Edit User Profile</h2>
         <div className="w-32"></div> 
       </div>
+
+      {/* Chef Profile Edit Section */}
+      {user?.role === 'Chef' && user.chefProfile && (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Chef Profile</h3>
+              <p className="text-gray-400">Manage chef-specific information</p>
+            </div>
+            <button
+              onClick={() => setEditingChef(true)}
+              className="px-6 py-3 bg-purple-500 hover:bg-purple-600 rounded-lg transition inline-flex items-center space-x-2"
+            >
+              <Award size={18} />
+              <span>Edit Chef Profile</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Avatar Section */}
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 mb-6">

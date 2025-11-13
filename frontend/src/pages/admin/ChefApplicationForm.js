@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Award, Calendar, FileText, Link as LinkIcon, Briefcase, Save } from 'lucide-react';
+import { ArrowLeft, Award, Calendar, FileText, Link as LinkIcon, Briefcase, Save, Upload } from 'lucide-react';
 
 function ChefApplicationForm({ user, onBack, onSubmit }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7,19 +7,29 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
     specialtyCuisine: '',
     yearsOfExperience: 0,
     certificationName: '',
-    certificationImageUrl: '',
+    certificationImage: null, // Changed from certificationImageUrl to certificationImage
     portfolioLink: '',
     biography: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [uploadingCert, setUploadingCert] = useState(false);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type, files } = e.target;
+    
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0] || null
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -121,15 +131,30 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
             placeholder="e.g., Culinary Arts Diploma (Optional)"
           />
 
-          {/* Certification Image URL */}
-          <FormField
-            icon={<LinkIcon size={20} />}
-            label="Certification Image URL"
-            name="certificationImageUrl"
-            value={formData.certificationImageUrl}
-            onChange={handleInputChange}
-            placeholder="https://example.com/certificate.jpg (Optional)"
-          />
+          {/* Certification Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center space-x-2">
+              <Upload size={20} />
+              <span>Certification Image (Optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                name="certificationImage"
+                accept=".jpg,.jpeg,.png,.gif"
+                onChange={handleInputChange}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600 transition"
+              />
+            </div>
+            {formData.certificationImage && (
+              <p className="text-green-400 text-sm mt-2">
+                Selected file: {formData.certificationImage.name}
+              </p>
+            )}
+            <p className="text-gray-500 text-sm mt-1">
+              Accepted formats: JPG, PNG, GIF (Max 5MB)
+            </p>
+          </div>
 
           {/* Portfolio Link */}
           <FormField

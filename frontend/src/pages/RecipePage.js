@@ -25,9 +25,11 @@ function RecipePage() {
   const [selectedCuisine, setSelectedCuisine] = useState("All");
   const [recipes, setRecipes] = useState([]);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setUserRole(localStorage.getItem("role"));
     const getRecipes = async () => {
       try {
         const data = await fetchAllRecipes();
@@ -169,15 +171,17 @@ function RecipePage() {
         )}
       </div>
 
-      {/* Request Chef Account Button - Same as in CoursePage */}
-      <div className="fixed bottom-6 right-6">
-        <button
-          onClick={() => navigate("/requestchef")}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-full shadow-lg font-semibold transition"
-        >
-          Request Chef Account
-        </button>
-      </div>
+{/* Request Chef Account Button */}
+      {userRole !== "Admin" && (
+        <div className="fixed bottom-6 right-6">
+          <button
+            onClick={() => navigate("/requestchef")}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-full shadow-lg font-semibold transition"
+          >
+            Request Chef Account
+          </button>
+        </div>
+      )}
     </div>
   );
 }

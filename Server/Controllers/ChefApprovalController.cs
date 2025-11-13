@@ -17,7 +17,7 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // GET: api/ChefApplication/pending
+        // GET: api/ChefApproval/pending
         [HttpGet("pending")]
         public async Task<ActionResult<IEnumerable<ChefApplicationDTO>>> GetPendingApplications()
         {
@@ -35,6 +35,7 @@ namespace Server.Controllers
                         SpecialtyCuisine = app.specialtyCuisine,
                         YearsOfExperience = app.yearsOfExperience,
                         CertificationName = app.certificationName,
+                        CertificationImageUrl = app.certificationImageUrl,  // Include this
                         PortfolioLink = app.portfolioLink,
                         Biography = app.biography,
                         Status = app.status,
@@ -44,7 +45,40 @@ namespace Server.Controllers
             return Ok(applications);
         }
 
-        // POST: api/ChefApplication/approve/{id}
+        // GET: api/ChefApproval/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ChefApplicationDTO>> GetApplicationById(int id)
+        {
+            var application = await _context.ChefApplications
+                .Where(a => a.id == id)
+                .Join(_context.Users,
+                    app => app.userId,
+                    user => user.id,
+                    (app, user) => new ChefApplicationDTO
+                    {
+                        Id = app.id,
+                        UserId = user.id,
+                        FullName = user.fullName,
+                        Email = user.email,
+                        SpecialtyCuisine = app.specialtyCuisine,
+                        YearsOfExperience = app.yearsOfExperience,
+                        CertificationName = app.certificationName,
+                        CertificationImageUrl = app.certificationImageUrl,  // Include this
+                        PortfolioLink = app.portfolioLink,
+                        Biography = app.biography,
+                        Status = app.status,
+                        DateApplied = app.dateApplied,
+                        DateReviewed = app.dateReviewed,
+                        AdminRemarks = app.adminRemarks
+                    }).FirstOrDefaultAsync();
+
+            if (application == null)
+                return NotFound(new { message = "Application not found" });
+
+            return Ok(application);
+        }
+
+        // POST: api/ChefApproval/approve/{id}
         [HttpPost("approve/{id}")]
         public async Task<IActionResult> ApproveApplication(int id)
         {
@@ -77,10 +111,10 @@ namespace Server.Controllers
             app.dateReviewed = DateTime.Now;
 
             await _context.SaveChangesAsync();
-            return Ok("Application Approved");
+            return Ok(new { message = "Application Approved" });
         }
 
-        // POST: api/ChefApplication/reject/{id}
+        // POST: api/ChefApproval/reject/{id}
         [HttpPost("reject/{id}")]
         public async Task<IActionResult> RejectApplication(int id, [FromBody] string remarks)
         {
@@ -92,39 +126,7 @@ namespace Server.Controllers
             app.dateReviewed = DateTime.Now;
 
             await _context.SaveChangesAsync();
-            return Ok("Application Rejected");
-        }
-
-        // GET: api/ChefApplication/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ChefApplicationDTO>> GetApplicationById(int id)
-        {
-            var application = await _context.ChefApplications
-                .Where(a => a.id == id)
-                .Join(_context.Users,
-                    app => app.userId,
-                    user => user.id,
-                    (app, user) => new ChefApplicationDTO
-                    {
-                        Id = app.id,
-                        UserId = user.id,
-                        FullName = user.fullName,
-                        Email = user.email,
-                        SpecialtyCuisine = app.specialtyCuisine,
-                        YearsOfExperience = app.yearsOfExperience,
-                        CertificationName = app.certificationName,
-                        PortfolioLink = app.portfolioLink,
-                        Biography = app.biography,
-                        Status = app.status,
-                        DateApplied = app.dateApplied,
-                        DateReviewed = app.dateReviewed,
-                        AdminRemarks = app.adminRemarks
-                    }).FirstOrDefaultAsync();
-
-            if (application == null)
-                return NotFound(new { message = "Application not found" });
-
-            return Ok(application);
+            return Ok(new { message = "Application Rejected" });
         }
     }
 }

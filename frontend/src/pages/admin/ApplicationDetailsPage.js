@@ -11,6 +11,8 @@ import {
   Briefcase,
   CheckCircle,
   XCircle,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 
 function ApplicationDetails({ applicationId, onBack }) {
@@ -23,6 +25,9 @@ function ApplicationDetails({ applicationId, onBack }) {
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  
+  // Image Modal State
+  const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
     loadApplicationDetails();
@@ -118,6 +123,10 @@ function ApplicationDetails({ applicationId, onBack }) {
     );
   }
 
+  const certImageUrl = application.certificationImageUrl 
+    ? `${application.certificationImageUrl}` 
+    : null;
+
   return (
     <div className="p-6">
       <BackButton onClick={onBack} />
@@ -191,8 +200,40 @@ function ApplicationDetails({ applicationId, onBack }) {
 
           <Divider />
 
+          {/* Certification Image Section */}
+          {certImageUrl && (
+            <>
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center space-x-2">
+                  <ImageIcon size={24} className="text-orange-500" />
+                  <span>Certification Image</span>
+                </h3>
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <div className="relative inline-block">
+                    <img
+                      src={certImageUrl}
+                      alt="Certification"
+                      className="max-w-full h-auto rounded-lg border-2 border-zinc-700 cursor-pointer hover:border-orange-500 transition"
+                      style={{ maxHeight: '300px' }}
+                      onClick={() => setShowImageModal(true)}
+                    />
+                    <button
+                      onClick={() => setShowImageModal(true)}
+                      className="absolute bottom-2 right-2 px-3 py-1 bg-black bg-opacity-70 text-white rounded text-sm hover:bg-opacity-90 transition"
+                    >
+                      View Full Size
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-2">Click to view full size</p>
+                </div>
+              </div>
+
+              <Divider />
+            </>
+          )}
+
           <Section title="Biography" icon={FileText}>
-            <div className="bg-zinc-800 rounded-lg p-4">
+            <div className="bg-zinc-800 rounded-lg p-4 col-span-2">
               <p className="text-gray-300 whitespace-pre-wrap">
                 {application.biography || 'No biography provided'}
               </p>
@@ -229,6 +270,11 @@ function ApplicationDetails({ applicationId, onBack }) {
           )}
         </div>
       </div>
+
+      {/* ---------- IMAGE MODAL ---------- */}
+      {showImageModal && certImageUrl && (
+        <ImageModal imageUrl={certImageUrl} onClose={() => setShowImageModal(false)} />
+      )}
 
       {/* ---------- APPROVE DIALOG ---------- */}
       {showApproveDialog && (
@@ -336,6 +382,30 @@ function FormField({ label, value, icon: Icon, isLink = false }) {
         ) : (
           <span className="text-white">{value}</span>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ImageModal({ imageUrl, onClose }) {
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div className="relative max-w-5xl max-h-full">
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition"
+        >
+          <X size={24} />
+        </button>
+        <img
+          src={imageUrl}
+          alt="Certification Full Size"
+          className="max-w-full max-h-[90vh] rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
     </div>
   );

@@ -1,46 +1,71 @@
-import React, { useState } from 'react';
-import { Home, Users, BookOpen, ChefHat, FileText, Award, LogOut, Menu, X } from 'lucide-react';
-import DashboardPage from './DashboardPage';
-import ChefApprovalPage from './ChefApprovalPage';
-import ManageBlogPage from './ManageBlogPage';
-import ManageRecipePage from './ManageRecipePage';
-import ManageUserPage from './ManageUserPage';
-import ManageQuizPage from './ManageQuizPage';
-import { logoutUser } from '../../api/auth';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Home,
+  Users,
+  BookOpen,
+  ChefHat,
+  FileText,
+  Award,
+  LogOut,
+  Menu,
+  X,
+  Globe,
+} from "lucide-react";
+import DashboardPage from "./DashboardPage";
+import ChefApprovalPage from "./ChefApprovalPage";
+import ManageBlogPage from "./ManageBlogPage";
+import ManageRecipePage from "./ManageRecipePage";
+import ManageUserPage from "./ManageUserPage";
+import ManageCoursePage from "./ManageCoursePage";
+import { logoutUser } from "../../api/auth";
+
+// Import the logo
+import logo from "../../assets/logo.png";
 
 function AdminDashboard() {
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const [activeModule, setActiveModule] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate(); 
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm("Are you sure you want to logout?")) {
       logoutUser();
     }
   };
 
   const menuItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'chef-approval', name: 'Chef Approval', icon: ChefHat },
-    { id: 'manage-blog', name: 'Manage Blogs', icon: FileText },
-    { id: 'manage-recipe', name: 'Manage Recipes', icon: BookOpen },
-    { id: 'manage-user', name: 'Manage Users', icon: Users },
-    { id: 'manage-quiz', name: 'Manage Quiz', icon: Award },
+    { id: "dashboard", name: "Dashboard", icon: Home },
+    { id: "chef-approval", name: "Chef Approval", icon: ChefHat },
+    { id: "manage-blog", name: "Manage Blogs", icon: FileText },
+    { id: "manage-recipe", name: "Manage Recipes", icon: BookOpen },
+    { id: "manage-user", name: "Manage Users", icon: Users },
+    { id: "manage-course", name: "Manage Courses", icon: Award },
+    { id: "preview-site", name: "Preview Site", icon: Globe },
   ];
+
+  const handleMenuClick = (id) => {
+    if (id === "preview-site") {
+      navigate("/"); 
+      return;
+    }
+    setActiveModule(id);
+  };
 
   const renderContent = () => {
     switch (activeModule) {
-      case 'dashboard':
+      case "dashboard":
         return <DashboardPage />;
-      case 'chef-approval':
+      case "chef-approval":
         return <ChefApprovalPage />;
-      case 'manage-blog':
+      case "manage-blog":
         return <ManageBlogPage />;
-      case 'manage-recipe':
+      case "manage-recipe":
         return <ManageRecipePage />;
-      case 'manage-user':
+      case "manage-user":
         return <ManageUserPage />;
-      case 'manage-quiz':
-        return <ManageQuizPage />;
+      case "manage-course":
+        return <ManageCoursePage />;
       default:
         return <DashboardPage />;
     }
@@ -51,15 +76,31 @@ function AdminDashboard() {
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
+          sidebarOpen ? "w-64" : "w-20"
         } bg-zinc-900 transition-all duration-300 ease-in-out flex flex-col`}
       >
         {/* Logo & Toggle */}
-        <div className="p-6 flex items-center justify-between border-b border-zinc-800">
+        <div className="p-4 flex items-center justify-between border-b border-zinc-800">
           {sidebarOpen && (
-            <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-              CookSmart Admin
-            </h1>
+            <div className="flex items-center space-x-3">
+              <img 
+                src={logo} 
+                alt="CookSmart Logo" 
+                className="w-8 h-8 object-contain"
+              />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                CookSmart Admin
+              </h1>
+            </div>
+          )}
+          {!sidebarOpen && (
+            <div className="flex justify-center w-full">
+              <img 
+                src={logo} 
+                alt="CookSmart Logo" 
+                className="w-8 h-8 object-contain"
+              />
+            </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -76,13 +117,13 @@ function AdminDashboard() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveModule(item.id)}
+                onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center ${
-                  sidebarOpen ? 'justify-start' : 'justify-center'
+                  sidebarOpen ? "justify-start" : "justify-center"
                 } space-x-3 px-4 py-3 rounded-lg transition ${
                   activeModule === item.id
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-400 hover:bg-zinc-800 hover:text-white'
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-400 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
                 <Icon size={20} />
@@ -97,7 +138,7 @@ function AdminDashboard() {
           <button
             onClick={handleLogout}
             className={`w-full flex items-center ${
-              sidebarOpen ? 'justify-start' : 'justify-center'
+              sidebarOpen ? "justify-start" : "justify-center"
             } space-x-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500 hover:text-white transition`}
           >
             <LogOut size={20} />
@@ -113,4 +154,6 @@ function AdminDashboard() {
     </div>
   );
 }
+
 export default AdminDashboard;
+

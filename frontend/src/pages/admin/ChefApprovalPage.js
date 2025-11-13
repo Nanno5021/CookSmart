@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {getPendingApplications,approveApplication,rejectApplication,} from '../../api/chefApproval';
+import { getPendingApplications, approveApplication, rejectApplication } from '../../api/chefApproval';
 import ApplicationDetails from './ApplicationDetailsPage';
-import { Eye } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 
 function ChefApprovalPage() {
   const [applications, setApplications] = useState([]);
+  const [filteredApplications, setFilteredApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedApplicationId, setSelectedApplicationId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Approve Dialog
   const [approveId, setApproveId] = useState(null);
@@ -22,12 +24,25 @@ function ChefApprovalPage() {
     loadApplications();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredApplications(applications);
+    } else {
+      const filtered = applications.filter(app =>
+        app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredApplications(filtered);
+    }
+  }, [searchTerm, applications]);
+
   const loadApplications = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getPendingApplications();
       setApplications(data);
+      setFilteredApplications(data);
     } catch (err) {
       setError(err.message || 'Failed to load applications');
     } finally {
@@ -84,6 +99,10 @@ function ChefApprovalPage() {
     loadApplications();
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   if (selectedApplicationId) {
     return (
       <ApplicationDetails
@@ -98,16 +117,45 @@ function ChefApprovalPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-8">Chef Approval</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Chef Approval</h2>
+        <div className="relative w-80">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+          />
+        </div>
+      </div>
 
-      {applications.length === 0 ? (
-        <EmptyState />
+      {filteredApplications.length === 0 ? (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          {searchTerm ? (
+            <div>
+              <p className="text-gray-400 mb-2">No applications found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-orange-500 hover:text-orange-400 transition"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-400">No pending applications</p>
+          )}
+        </div>
       ) : (
         <Table
-          applications={applications}
+          applications={filteredApplications}
           onView={handleViewDetails}
           onApprove={openApproveDialog}
           onReject={openRejectDialog}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -199,17 +247,16 @@ function ErrorState({ title, error, onRetry }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
-      <p className="text-gray-400">No pending applications</p>
-    </div>
-  );
-}
-
-function Table({ applications, onView, onApprove, onReject }) {
+function Table({ applications, onView, onApprove, onReject, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {searchTerm && (
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="text-sm text-gray-400">
+            Showing {applications.length} result{applications.length !== 1 ? 's' : ''} for "{searchTerm}"
+          </p>
+        </div>
+      )}
       <table className="w-full">
         <thead className="bg-zinc-800">
           <tr>
@@ -217,13 +264,13 @@ function Table({ applications, onView, onApprove, onReject }) {
             <th className="text-left p-4 font-semibold">Email</th>
             <th className="text-left p-4 font-semibold">Experience</th>
             <th className="text-left p-4 font-semibold">Status</th>
-            <th className="text-left p-4 font-semibold">Actions</th>
+            <th className="text-center p-4 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
           {applications.map((app) => (
-            <tr key={app.id} className="border-t border-zinc-800">
-              <td className="p-4">{app.fullName}</td>
+            <tr key={app.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
+              <td className="p-4 font-medium">{app.fullName}</td>
               <td className="p-4 text-gray-400">{app.email}</td>
               <td className="p-4 text-gray-400">{app.yearsOfExperience} years</td>
               <td className="p-4">
@@ -231,26 +278,28 @@ function Table({ applications, onView, onApprove, onReject }) {
                   {app.status}
                 </span>
               </td>
-              <td className="p-4 space-x-2">
-                <button
-                  onClick={() => onView(app.id)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
-                >
-                  <Eye size={16} />
-                  <span>View Details</span>
-                </button>
-                <button
-                  onClick={() => onApprove(app.id)}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => onReject(app.id)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
-                >
-                  Reject
-                </button>
+              <td className="p-4">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => onView(app.id)}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
+                  >
+                    <Eye size={16} />
+                    <span>View Details</span>
+                  </button>
+                  <button
+                    onClick={() => onApprove(app.id)}
+                    className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => onReject(app.id)}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
+                  >
+                    Reject
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

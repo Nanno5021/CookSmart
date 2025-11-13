@@ -7,7 +7,7 @@ import viewsIcon from "../assets/views.png";
 import postIcon from "../assets/post.png";
 import { fetchPosts } from "../api/post";
 import { apiFetch } from "../api/apiClient";
-import { fetchMyProfile, fetchProfileByUsername } from "../api/profileapi";
+import { fetchMyProfile } from "../api/profileapi";
 
 /* Helper: convert relative -> absolute and accept many field names */
 function resolveAvatarUrl(raw) {
@@ -117,20 +117,22 @@ export default function MainPage() {
 
         // 2️⃣ Fetch posts
         const data = await fetchPosts();
-        console.log(data); // check that each post has imageUrl
+        console.log(data);
         const postsArray = Array.isArray(data) ? data : data?.posts ?? [];
         if (!mounted) return;
 
         const mappedPosts = postsArray.map((p) => ({
           id: p.id,
           username: p.username || p.author?.username || p.user?.username || "Anonymous",
-          content: p.content ?? p.title ?? "",
+          title: p.title ?? "",
+          content: p.content ?? "",
           createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
           rating: p.rating ?? 0,
           comments: p.comments ?? 0,
           views: p.views ?? 0,
           avatar: pickAvatarFromPost(p) || null,
-          imageUrl: resolveAvatarUrl(p.imageUrl ?? p.image ?? p.filePath ?? p.postImage ?? null), // ← updated
+          imageUrl: resolveAvatarUrl(p.imageUrl ?? p.image ?? p.filePath ?? p.postImage ?? null),
+          isLikedByCurrentUser: p.isLikedByCurrentUser ?? false, // Add this
         }));
 
         if (!mounted) return;
@@ -157,25 +159,60 @@ export default function MainPage() {
     navigate("/postblog", { state: { title: newPost } });
   };
 
-  const handleRate = async (id) => {
+  const handleRate = async (id, e) => {
+    e.stopPropagation();
+    
     if (!isLoggedIn) {
       alert("You need to log in to rate posts.");
       return;
     }
 
-    // optimistic
-    setPosts(prev => prev.map(p => p.id === id ? { ...p, rating: (p.rating || 0) + 1 } : p));
+    // Find the post to check current like status
+    const post = posts.find(p => p.id === id);
+    const wasLiked = post?.isLikedByCurrentUser || false;
+
+    // Toggle optimistic update
+    setPosts(prev => prev.map(p => 
+      p.id === id ? { 
+        ...p, 
+        rating: wasLiked ? Math.max((p.rating || 1) - 1, 0) : (p.rating || 0) + 1,
+        isLikedByCurrentUser: !wasLiked
+      } : p
+    ));
 
     try {
       await apiFetch(`/posts/${id}/rate`, { method: "POST" });
     } catch (err) {
       console.error("Failed to rate post:", err);
-      setPosts(prev => prev.map(p => p.id === id ? { ...p, rating: Math.max((p.rating || 1) - 1, 0) } : p));
+      // Revert optimistic update
+      setPosts(prev => prev.map(p => 
+        p.id === id ? { 
+          ...p, 
+          rating: wasLiked ? (p.rating || 0) + 1 : Math.max((p.rating || 1) - 1, 0),
+          isLikedByCurrentUser: wasLiked
+        } : p
+      ));
       alert("Failed to rate post. Please try again.");
     }
   };
 
-  const handleComment = (id) => navigate(`/posts/${id}`);
+  const handleComment = (id, e) => {
+    e.stopPropagation();
+    navigate(`/posts/${id}`);
+  };
+
+  const handlePostClick = async (id) => {
+    // Track view for logged-in users (same logic as BlogDetails)
+    if (isLoggedIn) {
+      try {
+        await apiFetch(`/posts/${id}/view`, { method: "POST" });
+      } catch (viewErr) {
+        console.warn("Failed to track view:", viewErr);
+      }
+    }
+    
+    navigate(`/posts/${id}`);
+  };
 
   if (loading) {
     return (
@@ -200,7 +237,7 @@ export default function MainPage() {
           </select>
         </div>
 
-        {/* New Post Input - Updated to match Profile Page style */}
+        {/* New Post Input */}
         <div className="mb-8 flex items-center space-x-3">
           <Avatar 
             src={me?.avatar} 
@@ -224,10 +261,14 @@ export default function MainPage() {
 
         <div className="space-y-8">
           {posts.length > 0 ? (
-            posts.map((post, index) => (
+            posts.map((post) => (
               <React.Fragment key={post.id}>
-                {/* Post Container - Removed gray background */}
-                <div className="w-full pb-6 border-b" style={{ borderColor: "#2d2d2d" }}>
+                {/* Post Container - Now Clickable */}
+                <div 
+                  onClick={() => handlePostClick(post.id)}
+                  className="w-full pb-6 border-b cursor-pointer hover:bg-gray-900 hover:bg-opacity-30 transition-colors rounded-lg p-4 -m-4" 
+                  style={{ borderColor: "#2d2d2d" }}
+                >
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       <Avatar src={post.avatar} name={post.username} size={40} />
@@ -238,24 +279,39 @@ export default function MainPage() {
                     </div>
                   </div>
 
-                  <p className="text-gray-200 mb-4">{post.content}</p>
+                  {/* Show Title only */}
+                  <h2 className="text-xl font-bold text-white mb-4">{post.title || "Untitled Post"}</h2>
 
                   {post.imageUrl && (
                     <img
                       src={post.imageUrl}
                       alt="Post"
-                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" style={{ borderColor: "#2d2d2d" }}
+                      className="max-w-full max-h-96 rounded-lg border border-b mx-auto" 
+                      style={{ borderColor: "#2d2d2d" }}
                     />
                   )}
 
                   <div className="flex items-center justify-between text-gray-400 text-sm mt-4">
                     <div className="flex space-x-6 items-center">
-                      <button onClick={() => handleRate(post.id)} disabled={!isLoggedIn} className={`flex items-center space-x-1 transition ${isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"}`}>
-                        <img src={ratingIcon} alt="Rating" className="w-5 h-5 invert" />
+                      <button 
+                        onClick={(e) => handleRate(post.id, e)} 
+                        disabled={!isLoggedIn} 
+                        className={`flex items-center space-x-1 transition ${
+                          isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"
+                        } ${post.isLikedByCurrentUser ? "text-blue-400" : "text-gray-400"}`}
+                      >
+                        <img 
+                          src={ratingIcon} 
+                          alt="Rating" 
+                          className={`w-5 h-5 ${post.isLikedByCurrentUser ? "" : "invert"}`} 
+                        />
                         <span>{post.rating || 0}</span>
                       </button>
 
-                      <button onClick={() => handleComment(post.id)} className="flex items-center space-x-1 hover:text-white transition">
+                      <button 
+                        onClick={(e) => handleComment(post.id, e)} 
+                        className="flex items-center space-x-1 hover:text-white transition"
+                      >
                         <img src={commentIcon} alt="Comment" className="w-5 h-5 invert" />
                         <span>{post.comments || 0}</span>
                       </button>
@@ -275,7 +331,11 @@ export default function MainPage() {
         </div>
       </div>
 
-      <button onClick={() => (isLoggedIn ? navigate("/postblog") : alert("You need to log in to create a post."))} className="fixed bottom-10 right-10 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition" title="New Post">
+      <button 
+        onClick={() => (isLoggedIn ? navigate("/postblog") : alert("You need to log in to create a post."))} 
+        className="fixed bottom-10 right-10 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition" 
+        title="New Post"
+      >
         <img src={postIcon} alt="Post" className="w-8 h-8" />
       </button>
     </div>

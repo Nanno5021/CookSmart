@@ -11,6 +11,7 @@ namespace Server.DTO
         public string SpecialtyCuisine { get; set; }
         public int YearsOfExperience { get; set; }
         public string CertificationName { get; set; }
+        public string CertificationImageUrl { get; set; } 
         public string PortfolioLink { get; set; }
         public string Biography { get; set; }
 
