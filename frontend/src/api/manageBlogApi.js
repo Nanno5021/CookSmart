@@ -61,3 +61,14 @@ export async function removeBlogImage(postId) {
     method: "DELETE",
   });
 }
+
+export async function fetchBlogComments(postId) {
+  return await apiFetch(`/admin/posts/${postId}/comments`);
+}
+
+// DELETE: Delete a comment
+export async function deleteBlogComment(postId, commentId) {
+  return await apiFetch(`/admin/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+  });
+}

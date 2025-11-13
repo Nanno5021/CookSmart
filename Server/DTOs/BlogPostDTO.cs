@@ -14,14 +14,22 @@ namespace Server.DTOs
         public int views { get; set; }
         public string? imageUrl { get; set; }
         
-        // Author information
         public int userId { get; set; }
         public string authorName { get; set; } = string.Empty;
         public string authorUsername { get; set; } = string.Empty;
+        
+        // ✅ NEW: Include actual comments
+        public List<AdminCommentDto>? commentsList { get; set; }
     }
 
-    public class UpdatePostStatusDto
+    public class AdminCommentDto
     {
-        public string status { get; set; } = string.Empty;
+        public int id { get; set; }
+        public string content { get; set; } = string.Empty;
+        public DateTime createdAt { get; set; }
+        public int likes { get; set; }
+        public int userId { get; set; }
+        public string userName { get; set; } = string.Empty;
+        public string userAvatarUrl { get; set; } = string.Empty;
     }
 }
