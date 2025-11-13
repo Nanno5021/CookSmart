@@ -64,6 +64,23 @@ namespace Server.Controllers
             if (post == null)
                 return NotFound(new { message = "Post not found." });
 
+            // ✅ Fetch comments
+            var comments = await _context.Comments
+                .Where(c => c.postId == id && c.parentCommentId == null)
+                .Include(c => c.User)
+                .OrderByDescending(c => c.createdAt)
+                .Select(c => new AdminCommentDto
+                {
+                    id = c.id,
+                    content = c.content,
+                    createdAt = c.createdAt,
+                    likes = c.likes,
+                    userId = c.userId,
+                    userName = c.User.fullName,
+                    userAvatarUrl = c.User.avatarUrl ?? string.Empty
+                })
+                .ToListAsync();
+
             var postDto = new BlogPostDto
             {
                 id = post.id,
@@ -76,7 +93,8 @@ namespace Server.Controllers
                 imageUrl = post.imageUrl,
                 userId = post.userId,
                 authorName = post.User.fullName,
-                authorUsername = post.User.username
+                authorUsername = post.User.username,
+                commentsList = comments // ✅ Include comments
             };
 
             return Ok(postDto);
@@ -239,6 +257,57 @@ namespace Server.Controllers
                 totalComments = totalComments,
                 averageRating = totalPosts > 0 ? (double)totalRatings / totalPosts : 0
             });
+        }
+
+        [HttpGet("{id}/comments")]
+        public async Task<IActionResult> GetPostComments(int id)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+                return NotFound(new { message = "Post not found." });
+
+            var comments = await _context.Comments
+                .Where(c => c.postId == id && c.parentCommentId == null) // Only top-level comments
+                .Include(c => c.User)
+                .OrderByDescending(c => c.createdAt)
+                .Select(c => new AdminCommentDto
+                {
+                    id = c.id,
+                    content = c.content,
+                    createdAt = c.createdAt,
+                    likes = c.likes,
+                    userId = c.userId,
+                    userName = c.User.fullName,
+                    userAvatarUrl = c.User.avatarUrl ?? string.Empty
+                })
+                .ToListAsync();
+
+            return Ok(comments);
+        }
+
+        // DELETE: api/admin/posts/{postId}/comments/{commentId} - Delete a comment
+        [HttpDelete("{postId}/comments/{commentId}")]
+        public async Task<IActionResult> DeleteComment(int postId, int commentId)
+        {
+            var comment = await _context.Comments
+                .FirstOrDefaultAsync(c => c.id == commentId && c.postId == postId);
+            
+            if (comment == null)
+                return NotFound(new { message = "Comment not found." });
+
+            // Delete the comment
+            _context.Comments.Remove(comment);
+            
+            // Update comment count on post
+            var post = await _context.Posts.FindAsync(postId);
+            if (post != null && post.comments > 0)
+            {
+                post.comments--;
+            }
+            
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Comment deleted successfully." });
         }
     }
 }

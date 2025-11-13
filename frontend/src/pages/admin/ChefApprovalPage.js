@@ -217,7 +217,7 @@ function Table({ applications, onView, onApprove, onReject }) {
             <th className="text-left p-4 font-semibold">Email</th>
             <th className="text-left p-4 font-semibold">Experience</th>
             <th className="text-left p-4 font-semibold">Status</th>
-            <th className="text-left p-4 font-semibold">Actions</th>
+            <th className="text-center p-4 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
