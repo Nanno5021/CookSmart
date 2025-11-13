@@ -1,59 +1,86 @@
 function DashboardPage() {
-  const stats = [
-    { label: 'Total Users', value: '1,234', color: 'bg-blue-500' },
-    { label: 'Pending Chef Approvals', value: '12', color: 'bg-orange-500' },
-    { label: 'Total Blogs', value: '456', color: 'bg-green-500' },
-    { label: 'Total Recipes', value: '789', color: 'bg-purple-500' },
+  const modules = [
+    { 
+      name: 'User Management', 
+      description: 'Manage user accounts, roles, and access permissions',
+      path: 'manage-user'
+    },
+    { 
+      name: 'Chef Approvals', 
+      description: 'Review and process chef applications',
+      path: 'chef-approval'
+    },
+    { 
+      name: 'Recipe Management', 
+      description: 'Oversee recipe submissions and content',
+      path: 'manage-recipe'
+    },
+    { 
+      name: 'Blog Management', 
+      description: 'Manage blog posts and editorial content',
+      path: 'manage-blog'
+    },
+    { 
+      name: 'Course Management', 
+      description: 'Administer cooking courses and curriculum',
+      path: 'manage-course'
+    },
+    { 
+      name: 'Site Preview', 
+      description: 'View the live site as visitors see it',
+      path: 'preview-site'
+    }
   ];
 
   return (
-    <div>
-      <h2 className="text-3xl font-bold mb-8">Dashboard Overview</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-            <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center mb-4`}>
-              <div className="w-6 h-6 bg-white rounded"></div>
-            </div>
-            <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
-            <p className="text-3xl font-bold">{stat.value}</p>
-          </div>
-        ))}
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-3">Admin Dashboard</h1>
+        <div className="flex items-center text-gray-400 mb-2">
+          <span className="text-sm">Welcome back</span>
+        </div>
+        <p className="text-gray-300 max-w-2xl">
+          This dashboard provides access to all administrative functions for the CookSmart platform. 
+          Select a module from the sidebar to begin managing specific areas.
+        </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-        <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-        <div className="space-y-4">
-          <ActivityItem
-            action="New user registered"
-            user="john_doe@example.com"
-            time="2 minutes ago"
-          />
-          <ActivityItem
-            action="Chef application submitted"
-            user="chef_mike"
-            time="15 minutes ago"
-          />
-          <ActivityItem
-            action="New blog post created"
-            user="foodie_lover"
-            time="1 hour ago"
-          />
+      {/* Management Modules */}
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800">
+        <div className="p-6 border-b border-zinc-800">
+          <h2 className="text-xl font-semibold text-white">Management Modules</h2>
+          <p className="text-gray-400 text-sm mt-1">
+            Access different areas of platform administration
+          </p>
+        </div>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {modules.map((module, index) => (
+              <div 
+                key={index} 
+                className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 hover:border-zinc-500 transition-colors cursor-pointer"
+                onClick={() => window.location.hash = module.path}
+              >
+                <h3 className="font-medium text-white mb-2">{module.name}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{module.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-function ActivityItem({ action, user, time }) {
-  return (
-    <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg">
-      <div>
-        <p className="text-white font-medium">{action}</p>
-        <p className="text-gray-400 text-sm">{user}</p>
+      {/* Getting Started */}
+      <div className="bg-blue-500 bg-opacity-5 border border-blue-500 border-opacity-20 rounded-lg p-6">
+        <h3 className="font-semibold text-white mb-3">Getting Started</h3>
+        <div className="space-y-2 text-sm text-gray-300">
+          <p>• Navigate using the sidebar menu to access different management sections</p>
+          <p>• Review pending chef applications regularly to maintain platform quality</p>
+          <p>• Use the site preview to verify changes before they go live</p>
+          <p>• Contact technical support for any system-related issues</p>
+        </div>
       </div>
-      <p className="text-gray-500 text-sm">{time}</p>
     </div>
   );
 }

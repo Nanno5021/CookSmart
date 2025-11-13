@@ -17,6 +17,7 @@ function CoursePage() {
 
   // Get current user ID from localStorage
   const currentUserId = parseInt(localStorage.getItem("userId"));
+  const userRole = localStorage.getItem("role");
 
   useEffect(() => {
     if (currentUserId) {
@@ -314,15 +315,17 @@ function CoursePage() {
         </div>
       </div>
       
-      {/* Request Chef Account Button */}
-      <div className="fixed bottom-6 right-6">
-        <button
-          onClick={() => navigate("/requestchef")}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-full shadow-lg font-semibold transition"
-        >
-          Request Chef Account
-        </button>
-      </div>
+{/* Request Chef Account Button */}
+      {userRole !== "Admin" && (
+        <div className="fixed bottom-6 right-6">
+          <button
+            onClick={() => navigate("/requestchef")}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-full shadow-lg font-semibold transition"
+          >
+            Request Chef Account
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllRecipes, deleteRecipe } from '../../api/adminRecipeApi';
 import RecipeDetailsPage from './RecipeDetailsPage';
-import { Eye, Trash2, Edit, Star, BookOpen } from 'lucide-react';
+import { Eye, Trash2, Edit, Star, BookOpen, Search } from 'lucide-react';
 import EditRecipePage from "./EditRecipePage";
 
 function ManageRecipePage() {
   const [recipes, setRecipes] = useState([]);
+  const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [editingRecipeId, setEditingRecipeId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Delete Dialog
   const [deleteRecipeId, setDeleteRecipeId] = useState(null);
@@ -19,12 +21,27 @@ function ManageRecipePage() {
     loadRecipes();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredRecipes(recipes);
+    } else {
+      const filtered = recipes.filter(recipe =>
+        recipe.recipeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        recipe.chefName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        recipe.cuisine?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        recipe.ingredients?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRecipes(filtered);
+    }
+  }, [searchTerm, recipes]);
+
   const loadRecipes = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchAllRecipes();
       setRecipes(data);
+      setFilteredRecipes(data);
     } catch (err) {
       setError(err.message || 'Failed to load recipes');
     } finally {
@@ -63,6 +80,10 @@ function ManageRecipePage() {
     loadRecipes();
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   // Show details or edit page
   if (selectedRecipeId || editingRecipeId) {
     if (editingRecipeId) {
@@ -84,16 +105,49 @@ function ManageRecipePage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-8">Manage Recipes</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Manage Recipes</h2>
+        <div className="relative w-80">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by recipe, chef, cuisine, or ingredients..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+          />
+        </div>
+      </div>
 
-      {recipes.length === 0 ? (
-        <EmptyState />
+      {filteredRecipes.length === 0 ? (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          {searchTerm ? (
+            <div>
+              <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400 mb-2">No recipes found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-orange-500 hover:text-orange-400 transition"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <div>
+              <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400">No recipes found</p>
+            </div>
+          )}
+        </div>
       ) : (
         <RecipesTable
-          recipes={recipes}
+          recipes={filteredRecipes}
           onViewDetails={handleViewDetails}
           onEditRecipe={handleEditRecipe}
           onDeleteRecipe={openDeleteDialog}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -153,18 +207,16 @@ function ErrorState({ error, onRetry }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
-      <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
-      <p className="text-gray-400">No recipes found</p>
-    </div>
-  );
-}
-
-function RecipesTable({ recipes, onViewDetails, onEditRecipe, onDeleteRecipe }) {
+function RecipesTable({ recipes, onViewDetails, onEditRecipe, onDeleteRecipe, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {searchTerm && (
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="text-sm text-gray-400">
+            Showing {recipes.length} recipe{recipes.length !== 1 ? 's' : ''} for "{searchTerm}"
+          </p>
+        </div>
+      )}
       <table className="w-full">
         <thead className="bg-zinc-800">
           <tr>
@@ -179,7 +231,7 @@ function RecipesTable({ recipes, onViewDetails, onEditRecipe, onDeleteRecipe }) 
         </thead>
         <tbody>
           {recipes.map((recipe) => (
-            <tr key={recipe.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition">
+            <tr key={recipe.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
               <td className="p-4">
                 <div className="flex items-center space-x-3">
                   {recipe.recipeImage ? (
@@ -205,37 +257,39 @@ function RecipesTable({ recipes, onViewDetails, onEditRecipe, onDeleteRecipe }) 
               <td className="p-4">
                 <div className="flex items-center space-x-1">
                   <Star size={16} className="text-yellow-500 fill-current" />
-                  <span>{recipe.averageRating.toFixed(1)}</span>
+                  <span>{recipe.averageRating?.toFixed(1) || '0.0'}</span>
                 </div>
               </td>
-              <td className="p-4 text-gray-400">{recipe.totalReviews}</td>
+              <td className="p-4 text-gray-400">{recipe.totalReviews || 0}</td>
               <td className="p-4 text-gray-400">
                 {new Date(recipe.createdAt).toLocaleDateString()}
               </td>
-              <td className="p-4 space-x-2">
-                <button
-                  onClick={() => onViewDetails(recipe.id)}
-                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-1"
-                >
-                  <Eye size={16} />
-                  <span>View</span>
-                </button>
+              <td className="p-4">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => onViewDetails(recipe.id)}
+                    className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-1"
+                  >
+                    <Eye size={16} />
+                    <span>View</span>
+                  </button>
 
-                <button
-                  onClick={() => onEditRecipe(recipe.id)}
-                  className="px-3 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition inline-flex items-center space-x-1"
-                >
-                  <Edit size={16} />
-                  <span>Edit</span>
-                </button>
+                  <button
+                    onClick={() => onEditRecipe(recipe.id)}
+                    className="px-3 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition inline-flex items-center space-x-1"
+                  >
+                    <Edit size={16} />
+                    <span>Edit</span>
+                  </button>
 
-                <button
-                  onClick={() => onDeleteRecipe(recipe.id)}
-                  className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition inline-flex items-center space-x-1"
-                >
-                  <Trash2 size={16} />
-                  <span>Delete</span>
-                </button>
+                  <button
+                    onClick={() => onDeleteRecipe(recipe.id)}
+                    className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition inline-flex items-center space-x-1"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

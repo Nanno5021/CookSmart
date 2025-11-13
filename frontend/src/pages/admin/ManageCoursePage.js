@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllCourses, deleteCourse } from '../../api/courseApi';
-import { Eye, Trash2, Edit, Clock, Star, BookOpen } from 'lucide-react';
+import { Eye, Trash2, Edit, Clock, Star, BookOpen, Search } from 'lucide-react';
 import EditCoursePage from './EditCoursePage';
-import CourseDetailsPage from './CourseDetailsPage'; // Add this import
+import CourseDetailsPage from './CourseDetailsPage';
 
 function ManageCoursePage() {
   const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [editingCourseId, setEditingCourseId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Delete Dialog
   const [deleteCourseId, setDeleteCourseId] = useState(null);
@@ -19,12 +21,28 @@ function ManageCoursePage() {
     loadCourses();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredCourses(courses);
+    } else {
+      const filtered = courses.filter(course =>
+        course.courseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.chefName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.difficulty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.ingredients?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCourses(filtered);
+    }
+  }, [searchTerm, courses]);
+
   const loadCourses = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchAllCourses();
       setCourses(data);
+      setFilteredCourses(data);
     } catch (err) {
       setError(err.message || 'Failed to load courses');
     } finally {
@@ -63,7 +81,11 @@ function ManageCoursePage() {
     loadCourses();
   };
 
-  // Show details or edit page - FIXED THIS SECTION
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Show details or edit page
   if (selectedCourseId || editingCourseId) {
     if (editingCourseId) {
       return (
@@ -90,16 +112,49 @@ function ManageCoursePage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-8">Manage Courses</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Manage Courses</h2>
+        <div className="relative w-80">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by course, chef, difficulty..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+          />
+        </div>
+      </div>
 
-      {courses.length === 0 ? (
-        <EmptyState />
+      {filteredCourses.length === 0 ? (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          {searchTerm ? (
+            <div>
+              <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400 mb-2">No courses found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-orange-500 hover:text-orange-400 transition"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <div>
+              <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400">No courses found</p>
+            </div>
+          )}
+        </div>
       ) : (
         <CoursesTable
-          courses={courses}
+          courses={filteredCourses}
           onViewDetails={handleViewDetails}
           onEditCourse={handleEditCourse}
           onDeleteCourse={openDeleteDialog}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -159,18 +214,16 @@ function ErrorState({ error, onRetry }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
-      <BookOpen size={48} className="mx-auto mb-4 text-gray-600" />
-      <p className="text-gray-400">No courses found</p>
-    </div>
-  );
-}
-
-function CoursesTable({ courses, onViewDetails, onEditCourse, onDeleteCourse }) {
+function CoursesTable({ courses, onViewDetails, onEditCourse, onDeleteCourse, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {searchTerm && (
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="text-sm text-gray-400">
+            Showing {courses.length} course{courses.length !== 1 ? 's' : ''} for "{searchTerm}"
+          </p>
+        </div>
+      )}
       <table className="w-full">
         <thead className="bg-zinc-800">
           <tr>
@@ -185,7 +238,7 @@ function CoursesTable({ courses, onViewDetails, onEditCourse, onDeleteCourse }) 
         </thead>
         <tbody>
           {courses.map((course) => (
-            <tr key={course.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition">
+            <tr key={course.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
               <td className="p-4">
                 <div className="flex items-center space-x-3">
                   {course.courseImage ? (

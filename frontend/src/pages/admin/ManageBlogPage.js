@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { fetchAllBlogs, deleteBlog } from '../../api/manageBlogApi';
 import BlogDetailsPage from './BlogDetailsPage';
 import EditBlogPage from './EditBlogPage';
-import { Eye, Trash2, Edit } from 'lucide-react';
+import { Eye, Trash2, Edit, Search } from 'lucide-react';
 
 function ManageBlogPage() {
   const [blogs, setBlogs] = useState([]);
+  const [filteredBlogs, setFilteredBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBlogId, setSelectedBlogId] = useState(null);
   const [editingBlogId, setEditingBlogId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Delete Dialog
   const [deleteId, setDeleteId] = useState(null);
@@ -19,12 +21,26 @@ function ManageBlogPage() {
     loadBlogs();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredBlogs(blogs);
+    } else {
+      const filtered = blogs.filter(blog =>
+        blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.authorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.content?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredBlogs(filtered);
+    }
+  }, [searchTerm, blogs]);
+
   const loadBlogs = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchAllBlogs();
       setBlogs(data);
+      setFilteredBlogs(data);
     } catch (err) {
       setError(err.message || 'Failed to load blogs');
     } finally {
@@ -63,6 +79,10 @@ function ManageBlogPage() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   // Handle different views
   if (selectedBlogId || editingBlogId) {
     if (editingBlogId) {
@@ -84,16 +104,45 @@ function ManageBlogPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-8">Manage Blog Posts</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Manage Blog Posts</h2>
+        <div className="relative w-80">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by title, author, or content..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+          />
+        </div>
+      </div>
 
-      {blogs.length === 0 ? (
-        <EmptyState />
+      {filteredBlogs.length === 0 ? (
+        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
+          {searchTerm ? (
+            <div>
+              <p className="text-gray-400 mb-2">No blog posts found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-orange-500 hover:text-orange-400 transition"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-400">No blog posts found</p>
+          )}
+        </div>
       ) : (
         <BlogsTable
-          blogs={blogs}
+          blogs={filteredBlogs}
           onViewDetails={handleViewDetails}
           onEdit={handleEditBlog}
           onDelete={openDeleteDialog}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -154,17 +203,16 @@ function ErrorState({ error, onRetry }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 text-center">
-      <p className="text-gray-400">No blog posts found</p>
-    </div>
-  );
-}
-
-function BlogsTable({ blogs, onViewDetails, onEdit, onDelete }) {
+function BlogsTable({ blogs, onViewDetails, onEdit, onDelete, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {searchTerm && (
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="text-sm text-gray-400">
+            Showing {blogs.length} blog post{blogs.length !== 1 ? 's' : ''} for "{searchTerm}"
+          </p>
+        </div>
+      )}
       <table className="w-full">
         <thead className="bg-zinc-800">
           <tr>
@@ -177,7 +225,7 @@ function BlogsTable({ blogs, onViewDetails, onEdit, onDelete }) {
         </thead>
         <tbody>
           {blogs.map((blog) => (
-            <tr key={blog.id} className="border-t border-zinc-800">
+            <tr key={blog.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
               <td className="p-4 max-w-md">
                 <div className="flex items-center space-x-3">
                   {blog.imageUrl && (
@@ -206,28 +254,30 @@ function BlogsTable({ blogs, onViewDetails, onEdit, onDelete }) {
                   <div>👁 {blog.views} views</div>
                 </div>
               </td>
-              <td className="p-4 space-x-2">
-                <button
-                  onClick={() => onViewDetails(blog.id)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
-                >
-                  <Eye size={16} />
-                  <span>View</span>
-                </button>
-                <button
-                  onClick={() => onEdit(blog.id)}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition inline-flex items-center space-x-2"
-                >
-                  <Edit size={16} />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => onDelete(blog.id)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition inline-flex items-center space-x-2"
-                >
-                  <Trash2 size={16} />
-                  <span>Delete</span>
-                </button>
+              <td className="p-4">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => onViewDetails(blog.id)}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
+                  >
+                    <Eye size={16} />
+                    <span>View</span>
+                  </button>
+                  <button
+                    onClick={() => onEdit(blog.id)}
+                    className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition inline-flex items-center space-x-2"
+                  >
+                    <Edit size={16} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => onDelete(blog.id)}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition inline-flex items-center space-x-2"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -236,6 +286,7 @@ function BlogsTable({ blogs, onViewDetails, onEdit, onDelete }) {
     </div>
   );
 }
+
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
