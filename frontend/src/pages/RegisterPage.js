@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { registerUser } from "../api/auth";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import registerBackground from "../assets/register_background.png";
 
@@ -13,6 +13,7 @@ function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -21,25 +22,27 @@ function RegisterPage() {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (formData.password !== formData.confirmPassword) {
-    alert("Passwords do not match!");
-    return;
-  }
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
 
-  try {
-    const { confirmPassword, ...dataToSend } = formData;
-    dataToSend.role = "User"; 
-    
-    const data = await registerUser(dataToSend);
-    alert(data.message || "Registration successful!");
-    console.log("Registered:", data);
-  } catch (error) {
-    alert("Error: " + error.message);
-  }
-};
+    try {
+      const { confirmPassword, ...dataToSend } = formData;
+      dataToSend.role = "User"; 
+      
+      const data = await registerUser(dataToSend);
+      alert(data.message || "Registration successful!");
+      console.log("Registered:", data);
+
+      navigate("/login");
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
 
   return (
     <div

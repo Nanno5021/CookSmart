@@ -1,12 +1,12 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // ✅ added useNavigate
+import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import { Home, BookOpen, Bell, GraduationCap, User, LogOut } from "lucide-react";
 import { logoutUser } from "../api/auth";
 import logo from "../assets/logo.png";
 
 function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate(); // ✅ hook for navigation
+  const navigate = useNavigate(); 
 
   const userRole = localStorage.getItem("role"); 
 
@@ -64,7 +64,7 @@ function Navbar() {
       {/* Logout Button */}
       <div className="mt-auto pt-8">
         <button
-          onClick={handleLogout} // ✅ use new function
+          onClick={handleLogout} 
           className="text-gray-400 hover:text-red-400 transition-colors duration-200 group"
         >
           <LogOut className="w-5 h-5 group-hover:scale-105 transition-transform" />
