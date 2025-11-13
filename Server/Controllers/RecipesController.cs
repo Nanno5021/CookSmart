@@ -129,12 +129,15 @@ namespace Server.Controllers
             CreateRecipeDto dto,
             [FromQuery] int chefId)
         {
-            // Validate chef exists
-            var chef = await _context.Users.FindAsync(chefId);
+            // ✅ FIX: Validate chef exists in Chefs table
+            var chef = await _context.Chefs.FindAsync(chefId);
             if (chef == null)
             {
                 return BadRequest("Chef not found");
             }
+
+            // Get the user associated with this chef for the navigation property
+            var chefUser = await _context.Users.FindAsync(chef.userId);
 
             var recipe = new Recipe
             {
@@ -144,7 +147,8 @@ namespace Server.Controllers
                 recipeImage = dto.recipeImage,
                 ingredients = dto.ingredients,
                 steps = dto.steps,
-                createdAt = DateTime.UtcNow
+                createdAt = DateTime.UtcNow,
+                chef = chefUser  // ✅ Set navigation property
             };
 
             _context.Recipes.Add(recipe);

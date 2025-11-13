@@ -25,7 +25,7 @@ namespace Server.Controllers
         public async Task<ActionResult<IEnumerable<CourseResponseDto>>> GetAllCourses()
         {
             var courses = await _context.Courses
-                .Include(c => c.chef)
+                .Include(c => c.chef) // This loads the User who is the chef
                 .Include(c => c.sections)
                 .Include(c => c.quizQuestions)
                 .ToListAsync();
@@ -35,7 +35,7 @@ namespace Server.Controllers
                 id = c.id,
                 chefId = c.chefId,
                 chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = "",
+                chefImage = c.chef?.avatarUrl ?? "",
                 courseName = c.courseName,
                 courseImage = c.courseImage,
                 ingredients = c.ingredients,
@@ -84,7 +84,7 @@ namespace Server.Controllers
                 id = course.id,
                 chefId = course.chefId,
                 chefName = course.chef?.username ?? "Unknown Chef",
-                chefImage = "",
+                chefImage = course.chef?.avatarUrl ?? "",
                 courseName = course.courseName,
                 courseImage = course.courseImage,
                 ingredients = course.ingredients,
@@ -129,7 +129,7 @@ namespace Server.Controllers
                 id = c.id,
                 chefId = c.chefId,
                 chefName = c.chef?.username ?? "Unknown Chef",
-                chefImage = "",
+                chefImage = c.chef?.avatarUrl ?? "",
                 courseName = c.courseName,
                 courseImage = c.courseImage,
                 ingredients = c.ingredients,
@@ -162,11 +162,16 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<ActionResult<CourseResponseDto>> CreateCourse(CreateCourseDto dto)
         {
-            var chef = await _context.Users.FindAsync(dto.chefId);
+            // ✅ FIX: Validate chef exists in Chefs table
+            var chef = await _context.Chefs.FindAsync(dto.chefId);
+            
             if (chef == null)
             {
                 return BadRequest($"Chef with ID {dto.chefId} not found.");
             }
+
+            // Get the user associated with this chef for the navigation property
+            var chefUser = await _context.Users.FindAsync(chef.userId);
 
             var course = new Course
             {
@@ -177,7 +182,8 @@ namespace Server.Controllers
                 difficulty = dto.difficulty,
                 estimatedTime = dto.estimatedTime,
                 description = dto.description,
-                createdAt = DateTime.UtcNow
+                createdAt = DateTime.UtcNow,
+                chef = chefUser // Set the navigation property
             };
 
             _context.Courses.Add(course);
@@ -303,7 +309,6 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
-            // Save directly to wwwroot/courses
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
                 "courses"
@@ -339,7 +344,6 @@ namespace Server.Controllers
             if (file.Length > maxBytes)
                 return BadRequest(new { message = "File too large. Max 5 MB." });
 
-            // Save directly to wwwroot/sections
             var uploadsDir = Path.Combine(
                 _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), 
                 "sections"
