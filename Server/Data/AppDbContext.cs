@@ -29,6 +29,7 @@ namespace Server.Data
 
         public DbSet<ChefApplication> ChefApplications { get; set; }
         public DbSet<Chef> Chefs { get; set; }
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

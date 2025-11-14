@@ -62,3 +62,24 @@ export function logoutUser() {
   
   window.location.href = "/login";
 }
+
+export async function requestPasswordReset(email) {
+  return await apiFetch("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyOtp(email, otp) {
+  return await apiFetch("/auth/verify-otp", {
+    method: "POST",
+    body: JSON.stringify({ email, otp }),
+  });
+}
+
+export async function resetPassword(email, otp, newPassword) {
+  return await apiFetch("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+}
