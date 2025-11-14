@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, unbanUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
 import { Eye, Search } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
@@ -28,6 +28,10 @@ function ManageUserPage() {
   // Ban Dialog
   const [banUserId, setBanUserId] = useState(null);
   const [banning, setBanning] = useState(false);
+
+  // Unban Dialog
+const [unbanUserId, setUnbanUserId] = useState(null);
+const [unbanning, setUnbanning] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -241,6 +245,29 @@ function ManageUserPage() {
     }
   }
 
+// --- UNBAN USER ---
+const openUnbanDialog = (id) => {
+  setUnbanUserId(id);
+};
+
+const performUnban = async () => {
+  try {
+    setUnbanning(true);
+    await unbanUser(unbanUserId);
+    setUsers((prev) =>
+      prev.map((u) => (u.id === unbanUserId ? { ...u, isBanned: false } : u))
+    );
+    setUnbanUserId(null);
+    alert('User unbanned successfully!');
+  } catch (err) {
+    alert(err.message || 'Failed to unban user');
+  } finally {
+    setUnbanning(false);
+  }
+};
+
+
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadUsers} />;
 
@@ -284,6 +311,7 @@ function ManageUserPage() {
           onViewDetails={handleViewDetails}
           onEditRole={openEditRoleDialog}
           onBan={openBanDialog}
+          onUnban={openUnbanDialog}  
           onEditUser={setEditingUserId}
           searchTerm={searchTerm}
         />
@@ -349,6 +377,32 @@ function ManageUserPage() {
           </div>
         </Modal>
       )}
+
+      {/* ---------- UNBAN DIALOG ---------- */}
+      {unbanUserId !== null && (
+        <Modal onClose={() => setUnbanUserId(null)}>
+          <h3 className="text-xl font-bold mb-4">Unban User</h3>
+          <p className="text-gray-400 mb-6">
+            Are you sure you want to unban this user? They will be able to
+            access the platform again.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setUnbanUserId(null)}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={performUnban}
+              disabled={unbanning}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition disabled:opacity-50"
+            >
+              {unbanning ? 'Unbanning…' : 'Yes, Unban User'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -381,7 +435,7 @@ function ErrorState({ error, onRetry }) {
   );
 }
 
-function UsersTable({ users, onViewDetails, onEditRole, onBan, onEditUser, searchTerm }) {
+function UsersTable({ users, onViewDetails, onEditRole, onBan, onUnban, onEditUser, searchTerm }) {
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
       {searchTerm && (
@@ -459,13 +513,22 @@ function UsersTable({ users, onViewDetails, onEditRole, onBan, onEditUser, searc
                     Edit Role
                   </button>
 
-                  <button
-                    onClick={() => onBan(user.id)}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
-                    disabled={user.isBanned}
-                  >
-                    {user.isBanned ? 'Banned' : 'Ban'}
-                  </button>
+                  {/* Show Ban or Unban button based on status */}
+                  {user.isBanned ? (
+                    <button
+                      onClick={() => onUnban(user.id)}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition"
+                    >
+                      Unban
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onBan(user.id)}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
+                    >
+                      Ban
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

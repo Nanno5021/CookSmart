@@ -74,6 +74,9 @@ namespace Server.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.password))
                 return Unauthorized(new { message = "Invalid username/email or password." });
 
+            if (user.isBanned)
+                return StatusCode(403, new { message = "Your account has been banned. Please contact support for more information." });
+
             var token = GenerateJwtToken(user);
 
             int? chefId = null;

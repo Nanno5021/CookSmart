@@ -91,7 +91,6 @@ namespace Server.Controllers
             if (user == null) 
                 return NotFound(new { message = "User not found" });
 
-            // Update fields
             if (!string.IsNullOrWhiteSpace(dto.fullName))
                 user.fullName = dto.fullName;
             
@@ -385,6 +384,18 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Chef profile updated successfully" });
+        }
+
+        [HttpPost("unban/{id}")]
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.isBanned = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User unbanned." });
         }
 
     }
