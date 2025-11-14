@@ -28,6 +28,8 @@ function RecipePage() {
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
+  const isLoggedIn = !!localStorage.getItem("token");
+
   useEffect(() => {
     setUserRole(localStorage.getItem("role"));
     const getRecipes = async () => {
@@ -152,13 +154,18 @@ function RecipePage() {
 
                   <div className="flex items-center justify-between text-gray-500 text-sm">
                     <button
-                      onClick={() =>
-                        navigate("/recipedetail", { state: { recipe } })
-                      }
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          alert("Please log in to view recipe details.");
+                          return;
+                        }
+                        navigate("/recipedetail", { state: { recipe } });
+                      }}
                       className="text-sm font-semibold bg-white text-black px-3 py-1 rounded-lg hover:bg-gray-300 transition"
                     >
                       View Recipe
                     </button>
+                    
                   </div>
                 </div>
               </div>

@@ -33,7 +33,7 @@ namespace Server.Controllers
                 recipeId = r.recipeId,
                 userId = r.userId,
                 username = r.user?.username ?? "Anonymous",
-                userProfileImage = "", // Add once profile image is implemented
+                userProfileImage = r.user?.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = r.rating,
                 comment = r.comment,
                 reviewDate = r.reviewDate
@@ -87,7 +87,7 @@ namespace Server.Controllers
                 recipeId = review.recipeId,
                 userId = review.userId,
                 username = user.username,
-                userProfileImage = "", // Placeholder
+                userProfileImage = user.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = review.rating,
                 comment = review.comment,
                 reviewDate = review.reviewDate
@@ -127,7 +127,7 @@ namespace Server.Controllers
                 recipeId = review.recipeId,
                 userId = review.userId,
                 username = review.user?.username ?? "Anonymous",
-                userProfileImage = "",
+                userProfileImage = review.user?.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = review.rating,
                 comment = review.comment,
                 reviewDate = review.reviewDate

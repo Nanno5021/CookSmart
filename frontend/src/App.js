@@ -21,10 +21,13 @@ import AdminDashboard from "./pages/admin/MainPage.js";
 import EditProfilePage from "./pages/EditProfilePage.js";
 import RequireAdmin from './components/RequireAdmin';
 import EditCoursePage from "./pages/chef/EditCoursePage.js";
-import ChefMainPage from "./pages/chef/MainPage.js";
+import ChefMainPage from "./pages/MainPage.js";
 import RequestChefAccountPage from "./pages/chef/RequestChefAccountPage.js";
 import BlogDetails from "./pages/BlogDetails.js";
 import CheckStatus from "./pages/CheckStatus.js";
+
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import VerifyOTPPage from './pages/VerifyOTPPage';
 
 function App() {
   return (
@@ -50,6 +53,8 @@ function App() {
         <Route path="/requestchef" element={<RequestChefAccountPage />} />
         <Route path="/posts/:id" element={<BlogDetails />} />
         <Route path="/checkstatus" element={<CheckStatus />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-otp" element={<VerifyOTPPage />} />
 
         <Route path="/chef" element={<ChefMainPage />} />
         <Route

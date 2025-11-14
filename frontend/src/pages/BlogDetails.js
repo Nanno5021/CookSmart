@@ -4,8 +4,11 @@ import Navbar from "../components/Navbar";
 import ratingIcon from "../assets/rating.png";
 import commentIcon from "../assets/comment.png";
 import viewsIcon from "../assets/views.png";
-import { apiFetch } from "../api/apiClient";
-import { fetchComments, createComment, likeComment } from "../api/comment";
+import deleteIcon from "../assets/delete.png"; // Add delete icon
+// ✅ CORRECT - Should import from post.js
+import { deletePost } from "../api/post"; // Add this
+import { apiFetch } from "../api/apiClient"; // Keep this separate
+import { fetchComments, createComment, likeComment, deleteComment } from "../api/comment"; // Import deleteComment
 import { fetchMyProfile } from "../api/profileapi";
 
 /* Helper functions from MainPage */
@@ -68,6 +71,15 @@ export default function BlogDetails() {
 
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
+
+  // Add this useEffect at the top of BlogDetails component
+  useEffect(() => {
+    if (!isLoggedIn) {
+      alert("Please log in to view post details.");
+      navigate("/");
+      return;
+    }
+  }, [isLoggedIn, navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -202,6 +214,72 @@ export default function BlogDetails() {
       mounted = false;
     };
   }, [id, isLoggedIn]);
+
+  const handleDeletePost = async () => {
+    if (!isLoggedIn) {
+      alert("You need to log in to delete posts.");
+      return;
+    }
+
+    // Check if current user owns the post
+    if (currentUser && post.username === currentUser.username) {
+      if (!window.confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+        return;
+      }
+
+      try {
+        await deletePost(id);
+        alert("Post deleted successfully.");
+        navigate("/"); // Redirect to home page after deletion
+      } catch (err) {
+        console.error("Failed to delete post:", err);
+        alert("Failed to delete post. Please try again.");
+      }
+    } else {
+      alert("You can only delete your own posts.");
+    }
+  };
+
+  const handleDeleteComment = async (commentId, commentUsername) => {
+    if (!isLoggedIn) {
+      alert("You need to log in to delete comments.");
+      return;
+    }
+
+    // Check if current user owns the comment
+    if (currentUser && commentUsername === currentUser.username) {
+      if (!window.confirm("Are you sure you want to delete this comment?")) {
+        return;
+      }
+
+      try {
+        const response = await deleteComment(id, commentId);
+        
+        // Remove comment from state
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        
+        // Update post comment count using the response from backend
+        if (response.updatedCommentCount !== undefined) {
+          setPost(prev => ({ 
+            ...prev, 
+            comments: response.updatedCommentCount 
+          }));
+        } else {
+          // Fallback: decrement by 1
+          setPost(prev => ({ 
+            ...prev, 
+            comments: Math.max((prev.comments || 1) - 1, 0) 
+          }));
+        }
+        
+      } catch (err) {
+        console.error("Failed to delete comment:", err);
+        alert("Failed to delete comment. Please try again.");
+      }
+    } else {
+      alert("You can only delete your own comments.");
+    }
+  };
 
   const handleRate = async () => {
     if (!isLoggedIn) {
@@ -347,14 +425,27 @@ export default function BlogDetails() {
       <Navbar />
 
       <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818", border: "1px solid #2d2d2d" }}>
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/")}
-          className="mb-6 text-gray-400 hover:text-white flex items-center space-x-2"
-        >
-          <span>←</span>
-          <span>Back</span>
-        </button>
+        {/* Back Button and Delete Post Button */}
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => navigate("/")}
+            className="text-gray-400 hover:text-white flex items-center space-x-2"
+          >
+            <span>←</span>
+            <span>Back</span>
+          </button>
+          
+          {/* Post Delete Button - only show if current user owns the post */}
+          {currentUser && post && post.username === currentUser.username && (
+            <button
+              onClick={handleDeletePost}
+              className="text-red-500 hover:text-red-400 transition flex items-center space-x-2 px-3 py-1 rounded-lg hover:bg-red-900 hover:bg-opacity-20"
+            >
+              <img src={deleteIcon} alt="Delete" className="w-4 h-4 invert" />
+              <span>Delete Post</span>
+            </button>
+          )}
+        </div>
 
         {/* Post Container */}
         <div className="w-full pb-6 border-b" style={{ borderColor: "#2d2d2d" }}>
@@ -438,9 +529,22 @@ export default function BlogDetails() {
                     <div className="flex items-start space-x-3">
                       <Avatar src={comment.avatar} name={comment.username} size={40} />
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-semibold text-white">{comment.username}</span>
-                          <span className="text-gray-500 text-sm">{comment.createdAt}</span>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-semibold text-white">{comment.username}</span>
+                            <span className="text-gray-500 text-sm">{comment.createdAt}</span>
+                          </div>
+                          
+                          {/* Comment Delete Button - only show if current user owns the comment */}
+                          {currentUser && comment.username === currentUser.username && (
+                            <button 
+                              onClick={() => handleDeleteComment(comment.id, comment.username)}
+                              className="text-red-500 hover:text-red-400 transition p-1 rounded hover:bg-red-900 hover:bg-opacity-20"
+                              title="Delete comment"
+                            >
+                              <img src={deleteIcon} alt="Delete" className="w-4 h-4 invert opacity-70 hover:opacity-100" />
+                            </button>
+                          )}
                         </div>
                         <p className="text-gray-300 mb-2">{comment.text}</p>
                         <div className="flex items-center space-x-4 text-gray-500 text-sm">

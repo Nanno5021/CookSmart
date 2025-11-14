@@ -33,7 +33,7 @@ namespace Server.Controllers
                 courseId = r.courseId,
                 userId = r.userId,
                 username = r.user?.username ?? "Anonymous",
-                userProfileImage = "", // Temporarily removed until profile images are implemented
+                userProfileImage = r.user?.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = r.rating,
                 comment = r.comment,
                 reviewDate = r.reviewDate
@@ -87,11 +87,12 @@ namespace Server.Controllers
                 courseId = review.courseId,
                 userId = review.userId,
                 username = user.username,
-                userProfileImage = "", // Temporarily removed until profile images are implemented
+                userProfileImage = user.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = review.rating,
                 comment = review.comment,
                 reviewDate = review.reviewDate
             };
+
 
             return CreatedAtAction(nameof(GetReviewsByCourse), new { courseId = review.courseId }, response);
         }
@@ -127,7 +128,7 @@ namespace Server.Controllers
                 courseId = review.courseId,
                 userId = review.userId,
                 username = review.user?.username ?? "Anonymous",
-                userProfileImage = "",
+                userProfileImage = review.user?.avatarUrl ?? "", // Replace ProfilePicture with your actual field name
                 rating = review.rating,
                 comment = review.comment,
                 reviewDate = review.reviewDate

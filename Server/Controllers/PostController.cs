@@ -205,7 +205,48 @@ namespace Server.Controllers
             }
         }
 
+        // DELETE: api/posts/{id}
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<ActionResult> DeletePost(int id)
+        {
+            // Get user from token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "id" || c.Type == "sub")?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Invalid user ID" });
 
+            // Find post with related data
+            var post = await _context.Posts
+                .Include(p => p.Comments) // Include comments to delete them
+                .Include(p => p.PostLikes) // Include likes to delete them
+                .Include(p => p.PostViews) // Include views to delete them
+                .FirstOrDefaultAsync(p => p.id == id);
+            
+            if (post == null)
+                return NotFound(new { message = "Post not found" });
+
+            // Check if user owns the post
+            if (post.userId != userId)
+            {
+                return Forbid("You can only delete your own posts");
+            }
+
+            // Remove all related entities first (to maintain referential integrity)
+            if (post.Comments != null)
+                _context.Comments.RemoveRange(post.Comments);
+            
+            if (post.PostLikes != null)
+                _context.PostLikes.RemoveRange(post.PostLikes);
+            
+            if (post.PostViews != null)
+                _context.PostViews.RemoveRange(post.PostViews);
+
+            // Remove the post
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Post deleted successfully" });
+        }
 
         // Update GetPost to handle both logged-in and anonymous users
         [HttpGet("{id}")]
