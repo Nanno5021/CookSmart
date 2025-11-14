@@ -139,3 +139,10 @@ export async function updateChefProfile(userId, chefData) {
     body: JSON.stringify(chefData),
   });
 }
+
+// POST: Unban a user
+export async function unbanUser(id) {
+  return await apiFetch(`/ManageUser/unban/${id}`, {
+    method: "POST",
+  });
+}
