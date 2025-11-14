@@ -101,12 +101,10 @@ function CoursePage() {
     }
   };
 
-  // ✅ FIXED: Navigation logic - check enrollment status first
   const goToCourseDetail = (chef, course) => {
     const isEnrolled = userEnrollments.some(e => e.courseId === course.id);
     
     if (filter === "enrolled" && isEnrolled) {
-      // If in "Enrolled Courses" tab AND enrolled, go to enrolled detail page
       navigate("/enrolleddetail", { 
         state: { 
           chef: {
@@ -123,7 +121,6 @@ function CoursePage() {
         } 
       });
     } else {
-      // If in "All Courses" tab OR not enrolled, go to course detail page
       navigate("/coursedetail", { 
         state: { 
           chef: {
@@ -142,7 +139,7 @@ function CoursePage() {
     }
   };
 
-  // Filter displayed courses based on database enrollments
+
   const displayedCourses =
     filter === "all"
       ? courses
@@ -157,7 +154,7 @@ function CoursePage() {
           }))
           .filter((chef) => chef.courses.length > 0);
 
-  // ... rest of your component (loading, error, return JSX) remains the same
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
@@ -197,7 +194,6 @@ function CoursePage() {
         <div className="w-full flex flex-col items-center">
           <h1 className="text-center text-3xl font-bold mb-4">Chef Courses</h1>
 
-          {/* Filter buttons */}
           <div className="flex gap-4 mb-8">
             <button
               onClick={() => setFilter("all")}
@@ -230,7 +226,6 @@ function CoursePage() {
                 className="w-full max-w-6xl rounded-2xl p-8 shadow-lg"
                 style={{ backgroundColor: "#181818" }}
               >
-                {/* Chef Header */}
                 <div className="flex items-center mb-8">
                   <img
                     src={chef.chefImage || chefProfile}
@@ -242,7 +237,6 @@ function CoursePage() {
                   </div>
                 </div>
 
-                {/* Chef Courses (Horizontal Scroll) */}
                 <div className="flex overflow-x-auto space-x-8 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4 px-2">
                   {chef.courses.map((course, index) => {
                     const enrollment = userEnrollments.find(e => e.courseId === course.id);
@@ -271,12 +265,11 @@ function CoursePage() {
                             {course.description || "No description provided."}
                           </p>
                           
-                          {/* Enrollment Status */}
                           {isEnrolled && (
                             <div className="mt-2">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-green-400 font-semibold">
-                                  ✓ Enrolled
+                                  Enrolled
                                 </span>
                                 {enrollment.progress > 0 && (
                                   <span className="text-blue-400">
@@ -286,7 +279,7 @@ function CoursePage() {
                               </div>
                               {enrollment.completed && (
                                 <div className="mt-1 text-xs text-yellow-400 font-semibold">
-                                  🎉 Course Completed!
+                                  Course Completed!
                                 </div>
                               )}
                             </div>
@@ -315,7 +308,6 @@ function CoursePage() {
         </div>
       </div>
       
-{/* Request Chef Account Button */}
       {userRole !== "Admin" && (
         <div className="fixed bottom-6 right-6">
           <button

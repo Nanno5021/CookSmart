@@ -228,7 +228,6 @@ function RecipeDetailPage() {
       <Navbar />
 
       <div className="w-full max-w-3xl mt-8 p-6 rounded-2xl shadow-lg bg-[#181818] relative">
-        {/* Header Section */}
         <div className="relative mb-6">
           <img
             src={recipe.recipeImage || sampleFood}
@@ -246,7 +245,6 @@ function RecipeDetailPage() {
           </button>
         </div>
 
-        {/* Recipe Title and Chef Info */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold mb-2">{recipe.recipeName}</h1>
           <p className="text-gray-400">
@@ -340,7 +338,7 @@ function RecipeDetailPage() {
                 className="bg-[#222] rounded-lg p-4 flex gap-3 items-start"
               >
                 <img
-                  src={r.userProfileImage || chefProfile}
+                  src={r.userProfileImage  || chefProfile}
                   alt={r.username}
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
@@ -358,7 +356,6 @@ function RecipeDetailPage() {
                         ({formatDate(r.reviewDate)})
                       </span>
                     </div>
-                    {/* Edit/Delete buttons for current user's reviews */}
                     {r.userId === currentUserId && (
                       <div className="flex gap-2">
                         {editingReview === r.id ? (

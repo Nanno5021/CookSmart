@@ -22,34 +22,27 @@ function CourseDetailPage() {
     },
   };
 
-  // Get current user ID from localStorage
   const currentUserId = parseInt(localStorage.getItem("userId")) || 1;
 
-  // Reviews
+
   const [myRating, setMyRating] = useState(0);
   const [myReview, setMyReview] = useState("");
   const [reviews, setReviews] = useState([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Edit state
   const [editingReview, setEditingReview] = useState(null);
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
-
-  // ✅ FIXED: Enrollment state - check database enrollments
   const [userEnrollments, setUserEnrollments] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(true);
 
-  // ✅ FIXED: Check if this course is enrolled FROM DATABASE
   const isEnrolled = userEnrollments.some(
     (enrollment) => enrollment.courseId === course.id
   );
 
-  // Fetch reviews and enrollments from API
   useEffect(() => {
     if (course.id) {
       loadReviews();
@@ -70,7 +63,6 @@ function CourseDetailPage() {
     }
   };
 
-  // ✅ FIXED: Load user enrollments from database
   const loadUserEnrollments = async () => {
     if (!currentUserId) return;
     
@@ -88,13 +80,11 @@ function CourseDetailPage() {
   
   const toggleEnroll = async () => {
     if (isEnrolled) {
-      // Find the enrollment ID to delete
       const enrollment = userEnrollments.find(e => e.courseId === course.id);
       if (enrollment) {
         if (window.confirm(`Are you sure you want to unenroll from "${course.name}"?`)) {
           try {
             await deleteEnrollment(enrollment.id);
-            // Refresh enrollments from database
             await loadUserEnrollments();
             setSuccessMessage("Unenrolled successfully!");
             setShowSuccess(true);
@@ -108,7 +98,6 @@ function CourseDetailPage() {
         alert("Enrollment record not found. Please try refreshing the page.");
       }
     } else {
-      // Show confirmation dialog to enroll
       setIsDialogOpen(true);
     }
   };

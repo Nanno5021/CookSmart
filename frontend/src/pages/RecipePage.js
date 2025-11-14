@@ -120,7 +120,6 @@ function RecipePage() {
                     {recipe.recipeName}
                   </h3>
                   
-                  {/* Display Chef Name */}
                   <p className="text-gray-400 text-sm mb-1">
                     By: <span className="text-gray-300">{recipe.chefName}</span>
                   </p>
@@ -129,7 +128,6 @@ function RecipePage() {
                     Cuisine: {recipe.cuisine}
                   </p>
                   
-                  {/* Display Rating */}
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-yellow-400">
                       {"★".repeat(Math.round(recipe.averageRating))}
@@ -171,7 +169,6 @@ function RecipePage() {
         )}
       </div>
 
-{/* Request Chef Account Button */}
       {userRole !== "Admin" && (
         <div className="fixed bottom-6 right-6">
           <button
