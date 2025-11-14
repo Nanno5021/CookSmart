@@ -290,7 +290,7 @@ namespace Server.Migrations
                         column: x => x.parentCommentId,
                         principalTable: "Comments",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Comments_Posts_postId",
                         column: x => x.postId,

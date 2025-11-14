@@ -588,7 +588,7 @@ namespace Server.Migrations
                     b.HasOne("Server.Models.Comment", "ParentComment")
                         .WithMany("Replies")
                         .HasForeignKey("parentCommentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Server.Models.Post", "Post")
                         .WithMany("Comments")

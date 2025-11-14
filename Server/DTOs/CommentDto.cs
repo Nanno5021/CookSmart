@@ -15,6 +15,10 @@ namespace Server.DTOs
         public List<CommentDto>? replies { get; set; }
 
         public bool isLikedByCurrentUser { get; set; }
+
+            // Add these properties
+        public int postId { get; set; }
+        public string postTitle { get; set; } = string.Empty;
     }
 
     public class CreateCommentDto

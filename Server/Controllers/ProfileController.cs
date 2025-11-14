@@ -1,16 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.DTOs;
-using Server.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
-using System.IO;
-using Microsoft.AspNetCore.Http;
 
 namespace Server.Controllers
 {

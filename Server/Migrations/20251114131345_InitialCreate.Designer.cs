@@ -11,11 +11,7 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-<<<<<<<< HEAD:Server/Migrations/20251113101214_InitialCreate.Designer.cs
-    [Migration("20251113101214_InitialCreate")]
-========
-    [Migration("20251112132320_InitialCreate")]
->>>>>>>> main:Server/Migrations/20251112132320_InitialCreate.Designer.cs
+    [Migration("20251114131345_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -595,7 +591,7 @@ namespace Server.Migrations
                     b.HasOne("Server.Models.Comment", "ParentComment")
                         .WithMany("Replies")
                         .HasForeignKey("parentCommentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Server.Models.Post", "Post")
                         .WithMany("Comments")

@@ -52,3 +52,14 @@ export async function deleteComment(postId, commentId) {
     throw new Error("Delete functionality is not available");
   }
 }
+
+export async function fetchMyComments() {
+  try {
+    return await apiFetch("/users/my-comments", {
+      method: "GET",
+    });
+  } catch (error) {
+    console.warn("Failed to fetch user comments:", error);
+    return [];
+  }
+}

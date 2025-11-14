@@ -21,7 +21,7 @@ import AdminDashboard from "./pages/admin/MainPage.js";
 import EditProfilePage from "./pages/EditProfilePage.js";
 import RequireAdmin from './components/RequireAdmin';
 import EditCoursePage from "./pages/chef/EditCoursePage.js";
-import ChefMainPage from "./pages/chef/MainPage.js";
+import ChefMainPage from "./pages/MainPage.js";
 import RequestChefAccountPage from "./pages/chef/RequestChefAccountPage.js";
 import BlogDetails from "./pages/BlogDetails.js";
 import CheckStatus from "./pages/CheckStatus.js";
