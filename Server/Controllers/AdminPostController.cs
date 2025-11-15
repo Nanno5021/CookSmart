@@ -57,7 +57,6 @@ namespace Server.Controllers
             if (post == null)
                 return NotFound(new { message = "Post not found." });
 
-            // ✅ Fetch comments
             var comments = await _context.Comments
                 .Where(c => c.postId == id && c.parentCommentId == null)
                 .Include(c => c.User)
@@ -87,7 +86,7 @@ namespace Server.Controllers
                 userId = post.userId,
                 authorName = post.User.fullName,
                 authorUsername = post.User.username,
-                commentsList = comments // ✅ Include comments
+                commentsList = comments 
             };
 
             return Ok(postDto);
@@ -260,7 +259,7 @@ namespace Server.Controllers
                 return NotFound(new { message = "Post not found." });
 
             var comments = await _context.Comments
-                .Where(c => c.postId == id && c.parentCommentId == null) // Only top-level comments
+                .Where(c => c.postId == id && c.parentCommentId == null) 
                 .Include(c => c.User)
                 .OrderByDescending(c => c.createdAt)
                 .Select(c => new AdminCommentDto

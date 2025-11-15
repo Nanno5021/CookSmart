@@ -28,18 +28,18 @@ namespace Server.Controllers
                     user => user.id,
                     (app, user) => new ChefApplicationDTO
                     {
-                        Id = app.id,
-                        UserId = user.id,
-                        FullName = user.fullName,
-                        Email = user.email,
-                        SpecialtyCuisine = app.specialtyCuisine,
-                        YearsOfExperience = app.yearsOfExperience,
-                        CertificationName = app.certificationName,
-                        CertificationImageUrl = app.certificationImageUrl,  // Include this
-                        PortfolioLink = app.portfolioLink,
-                        Biography = app.biography,
-                        Status = app.status,
-                        DateApplied = app.dateApplied
+                        id = app.id,
+                        userId = user.id,
+                        fullName = user.fullName,
+                        email = user.email,
+                        specialtyCuisine = app.specialtyCuisine,
+                        yearsOfExperience = app.yearsOfExperience,
+                        certificationName = app.certificationName,
+                        certificationImageUrl = app.certificationImageUrl,
+                        portfolioLink = app.portfolioLink,
+                        biography = app.biography,
+                        status = app.status,
+                        dateApplied = app.dateApplied
                     }).ToListAsync();
 
             return Ok(applications);
@@ -56,20 +56,20 @@ namespace Server.Controllers
                     user => user.id,
                     (app, user) => new ChefApplicationDTO
                     {
-                        Id = app.id,
-                        UserId = user.id,
-                        FullName = user.fullName,
-                        Email = user.email,
-                        SpecialtyCuisine = app.specialtyCuisine,
-                        YearsOfExperience = app.yearsOfExperience,
-                        CertificationName = app.certificationName,
-                        CertificationImageUrl = app.certificationImageUrl,  // Include this
-                        PortfolioLink = app.portfolioLink,
-                        Biography = app.biography,
-                        Status = app.status,
-                        DateApplied = app.dateApplied,
-                        DateReviewed = app.dateReviewed,
-                        AdminRemarks = app.adminRemarks
+                        id = app.id,
+                        userId = user.id,
+                        fullName = user.fullName,
+                        email = user.email,
+                        specialtyCuisine = app.specialtyCuisine,
+                        yearsOfExperience = app.yearsOfExperience,
+                        certificationName = app.certificationName,
+                        certificationImageUrl = app.certificationImageUrl,
+                        portfolioLink = app.portfolioLink,
+                        biography = app.biography,
+                        status = app.status,
+                        dateApplied = app.dateApplied,
+                        dateReviewed = app.dateReviewed,
+                        adminRemarks = app.adminRemarks
                     }).FirstOrDefaultAsync();
 
             if (application == null)
