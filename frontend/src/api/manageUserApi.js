@@ -146,3 +146,14 @@ export async function unbanUser(id) {
     method: "POST",
   });
 }
+
+// POST: Create a new user
+export async function createUser(userData) {
+  return await apiFetch("/ManageUser/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+}

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllUsers, banUser, unbanUser, updateUserRole, createChefProfile, deleteChefProfile } from '../../api/manageUserApi';
+import { fetchAllUsers, banUser, unbanUser, updateUserRole, createChefProfile, deleteChefProfile, createUser } from '../../api/manageUserApi';
 import UserDetailsPage from './UserDetailsPage';
-import { Eye, Search } from 'lucide-react';
+import { Eye, Search, UserPlus } from 'lucide-react';
 import EditUserPage from "./EditUserPage";
 import ChefApplicationForm from "./ChefApplicationForm"; 
 import EditChefProfile from "./EditChefProfile";
+import CreateUserPage from "./CreateUserPage";
 
 function ManageUserPage() {
   const [users, setUsers] = useState([]);
@@ -16,7 +17,10 @@ function ManageUserPage() {
   const [editingChefUserId, setEditingChefUserId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // NEW: Chef Application Form State
+  // NEW: Create User State
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  
+  // Chef Application Form State
   const [showChefForm, setShowChefForm] = useState(false);
   const [chefFormUser, setChefFormUser] = useState(null);
 
@@ -30,8 +34,8 @@ function ManageUserPage() {
   const [banning, setBanning] = useState(false);
 
   // Unban Dialog
-const [unbanUserId, setUnbanUserId] = useState(null);
-const [unbanning, setUnbanning] = useState(false);
+  const [unbanUserId, setUnbanUserId] = useState(null);
+  const [unbanning, setUnbanning] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -65,13 +69,34 @@ const [unbanning, setUnbanning] = useState(false);
     }
   };
 
+  // NEW: Handle user creation
+  const handleCreateUser = async (userData) => {
+    try {
+      const newUser = await createUser(userData);
+      
+      // If the role is Chef, show the chef application form
+      if (userData.role === 'Chef') {
+        setChefFormUser(newUser);
+        setShowChefForm(true);
+        setShowCreateUser(false);
+        alert('User created successfully! Please complete the chef profile.');
+      } else {
+        // For non-chef users, just refresh and go back
+        await loadUsers();
+        setShowCreateUser(false);
+        alert('User created successfully!');
+      }
+    } catch (err) {
+      throw err; // Let CreateUserPage handle the error
+    }
+  };
+
   // --- EDIT ROLE ---
   const openEditRoleDialog = (user) => {
     setEditRoleUserId(user.id);
     setSelectedRole(user.role);
   };
 
-  // UPDATED: Handle role update - check if changing to Chef
   const performRoleUpdate = async () => {
     if (!selectedRole) {
       alert('Please select a role');
@@ -81,23 +106,17 @@ const [unbanning, setUnbanning] = useState(false);
     try {
       setUpdatingRole(true);
       
-      // Find the user being updated
       const user = users.find(u => u.id === editRoleUserId);
       
-      // Check if changing FROM Chef role to another role
       if (user.role === 'Chef' && selectedRole !== 'Chef') {
         if (!window.confirm('Changing from Chef role will delete all chef profile data. Are you sure?')) {
           setUpdatingRole(false);
           return;
         }
         
-        // Delete chef profile first
         await deleteChefProfile(editRoleUserId);
-        
-        // Then update the role
         await updateUserRole(editRoleUserId, selectedRole);
         
-        // Update local state
         setUsers((prev) =>
           prev.map((u) =>
             u.id === editRoleUserId ? { ...u, role: selectedRole } : u
@@ -107,28 +126,21 @@ const [unbanning, setUnbanning] = useState(false);
         setEditRoleUserId(null);
         alert('Chef profile deleted and role updated successfully!');
       }
-      // Check if changing TO Chef role
       else if (selectedRole === 'Chef' && user.role !== 'Chef') {
-        // Update the role first
         await updateUserRole(editRoleUserId, selectedRole);
         
-        // Update local state
         setUsers((prev) =>
           prev.map((u) =>
             u.id === editRoleUserId ? { ...u, role: selectedRole } : u
           )
         );
         
-        // Close the role dialog
         setEditRoleUserId(null);
-        
-        // Show chef application form
         setChefFormUser(user);
         setShowChefForm(true);
         
         alert('Role updated! Please complete the chef profile.');
       } else {
-        // Normal role update (not involving Chef role)
         await updateUserRole(editRoleUserId, selectedRole);
         setUsers((prev) =>
           prev.map((u) =>
@@ -145,19 +157,17 @@ const [unbanning, setUnbanning] = useState(false);
     }
   };
 
-  // NEW: Handle chef profile submission
   const handleChefProfileSubmit = async (chefData) => {
     try {
       await createChefProfile(chefFormUser.id, chefData);
       setShowChefForm(false);
       setChefFormUser(null);
-      await loadUsers(); // Refresh the list
+      await loadUsers();
     } catch (err) {
-      throw err; // Let the form handle the error
+      throw err;
     }
   };
 
-  // NEW: Handle chef form cancellation
   const handleChefFormCancel = () => {
     setShowChefForm(false);
     setChefFormUser(null);
@@ -184,6 +194,27 @@ const [unbanning, setUnbanning] = useState(false);
     }
   };
 
+  // --- UNBAN USER ---
+  const openUnbanDialog = (id) => {
+    setUnbanUserId(id);
+  };
+
+  const performUnban = async () => {
+    try {
+      setUnbanning(true);
+      await unbanUser(unbanUserId);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === unbanUserId ? { ...u, isBanned: false } : u))
+      );
+      setUnbanUserId(null);
+      alert('User unbanned successfully!');
+    } catch (err) {
+      alert(err.message || 'Failed to unban user');
+    } finally {
+      setUnbanning(false);
+    }
+  };
+
   // --- VIEW DETAILS ---
   const handleViewDetails = (id) => setSelectedUserId(id);
   
@@ -200,6 +231,7 @@ const [unbanning, setUnbanning] = useState(false);
     setSelectedUserId(null);
     setEditingUserId(null);
     setEditingChefUserId(null);
+    setShowCreateUser(false);
     loadUsers();
   };
 
@@ -207,7 +239,17 @@ const [unbanning, setUnbanning] = useState(false);
     setSearchTerm(e.target.value);
   };
 
-  // NEW: Show Chef Application Form if needed
+  // Show Create User Page
+  if (showCreateUser) {
+    return (
+      <CreateUserPage
+        onBack={handleBackToList}
+        onUserCreated={handleCreateUser}
+      />
+    );
+  }
+
+  // Show Chef Application Form
   if (showChefForm && chefFormUser) {
     return (
       <ChefApplicationForm
@@ -245,29 +287,6 @@ const [unbanning, setUnbanning] = useState(false);
     }
   }
 
-// --- UNBAN USER ---
-const openUnbanDialog = (id) => {
-  setUnbanUserId(id);
-};
-
-const performUnban = async () => {
-  try {
-    setUnbanning(true);
-    await unbanUser(unbanUserId);
-    setUsers((prev) =>
-      prev.map((u) => (u.id === unbanUserId ? { ...u, isBanned: false } : u))
-    );
-    setUnbanUserId(null);
-    alert('User unbanned successfully!');
-  } catch (err) {
-    alert(err.message || 'Failed to unban user');
-  } finally {
-    setUnbanning(false);
-  }
-};
-
-
-
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} onRetry={loadUsers} />;
 
@@ -275,17 +294,26 @@ const performUnban = async () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold">Manage Users</h2>
-        <div className="relative w-80">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={20} className="text-gray-400" />
+        <div className="flex items-center space-x-4">
+          <div className="relative w-80">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={20} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by name, email, role, or username..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search by name, email, role, or username..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 transition"
-          />
+          <button
+            onClick={() => setShowCreateUser(true)}
+            className="px-6 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition inline-flex items-center space-x-2"
+          >
+            <UserPlus size={20} />
+            <span>Create User</span>
+          </button>
         </div>
       </div>
 
@@ -513,7 +541,6 @@ function UsersTable({ users, onViewDetails, onEditRole, onBan, onUnban, onEditUs
                     Edit Role
                   </button>
 
-                  {/* Show Ban or Unban button based on status */}
                   {user.isBanned ? (
                     <button
                       onClick={() => onUnban(user.id)}
