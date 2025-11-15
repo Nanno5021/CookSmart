@@ -18,17 +18,15 @@ function CoursePage() {
   // Get current user info from localStorage
   const currentUserId = parseInt(localStorage.getItem("userId"));
   const userRole = localStorage.getItem("role");
-  const isLoggedIn = !!localStorage.getItem("token"); // Add this line
+  const isLoggedIn = !!localStorage.getItem("token");
 
   useEffect(() => {
-    // Load courses for both guests and logged-in users
     loadCourses();
     
-    // Only load enrollments if user is logged in
     if (isLoggedIn && currentUserId) {
       loadUserEnrollments();
     }
-  }, [currentUserId, isLoggedIn]); // Add isLoggedIn as dependency
+  }, [currentUserId, isLoggedIn]);
 
   const loadCourses = async () => {
     try {
@@ -85,9 +83,8 @@ function CoursePage() {
     }
   };
 
-  // Handle course enrollment (only for logged-in users)
   const handleEnrollInCourse = async (courseId, e) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    e.stopPropagation();
     
     if (!isLoggedIn) {
       alert("Please log in to enroll in courses");
@@ -96,7 +93,7 @@ function CoursePage() {
 
     try {
       await enrollInCourse(currentUserId, courseId);
-      await loadUserEnrollments(); // Refresh enrollments
+      await loadUserEnrollments();
       alert("Successfully enrolled in the course!");
     } catch (err) {
       console.error("Error enrolling in course:", err);
@@ -104,7 +101,6 @@ function CoursePage() {
     }
   };
 
-  // Navigation logic - with guest restriction
   const goToCourseDetail = (chef, course) => {
     if (!isLoggedIn) {
       alert("Please log in to view course details.");
@@ -148,7 +144,6 @@ function CoursePage() {
     }
   };
 
-  // Filter displayed courses based on database enrollments
   const displayedCourses =
     filter === "all"
       ? courses
@@ -202,7 +197,6 @@ function CoursePage() {
         <div className="w-full flex flex-col items-center">
           <h1 className="text-center text-3xl font-bold mb-4">Chef Courses</h1>
 
-          {/* Filter buttons - Only show "Enrolled Courses" for logged-in users */}
           <div className="flex gap-4 mb-8">
             <button
               onClick={() => setFilter("all")}
@@ -259,30 +253,29 @@ function CoursePage() {
                       <div
                         key={course.id || index}
                         onClick={() => goToCourseDetail(chef, course)}
-                        className={`min-w-[340px] rounded-xl overflow-hidden shadow-md transition transform hover:scale-105 hover:shadow-lg flex-shrink-0 flex flex-col ${
+                        className={`min-w-[300px] max-w-[300px] rounded-xl overflow-hidden shadow-md transition transform hover:scale-105 hover:shadow-lg flex-shrink-0 ${
                           isLoggedIn ? "cursor-pointer" : "cursor-not-allowed"
                         }`}
                         style={{ backgroundColor: "#1f1f1f" }}
                       >
+                        {/* Fixed height image */}
                         <img
                           src={course.image || sampleFood}
                           alt={course.name}
-                          className="w-full h-52 object-cover"
+                          className="w-full h-40 object-cover"
                         />
-                        <div className="p-5 flex-1 flex flex-col">
-                          <p className="text-sm text-gray-400 mb-3">
-                            Ingredients: {course.ingredients || "N/A"}
-                          </p>
+                        <div className="p-4">
                           <h3 className="text-lg font-semibold mb-2">
                             {course.name}
                           </h3>
-                          <p className="text-gray-300 text-sm flex-1">
-                            {course.description || "No description provided."}
+                          
+                          <p className="text-gray-400 text-sm mb-2">
+                            Ingredients: <span className="text-gray-300">{course.ingredients || "N/A"}</span>
                           </p>
                           
-                          {/* Enrollment Status - Only show for logged-in users */}
+                          {/* Enrollment Status */}
                           {isLoggedIn && isEnrolled && (
-                            <div className="mt-2">
+                            <div className="mb-2">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-green-400 font-semibold">
                                   ✓ Enrolled
@@ -303,18 +296,16 @@ function CoursePage() {
                           
                           {/* Guest message */}
                           {!isLoggedIn && (
-                            <div className="mt-2">
+                            <div className="mb-2">
                               <div className="text-xs text-yellow-400 font-semibold">
                                 🔒 Log in to enroll and view details
                               </div>
                             </div>
                           )}
                           
-                          <div className="mt-4 pt-3 border-t border-gray-700">
-                            <div className="flex justify-between items-center text-xs text-gray-400">
-                              <span>Difficulty: {course.difficulty}</span>
-                              <span>Time: {course.time}</span>
-                            </div>
+                          <div className="flex items-center justify-between text-gray-500 text-sm mt-2">
+                            <span>Difficulty: {course.difficulty}</span>
+                            <span>Time: {course.time}</span>
                           </div>
                         </div>
                       </div>
@@ -333,7 +324,7 @@ function CoursePage() {
         </div>
       </div>
       
-      {/* Request Chef Account Button - Only show for logged-in non-Admin users */}
+      {/* Request Chef Account Button */}
       {isLoggedIn && userRole !== "Admin" && (
         <div className="fixed bottom-6 right-6">
           <button

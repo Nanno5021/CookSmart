@@ -7,7 +7,6 @@ import { fetchCoursesByChef, deleteCourse } from "../../api/courseApi";
 
 function ChefCoursePage() {
   const navigate = useNavigate();
-  // Get logged-in chef ID from localStorage
   const chefId = parseInt(localStorage.getItem("chefId"));
 
   const [myCourses, setMyCourses] = useState([]);
@@ -33,7 +32,6 @@ function ChefCoursePage() {
       setLoading(true);
       const data = await fetchCoursesByChef(chefId);
       
-      // Transform API response to match component format
       const transformedCourses = data.map(course => ({
         id: course.id,
         name: course.courseName,
@@ -72,7 +70,7 @@ function ChefCoursePage() {
     try {
       await deleteCourse(courseId);
       alert("Course deleted successfully!");
-      loadChefCourses(); // Reload the courses
+      loadChefCourses();
     } catch (err) {
       console.error("Error deleting course:", err);
       alert("Failed to delete course. Please try again.");
@@ -90,7 +88,6 @@ function ChefCoursePage() {
     );
   }
 
-  // Check if user is a chef
   if (!chefId) {
     return (
       <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
@@ -136,7 +133,6 @@ function ChefCoursePage() {
           </div>
         )}
 
-        {/* Check if chef has any courses */}
         {myCourses.length === 0 ? (
           <div className="flex flex-col items-center justify-center mt-20">
             <p className="text-gray-400 text-lg mb-6">
@@ -167,35 +163,33 @@ function ChefCoursePage() {
                 {myCourses.map((course) => (
                   <div
                     key={course.id}
-                    className="min-w-[320px] bg-[#1f1f1f] rounded-xl shadow-md flex-shrink-0"
+                    className="min-w-[300px] max-w-[300px] bg-[#1f1f1f] rounded-xl shadow-md flex-shrink-0 overflow-hidden"
                   >
+                    {/* Fixed height image */}
                     <img
                       src={course.image || sampleFood}
                       alt={course.name}
-                      className="w-full h-48 object-cover rounded-t-xl"
+                      className="w-full h-40 object-cover"
                     />
                     <div className="p-4">
-                      <p className="text-sm text-gray-400 mb-2">
-                        Ingredients: {course.ingredients}
-                      </p>
-                      <h3 className="text-lg font-semibold mb-1">
+                      <h3 className="text-lg font-semibold mb-2">
                         {course.name}
                       </h3>
-                      <p className="text-gray-300 text-sm mb-3">
-                        {course.description}
+                      <p className="text-gray-400 text-sm mb-2">
+                        Ingredients: <span className="text-gray-300">{course.ingredients}</span>
                       </p>
                       
                       {/* Action buttons */}
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex gap-2 mt-3">
                         <button
                           onClick={() => handleEditCourse(course.id)}
-                          className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors"
+                          className="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg text-sm font-semibold transition"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteCourse(course.id, course.name)}
-                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors"
+                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition"
                         >
                           Delete
                         </button>
@@ -205,7 +199,7 @@ function ChefCoursePage() {
                 ))}
               </div>
 
-              {/* Add Course Button (when chef already has courses) */}
+              {/* Add Course Button */}
               <div className="flex justify-center mt-8">
                 <button
                   onClick={handleAddCourse}
