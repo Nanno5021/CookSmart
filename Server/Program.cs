@@ -3,13 +3,29 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Server.Data;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------------------
 // 1️⃣ Add Controllers & CORS
 // ---------------------------
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        // Ignore circular references
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+
+        // Keep property names as-is (PascalCase preserved)
+        options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+
+        // Pretty print
+        options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+    });
 
 builder.Services.AddCors(options =>
 {
@@ -25,6 +41,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddHostedService<Server.Services.DbJsonUpdater>();
 // ---------------------------
 // 3️⃣ JWT Authentication
 // ---------------------------
