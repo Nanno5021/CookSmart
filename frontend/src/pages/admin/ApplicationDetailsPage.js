@@ -51,7 +51,7 @@ function ApplicationDetails({ applicationId, onBack }) {
     try {
       setActionLoading(true);
       await approveApplication(applicationId);
-      setApplication({ ...application, Status: 'Approved' });
+      setApplication({ ...application, status: 'Approved' });
       setShowApproveDialog(false);
       alert('Chef approved successfully!');
     } catch (err) {
@@ -70,7 +70,7 @@ function ApplicationDetails({ applicationId, onBack }) {
     try {
       setActionLoading(true);
       await rejectApplication(applicationId, rejectReason);
-      setApplication({ ...application, Status: 'Rejected', AdminRemarks: rejectReason });
+      setApplication({ ...application, status: 'Rejected', adminRemarks: rejectReason });
       setShowRejectDialog(false);
       setRejectReason('');
       alert('Chef rejected successfully!');
@@ -123,8 +123,8 @@ function ApplicationDetails({ applicationId, onBack }) {
     );
   }
 
-  const certImageUrl = application.CertificationImageUrl 
-    ? `${application.CertificationImageUrl}` 
+  const certImageUrl = application.certificationImageUrl 
+    ? `${application.certificationImageUrl}` 
     : null;
 
   return (
@@ -134,19 +134,19 @@ function ApplicationDetails({ applicationId, onBack }) {
         <h2 className="text-3xl font-bold">Application Details</h2>
         <span
           className={`px-4 py-2 rounded-full text-sm font-semibold ${
-            application.Status === 'Pending'
+            application.status === 'Pending'
               ? 'bg-yellow-500 bg-opacity-20 text-yellow-500'
-              : application.Status === 'Approved'
+              : application.status === 'Approved'
               ? 'bg-green-500 bg-opacity-20 text-green-500'
               : 'bg-red-500 bg-opacity-20 text-red-500'
           }`}
         >
-          {application.Status}
+          {application.status}
         </span>
       </div>
 
       {/* Action Buttons - Only for Pending */}
-      {application.Status === 'Pending' && (
+      {application.status === 'Pending' && (
         <div className="flex gap-3 mb-6">
           <button
             onClick={() => setShowApproveDialog(true)}
@@ -172,29 +172,29 @@ function ApplicationDetails({ applicationId, onBack }) {
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
         <div className="p-8 space-y-6">
           <Section title="Personal Information" icon={User}>
-            <FormField label="Full Name" value={application.FullName} icon={User} />
-            <FormField label="Email" value={application.Email} icon={Mail} />
+            <FormField label="Full Name" value={application.fullName} icon={User} />
+            <FormField label="Email" value={application.email} icon={Mail} />
           </Section>
 
           <Divider />
 
           <Section title="Professional Information" icon={Briefcase}>
-            <FormField label="Specialty Cuisine" value={application.SpecialtyCuisine} icon={Award} />
+            <FormField label="Specialty Cuisine" value={application.specialtyCuisine} icon={Award} />
             <FormField
               label="Years of Experience"
-              value={`${application.YearsOfExperience} years`}
+              value={`${application.yearsOfExperience} years`}
               icon={Calendar}
             />
             <FormField
               label="Certification Name"
-              value={application.CertificationName || 'N/A'}
+              value={application.certificationName || 'N/A'}
               icon={Award}
             />
             <FormField
               label="Portfolio Link"
-              value={application.PortfolioLink || 'N/A'}
+              value={application.portfolioLink || 'N/A'}
               icon={LinkIcon}
-              isLink={!!application.PortfolioLink}
+              isLink={!!application.portfolioLink}
             />
           </Section>
 
@@ -235,7 +235,7 @@ function ApplicationDetails({ applicationId, onBack }) {
           <Section title="Biography" icon={FileText}>
             <div className="bg-zinc-800 rounded-lg p-4 col-span-2">
               <p className="text-gray-300 whitespace-pre-wrap">
-                {application.Biography || 'No biography provided'}
+                {application.biography || 'No biography provided'}
               </p>
             </div>
           </Section>
@@ -245,25 +245,25 @@ function ApplicationDetails({ applicationId, onBack }) {
           <Section title="Application Timeline" icon={Calendar}>
             <FormField
               label="Date Applied"
-              value={new Date(application.DateApplied).toLocaleDateString()}
+              value={new Date(application.dateApplied).toLocaleDateString()}
               icon={Calendar}
             />
-            {application.DateReviewed && (
+            {application.dateReviewed && (
               <FormField
                 label="Date Reviewed"
-                value={new Date(application.DateReviewed).toLocaleDateString()}
+                value={new Date(application.dateReviewed).toLocaleDateString()}
                 icon={Calendar}
               />
             )}
           </Section>
 
-          {application.Status === 'Rejected' && application.AdminRemarks && (
+          {application.status === 'Rejected' && application.adminRemarks && (
             <>
               <Divider />
               <div>
                 <h3 className="text-xl font-bold mb-4 text-red-400">Rejection Remarks</h3>
                 <div className="bg-red-500 bg-opacity-10 border border-red-500 border-opacity-30 rounded-lg p-4">
-                  <p className="text-gray-300">{application.AdminRemarks}</p>
+                  <p className="text-gray-300">{application.adminRemarks}</p>
                 </div>
               </div>
             </>
