@@ -65,7 +65,6 @@ function RequestChefAccountPage() {
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (
       !specialtyCuisine ||
       !yearsOfExperience ||
@@ -77,7 +76,6 @@ function RequestChefAccountPage() {
       return;
     }
 
-    // Check if image file is selected but not uploaded
     if (certImageFile && !certificationImageUrl) {
       alert("Please upload the selected certification image before submitting");
       return;
@@ -106,7 +104,6 @@ function RequestChefAccountPage() {
       console.log("Chef application submitted:", response);
       alert("Your chef application has been submitted successfully! We will review it shortly.");
       
-      // Clear form
       setSpecialtyCuisine("");
       setYearsOfExperience("");
       setCertificationName("");
@@ -116,12 +113,10 @@ function RequestChefAccountPage() {
       setPortfolioLink("");
       setBiography("");
       
-      // Redirect to home or profile page
       navigate("/");
     } catch (error) {
       console.error("Error submitting chef application:", error);
       
-      // Handle specific error messages
       if (error.message.includes("already have a pending application")) {
         alert("You already have a pending chef application. Please wait for admin review.");
       } else if (error.message.includes("already a chef")) {
@@ -205,7 +200,7 @@ function RequestChefAccountPage() {
                   </button>
                 )}
                 {certificationImageUrl && (
-                  <p className="text-green-400 text-sm mt-2">✓ Certification image uploaded successfully</p>
+                  <p className="text-green-400 text-sm mt-2"> Certification image uploaded successfully</p>
                 )}
               </div>
             ) : (

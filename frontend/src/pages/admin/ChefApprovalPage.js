@@ -29,8 +29,8 @@ function ChefApprovalPage() {
       setFilteredApplications(applications);
     } else {
       const filtered = applications.filter(app =>
-        app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        app.FullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.Email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredApplications(filtered);
     }
@@ -59,7 +59,7 @@ function ChefApprovalPage() {
     try {
       setApproving(true);
       await approveApplication(approveId);
-      setApplications((prev) => prev.filter((a) => a.id !== approveId));
+      setApplications((prev) => prev.filter((a) => a.Id !== approveId));
       setApproveId(null);
       alert('Approved!');
     } catch (err) {
@@ -83,7 +83,7 @@ function ChefApprovalPage() {
     try {
       setRejecting(true);
       await rejectApplication(rejectId, rejectReason);
-      setApplications((prev) => prev.filter((a) => a.id !== rejectId));
+      setApplications((prev) => prev.filter((a) => a.Id !== rejectId));
       setRejectId(null);
       alert('Rejected!');
     } catch (err) {
@@ -269,32 +269,32 @@ function Table({ applications, onView, onApprove, onReject, searchTerm }) {
         </thead>
         <tbody>
           {applications.map((app) => (
-            <tr key={app.id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
-              <td className="p-4 font-medium">{app.fullName}</td>
-              <td className="p-4 text-gray-400">{app.email}</td>
-              <td className="p-4 text-gray-400">{app.yearsOfExperience} years</td>
+            <tr key={app.Id} className="border-t border-zinc-800 hover:bg-zinc-800 transition-colors">
+              <td className="p-4 font-medium">{app.FullName}</td>
+              <td className="p-4 text-gray-400">{app.Email}</td>
+              <td className="p-4 text-gray-400">{app.YearsOfExperience} years</td>
               <td className="p-4">
                 <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-500 rounded-full text-sm">
-                  {app.status}
+                  {app.Status}
                 </span>
               </td>
               <td className="p-4">
                 <div className="flex justify-center space-x-2">
                   <button
-                    onClick={() => onView(app.id)}
+                    onClick={() => onView(app.Id)}
                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition inline-flex items-center space-x-2"
                   >
                     <Eye size={16} />
                     <span>View Details</span>
                   </button>
                   <button
-                    onClick={() => onApprove(app.id)}
+                    onClick={() => onApprove(app.Id)}
                     className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => onReject(app.id)}
+                    onClick={() => onReject(app.Id)}
                     className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
                   >
                     Reject
