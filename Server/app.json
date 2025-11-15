@@ -1070,9 +1070,22 @@
       "email": "lowyingqi@gmail.com",
       "phone": "0123456789",
       "password": "$2a$11$DoGt14kPDgNg0gpzf/DSiOZOvzVPtR40PdgERx3uR2/Oq5h1MUT22",
-      "role": "User",
+      "role": "Chef",
       "isBanned": false,
       "joinDate": "2025-11-15T15:11:50.7002742",
+      "avatarUrl": "http://localhost:5037/uploads/default.png",
+      "Posts": []
+    },
+    {
+      "id": 13,
+      "fullName": "ns",
+      "username": "ns",
+      "email": "ns@gmail.com",
+      "phone": "01232424151",
+      "password": "$2a$11$LCagxlGjZ.WIFDw4ryLtNenUCHY/Xvk4qqC7F1UHjJnalKQZJldGq",
+      "role": "User",
+      "isBanned": false,
+      "joinDate": "2025-11-15T19:05:59.5260971",
       "avatarUrl": "http://localhost:5037/uploads/default.png",
       "Posts": []
     }
@@ -10169,6 +10182,19 @@
       "rating": 0.0,
       "totalReviews": 0,
       "approvedDate": "2025-11-15T14:36:29.0739434"
+    },
+    {
+      "id": 12,
+      "userId": 12,
+      "specialtyCuisine": "Italian",
+      "yearsOfExperience": 21,
+      "certificationName": "APU",
+      "certificationImageUrl": "http://localhost:5037/certifications/cert_12_c17ef581-db83-4aa2-824b-9e4cb2f02c09.jpg",
+      "portfolioLink": "asd",
+      "biography": "dasd",
+      "rating": 0.0,
+      "totalReviews": 0,
+      "approvedDate": "2025-11-15T19:21:32.611881"
     }
   ],
   "ChefApplications": [
@@ -11361,6 +11387,33 @@
       "adminRemarks": "",
       "dateApplied": "2025-11-15T06:35:29.7073048",
       "dateReviewed": "2025-11-15T14:36:29.0740609"
+    },
+    {
+      "id": 11,
+      "userId": 13,
+      "User": {
+        "id": 13,
+        "fullName": "ns",
+        "username": "ns",
+        "email": "ns@gmail.com",
+        "phone": "01232424151",
+        "password": "$2a$11$LCagxlGjZ.WIFDw4ryLtNenUCHY/Xvk4qqC7F1UHjJnalKQZJldGq",
+        "role": "User",
+        "isBanned": false,
+        "joinDate": "2025-11-15T19:05:59.5260971",
+        "avatarUrl": "http://localhost:5037/uploads/default.png",
+        "Posts": []
+      },
+      "specialtyCuisine": "Japanese",
+      "yearsOfExperience": 2,
+      "certificationName": "aPU",
+      "certificationImageUrl": "http://localhost:5037/certifications/10579e0e-bab1-4133-b40f-839b02e12354.jpg",
+      "portfolioLink": "da",
+      "biography": "sadad",
+      "status": "Approved",
+      "adminRemarks": "",
+      "dateApplied": "2025-11-15T11:06:29.6774822",
+      "dateReviewed": "2025-11-15T19:20:46.558275"
     }
   ],
   "OtpVerifications": []
