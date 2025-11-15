@@ -29,6 +29,7 @@ namespace Server.Data
 
         public DbSet<ChefApplication> ChefApplications { get; set; }
         public DbSet<Chef> Chefs { get; set; }
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -179,6 +180,38 @@ namespace Server.Data
             modelBuilder.Entity<Enrollment>()
                 .Property(e => e.progress)
                 .HasPrecision(3, 2);
+
+            // Post relationships
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.Comments)
+                .WithOne(c => c.Post)
+                .HasForeignKey(c => c.postId)
+                .OnDelete(DeleteBehavior.Cascade); // This ensures comments are deleted when post is deleted
+
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.PostLikes)
+                .WithOne(pl => pl.Post)
+                .HasForeignKey(pl => pl.postId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.PostViews)
+                .WithOne(pv => pv.Post)
+                .HasForeignKey(pv => pv.postId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Comment relationships
+            modelBuilder.Entity<Comment>()
+                .HasMany(c => c.Replies)
+                .WithOne(r => r.ParentComment)
+                .HasForeignKey(r => r.parentCommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasMany(c => c.CommentLikes)
+                .WithOne(cl => cl.Comment)
+                .HasForeignKey(cl => cl.commentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

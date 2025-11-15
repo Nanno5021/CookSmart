@@ -172,6 +172,18 @@ function LoginPage() {
           </Link>
         </p>
 
+        <p style={{ marginTop: "10px", fontSize: "14px" }}>
+          <Link
+            to="/forgot-password"
+            style={{
+              color: "white",
+              textDecoration: "underline",
+            }}
+          >
+            Forgot your password?
+          </Link>
+        </p>
+
         
       </div>
     </div>

@@ -15,19 +15,18 @@ function CoursePage() {
   const [filter, setFilter] = useState("all");
   const [userEnrollments, setUserEnrollments] = useState([]);
 
-  // Get current user ID from localStorage
+  // Get current user info from localStorage
   const currentUserId = parseInt(localStorage.getItem("userId"));
   const userRole = localStorage.getItem("role");
+  const isLoggedIn = !!localStorage.getItem("token");
 
   useEffect(() => {
-    if (currentUserId) {
-      loadCourses();
+    loadCourses();
+    
+    if (isLoggedIn && currentUserId) {
       loadUserEnrollments();
-    } else {
-      setLoading(false);
-      setError("Please log in to view courses");
     }
-  }, [currentUserId]);
+  }, [currentUserId, isLoggedIn]);
 
   const loadCourses = async () => {
     try {
@@ -84,16 +83,17 @@ function CoursePage() {
     }
   };
 
-  // ✅ FIXED: Handle course enrollment (separate from navigation)
-  const handleEnrollInCourse = async (courseId) => {
-    if (!currentUserId) {
-      setError("Please log in to enroll in courses");
+  const handleEnrollInCourse = async (courseId, e) => {
+    e.stopPropagation();
+    
+    if (!isLoggedIn) {
+      alert("Please log in to enroll in courses");
       return;
     }
 
     try {
       await enrollInCourse(currentUserId, courseId);
-      await loadUserEnrollments(); // Refresh enrollments
+      await loadUserEnrollments();
       alert("Successfully enrolled in the course!");
     } catch (err) {
       console.error("Error enrolling in course:", err);
@@ -102,6 +102,11 @@ function CoursePage() {
   };
 
   const goToCourseDetail = (chef, course) => {
+    if (!isLoggedIn) {
+      alert("Please log in to view course details.");
+      return;
+    }
+
     const isEnrolled = userEnrollments.some(e => e.courseId === course.id);
     
     if (filter === "enrolled" && isEnrolled) {
@@ -139,7 +144,6 @@ function CoursePage() {
     }
   };
 
-
   const displayedCourses =
     filter === "all"
       ? courses
@@ -153,7 +157,6 @@ function CoursePage() {
             ),
           }))
           .filter((chef) => chef.courses.length > 0);
-
 
   if (loading) {
     return (
@@ -205,16 +208,18 @@ function CoursePage() {
             >
               All Courses
             </button>
-            <button
-              onClick={() => setFilter("enrolled")}
-              className={`px-4 py-2 rounded-lg ${
-                filter === "enrolled"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Enrolled Courses ({userEnrollments.length})
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => setFilter("enrolled")}
+                className={`px-4 py-2 rounded-lg ${
+                  filter === "enrolled"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                Enrolled Courses ({userEnrollments.length})
+              </button>
+            )}
           </div>
         </div>
 
@@ -226,6 +231,7 @@ function CoursePage() {
                 className="w-full max-w-6xl rounded-2xl p-8 shadow-lg"
                 style={{ backgroundColor: "#181818" }}
               >
+                {/* Chef Header */}
                 <div className="flex items-center mb-8">
                   <img
                     src={chef.chefImage || chefProfile}
@@ -237,6 +243,7 @@ function CoursePage() {
                   </div>
                 </div>
 
+                {/* Chef Courses (Horizontal Scroll) */}
                 <div className="flex overflow-x-auto space-x-8 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900 pb-4 px-2">
                   {chef.courses.map((course, index) => {
                     const enrollment = userEnrollments.find(e => e.courseId === course.id);
@@ -246,30 +253,32 @@ function CoursePage() {
                       <div
                         key={course.id || index}
                         onClick={() => goToCourseDetail(chef, course)}
-                        className="min-w-[340px] rounded-xl overflow-hidden shadow-md transition transform hover:scale-105 hover:shadow-lg flex-shrink-0 cursor-pointer flex flex-col"
+                        className={`min-w-[300px] max-w-[300px] rounded-xl overflow-hidden shadow-md transition transform hover:scale-105 hover:shadow-lg flex-shrink-0 ${
+                          isLoggedIn ? "cursor-pointer" : "cursor-not-allowed"
+                        }`}
                         style={{ backgroundColor: "#1f1f1f" }}
                       >
+                        {/* Fixed height image */}
                         <img
                           src={course.image || sampleFood}
                           alt={course.name}
-                          className="w-full h-52 object-cover"
+                          className="w-full h-40 object-cover"
                         />
-                        <div className="p-5 flex-1 flex flex-col">
-                          <p className="text-sm text-gray-400 mb-3">
-                            Ingredients: {course.ingredients || "N/A"}
-                          </p>
+                        <div className="p-4">
                           <h3 className="text-lg font-semibold mb-2">
                             {course.name}
                           </h3>
-                          <p className="text-gray-300 text-sm flex-1">
-                            {course.description || "No description provided."}
+                          
+                          <p className="text-gray-400 text-sm mb-2">
+                            Ingredients: <span className="text-gray-300">{course.ingredients || "N/A"}</span>
                           </p>
                           
-                          {isEnrolled && (
-                            <div className="mt-2">
+                          {/* Enrollment Status */}
+                          {isLoggedIn && isEnrolled && (
+                            <div className="mb-2">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-green-400 font-semibold">
-                                  Enrolled
+                                  ✓ Enrolled
                                 </span>
                                 {enrollment.progress > 0 && (
                                   <span className="text-blue-400">
@@ -279,17 +288,24 @@ function CoursePage() {
                               </div>
                               {enrollment.completed && (
                                 <div className="mt-1 text-xs text-yellow-400 font-semibold">
-                                  Course Completed!
+                                  🎉 Course Completed!
                                 </div>
                               )}
                             </div>
                           )}
                           
-                          <div className="mt-4 pt-3 border-t border-gray-700">
-                            <div className="flex justify-between items-center text-xs text-gray-400">
-                              <span>Difficulty: {course.difficulty}</span>
-                              <span>Time: {course.time}</span>
+                          {/* Guest message */}
+                          {!isLoggedIn && (
+                            <div className="mb-2">
+                              <div className="text-xs text-yellow-400 font-semibold">
+                                🔒 Log in to enroll and view details
+                              </div>
                             </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-gray-500 text-sm mt-2">
+                            <span>Difficulty: {course.difficulty}</span>
+                            <span>Time: {course.time}</span>
                           </div>
                         </div>
                       </div>
@@ -308,7 +324,8 @@ function CoursePage() {
         </div>
       </div>
       
-      {userRole !== "Admin" && (
+      {/* Request Chef Account Button */}
+      {isLoggedIn && userRole !== "Admin" && (
         <div className="fixed bottom-6 right-6">
           <button
             onClick={() => navigate("/requestchef")}

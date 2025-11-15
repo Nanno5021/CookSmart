@@ -91,7 +91,6 @@ namespace Server.Controllers
             if (user == null) 
                 return NotFound(new { message = "User not found" });
 
-            // Update fields
             if (!string.IsNullOrWhiteSpace(dto.fullName))
                 user.fullName = dto.fullName;
             
@@ -385,6 +384,86 @@ namespace Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Chef profile updated successfully" });
+        }
+
+        [HttpPost("unban/{id}")]
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.isBanned = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User unbanned." });
+        }
+
+        // POST: api/ManageUser/create
+        [HttpPost("create")]
+        public async Task<ActionResult<UserDTO>> CreateUser([FromBody] CreateUserDTO dto)
+        {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(dto.fullName))
+                return BadRequest(new { message = "Full name is required" });
+
+            if (string.IsNullOrWhiteSpace(dto.username))
+                return BadRequest(new { message = "Username is required" });
+
+            if (string.IsNullOrWhiteSpace(dto.email))
+                return BadRequest(new { message = "Email is required" });
+
+            if (string.IsNullOrWhiteSpace(dto.password))
+                return BadRequest(new { message = "Password is required" });
+
+            if (dto.password.Length < 6)
+                return BadRequest(new { message = "Password must be at least 6 characters" });
+
+            // Check if username already exists
+            var existingUsername = await _context.Users
+                .FirstOrDefaultAsync(u => u.username == dto.username);
+            if (existingUsername != null)
+                return BadRequest(new { message = "Username already taken" });
+
+            // Check if email already exists
+            var existingEmail = await _context.Users
+                .FirstOrDefaultAsync(u => u.email == dto.email);
+            if (existingEmail != null)
+                return BadRequest(new { message = "Email already in use" });
+
+            // Hash the password
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.password);
+
+            // Create new user
+            var user = new User
+            {
+                fullName = dto.fullName,
+                username = dto.username,
+                email = dto.email,
+                phone = dto.phone,
+                password = hashedPassword,
+                role = dto.role ?? "User",
+                isBanned = false,
+                joinDate = DateTime.Now,
+                avatarUrl = $"{Request.Scheme}://{Request.Host}/uploads/default.png"
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Return the created user with ID
+            var createdUser = new UserDTO
+            {
+                id = user.id,
+                fullName = user.fullName,
+                username = user.username,
+                email = user.email,
+                phone = user.phone,
+                role = user.role,
+                isBanned = user.isBanned,
+                joinDate = user.joinDate
+            };
+
+            return Ok(createdUser);
         }
 
     }

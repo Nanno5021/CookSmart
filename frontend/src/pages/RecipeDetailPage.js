@@ -6,6 +6,62 @@ import sampleFood from "../assets/food.png";
 import { fetchRecipeById } from "../api/recipeApi";
 import { fetchReviewsByRecipe, createRecipeReview, updateRecipeReview, deleteRecipeReview } from "../api/recipeReviewApi";
 
+// Add these helper functions at the top of RecipeDetailPage.js (after imports)
+function resolveAvatarUrl(raw) {
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${window.location.origin}${raw}`;
+  return `${window.location.origin}/${raw}`;
+}
+
+function pickAvatarFromReview(review) {
+  const candidates = [
+    review.userProfileImage,
+    review.avatarUrl,
+    review.avatar,
+    review.profilePic,
+    review.image,
+    review.userAvatar,
+    review.authorAvatar,
+    review.author?.avatarUrl,
+    review.user?.avatarUrl,
+  ];
+  const first = candidates.flat?.().find(Boolean) ?? candidates.find(Boolean);
+  return first ? resolveAvatarUrl(first) : null;
+}
+
+function ReviewAvatar({ review, size = 40 }) {
+  const avatarUrl = pickAvatarFromReview(review);
+  const userName = review.username || "User";
+  
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={userName}
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  
+  // Fallback to initials
+  const initials = userName.split(" ").map(n => n[0]).slice(0,2).join("").toUpperCase();
+  return (
+    <div
+      className="rounded-full flex items-center justify-center text-white font-semibold"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: "#2a2a2a",
+        fontSize: size * 0.4
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function RecipeDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -228,6 +284,7 @@ function RecipeDetailPage() {
       <Navbar />
 
       <div className="w-full max-w-3xl mt-8 p-6 rounded-2xl shadow-lg bg-[#181818] relative">
+        {/* Header Section */}
         <div className="relative mb-6">
           <img
             src={recipe.recipeImage || sampleFood}
@@ -245,6 +302,7 @@ function RecipeDetailPage() {
           </button>
         </div>
 
+        {/* Recipe Title and Chef Info */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold mb-2">{recipe.recipeName}</h1>
           <p className="text-gray-400">
@@ -337,14 +395,7 @@ function RecipeDetailPage() {
                 key={r.id}
                 className="bg-[#222] rounded-lg p-4 flex gap-3 items-start"
               >
-                <img
-                  src={r.userProfileImage  || chefProfile}
-                  alt={r.username}
-                  className="w-10 h-10 rounded-full object-cover"
-                  onError={(e) => {
-                    e.target.src = chefProfile;
-                  }}
-                />
+                <ReviewAvatar review={r} size={40} /> 
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -356,6 +407,7 @@ function RecipeDetailPage() {
                         ({formatDate(r.reviewDate)})
                       </span>
                     </div>
+                    {/* Edit/Delete buttons for current user's reviews */}
                     {r.userId === currentUserId && (
                       <div className="flex gap-2">
                         {editingReview === r.id ? (

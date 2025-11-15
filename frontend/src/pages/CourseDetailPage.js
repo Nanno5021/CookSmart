@@ -5,6 +5,61 @@ import sampleFood from "../assets/food.png";
 import { fetchReviewsByCourse, createReview, updateReview, deleteReview } from "../api/courseReviewApi";
 import { enrollInCourse, getEnrollmentsByUser, deleteEnrollment } from "../api/enrollmentApi";
 
+function resolveAvatarUrl(raw) {
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${window.location.origin}${raw}`;
+  return `${window.location.origin}/${raw}`;
+}
+
+function pickAvatarFromReview(review) {
+  const candidates = [
+    review.userProfileImage,
+    review.avatarUrl,
+    review.avatar,
+    review.profilePic,
+    review.image,
+    review.userAvatar,
+    review.authorAvatar,
+    review.author?.avatarUrl,
+    review.user?.avatarUrl,
+  ];
+  const first = candidates.flat?.().find(Boolean) ?? candidates.find(Boolean);
+  return first ? resolveAvatarUrl(first) : null;
+}
+
+function ReviewAvatar({ review, size = 40 }) {
+  const avatarUrl = pickAvatarFromReview(review);
+  const userName = review.username || "User";
+  
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={userName}
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  
+  // Fallback to initials
+  const initials = userName.split(" ").map(n => n[0]).slice(0,2).join("").toUpperCase();
+  return (
+    <div
+      className="rounded-full flex items-center justify-center text-white font-semibold"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: "#2a2a2a",
+        fontSize: size * 0.4
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function CourseDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -364,11 +419,7 @@ function CourseDetailPage() {
             ) : (
               reviews.map((rev) => (
                 <div key={rev.id} className="flex gap-3 p-3 bg-[#222] rounded-lg items-start">
-                  <img
-                    src={rev.userProfileImage || chefProfile}
-                    alt={rev.username}
-                    className="w-10 h-10 rounded-full object-cover mt-1"
-                  />
+                  <ReviewAvatar review={rev} size={40} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -443,8 +494,7 @@ function CourseDetailPage() {
                     )}
                   </div>
                 </div>
-              ))
-            )}
+              )))}
           </div>
         </div>
 

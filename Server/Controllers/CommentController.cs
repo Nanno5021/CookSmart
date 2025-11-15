@@ -1,4 +1,3 @@
-// CommentsController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -195,8 +194,9 @@ namespace Server.Controllers
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(new { message = "Invalid user ID" });
 
-            // Find comment
+            // Find comment including the Post
             var comment = await _context.Comments
+                .Include(c => c.Post) // Include the post to update comment count
                 .FirstOrDefaultAsync(c => c.id == commentId && c.postId == postId);
             
             if (comment == null)
@@ -209,10 +209,67 @@ namespace Server.Controllers
                 return Forbid("You can only delete your own comments");
             }
 
+            // Check if this is a top-level comment (not a reply)
+            bool isTopLevelComment = comment.parentCommentId == null;
+
             _context.Comments.Remove(comment);
+
+            // Update post comment count if it's a top-level comment
+            if (isTopLevelComment && comment.Post != null)
+            {
+                comment.Post.comments = Math.Max(0, comment.Post.comments - 1);
+            }
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Comment deleted" });
+            
+            var updatedCommentCount = comment.Post?.comments ?? 0;
+
+            return Ok(new { 
+                message = "Comment deleted",
+                wasTopLevelComment = isTopLevelComment,
+                updatedCommentCount = updatedCommentCount
+            });
+        }
+
+        // GET: api/users/my-comments
+        [HttpGet("~/api/users/my-comments")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<CommentDto>>> GetMyComments()
+        {
+            // Get user from token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "id" || c.Type == "sub")?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Invalid user ID" });
+
+            var comments = await _context.Comments
+                .Include(c => c.User)
+                .Include(c => c.Post) // Include post to show which post the comment belongs to
+                .Where(c => c.userId == userId)
+                .OrderByDescending(c => c.createdAt)
+                .Select(c => new CommentDto
+                {
+                    id = c.id,
+                    content = c.content,
+                    createdAt = c.createdAt,
+                    likes = c.likes,
+                    username = c.User != null
+                        ? (!string.IsNullOrWhiteSpace(c.User.username)
+                            ? c.User.username
+                            : (!string.IsNullOrWhiteSpace(c.User.fullName)
+                                ? c.User.fullName
+                                : $"user{c.User.id}"))
+                        : "Anonymous",
+                    avatarUrl = c.User != null && !string.IsNullOrWhiteSpace(c.User.avatarUrl)
+                        ? c.User.avatarUrl
+                        : string.Empty,
+                    parentCommentId = c.parentCommentId,
+                    postId = c.postId,
+                    postTitle = c.Post != null ? c.Post.title : "Unknown Post" // Include post title
+                })
+                .ToListAsync();
+
+            return Ok(comments);
         }
     }
 }

@@ -26,20 +26,31 @@ namespace Server.Controllers
             var recipes = await _context.Recipes
                 .Include(r => r.chef)
                 .Include(r => r.reviews)
-                .Select(r => new RecipeDTO
-                {
-                    id = r.id,
-                    chefId = r.chefId,
-                    chefName = r.chef!.fullName,
-                    recipeName = r.recipeName,
-                    cuisine = r.cuisine,
-                    recipeImage = r.recipeImage,
-                    ingredients = r.ingredients,
-                    steps = r.steps,
-                    createdAt = r.createdAt,
-                    averageRating = r.reviews.Any() ? r.reviews.Average(rv => rv.rating) : 0.0,
-                    totalReviews = r.reviews.Count
-                })
+                .Join(
+                    _context.Chefs,
+                    recipe => recipe.chefId,
+                    chef => chef.id,
+                    (recipe, chef) => new { recipe, chef }
+                )
+                .Join(
+                    _context.Users,
+                    rc => rc.chef.userId,
+                    user => user.id,
+                    (rc, user) => new RecipeDTO
+                    {
+                        id = rc.recipe.id,
+                        chefId = rc.recipe.chefId,
+                        chefName = user.fullName,
+                        recipeName = rc.recipe.recipeName,
+                        cuisine = rc.recipe.cuisine,
+                        recipeImage = rc.recipe.recipeImage,
+                        ingredients = rc.recipe.ingredients,
+                        steps = rc.recipe.steps,
+                        createdAt = rc.recipe.createdAt,
+                        averageRating = rc.recipe.reviews.Any() ? rc.recipe.reviews.Average(rv => rv.rating) : 0.0,
+                        totalReviews = rc.recipe.reviews.Count
+                    }
+                )
                 .OrderByDescending(r => r.createdAt)
                 .ToListAsync();
 
@@ -55,31 +66,42 @@ namespace Server.Controllers
                 .Include(r => r.reviews)
                     .ThenInclude(rv => rv.user)
                 .Where(r => r.id == id)
-                .Select(r => new RecipeDetailDTO
-                {
-                    id = r.id,
-                    chefId = r.chefId,
-                    chefName = r.chef!.fullName,
-                    chefAvatar = r.chef.avatarUrl,
-                    recipeName = r.recipeName,
-                    cuisine = r.cuisine,
-                    recipeImage = r.recipeImage,
-                    ingredients = r.ingredients,
-                    steps = r.steps,
-                    createdAt = r.createdAt,
-                    averageRating = r.reviews.Any() ? r.reviews.Average(rv => rv.rating) : 0.0,
-                    totalReviews = r.reviews.Count,
-                    reviews = r.reviews.Select(rv => new RecipeReviewDTO
+                .Join(
+                    _context.Chefs,
+                    recipe => recipe.chefId,
+                    chef => chef.id,
+                    (recipe, chef) => new { recipe, chef }
+                )
+                .Join(
+                    _context.Users,
+                    rc => rc.chef.userId,
+                    user => user.id,
+                    (rc, user) => new RecipeDetailDTO
                     {
-                        id = rv.id,
-                        userId = rv.userId,
-                        userName = rv.user!.fullName,
-                        userAvatar = rv.user.avatarUrl,
-                        rating = rv.rating,
-                        comment = rv.comment,
-                        reviewDate = rv.reviewDate
-                    }).OrderByDescending(rv => rv.reviewDate).ToList()
-                })
+                        id = rc.recipe.id,
+                        chefId = rc.recipe.chefId,
+                        chefName = user.fullName,
+                        chefAvatar = user.avatarUrl,
+                        recipeName = rc.recipe.recipeName,
+                        cuisine = rc.recipe.cuisine,
+                        recipeImage = rc.recipe.recipeImage,
+                        ingredients = rc.recipe.ingredients,
+                        steps = rc.recipe.steps,
+                        createdAt = rc.recipe.createdAt,
+                        averageRating = rc.recipe.reviews.Any() ? rc.recipe.reviews.Average(rv => rv.rating) : 0.0,
+                        totalReviews = rc.recipe.reviews.Count,
+                        reviews = rc.recipe.reviews.Select(rv => new RecipeReviewDTO
+                        {
+                            id = rv.id,
+                            userId = rv.userId,
+                            userName = rv.user!.fullName,
+                            userAvatar = rv.user.avatarUrl,
+                            rating = rv.rating,
+                            comment = rv.comment,
+                            reviewDate = rv.reviewDate
+                        }).OrderByDescending(rv => rv.reviewDate).ToList()
+                    }
+                )
                 .FirstOrDefaultAsync();
 
             if (recipe == null)
@@ -147,7 +169,7 @@ namespace Server.Controllers
                     }
                 }
 
-                // Create recipes directory if it doesn't exist - CHANGED PATH
+                // Create recipes directory if it doesn't exist
                 var recipesDir = Path.Combine(_env.WebRootPath, "recipes");
                 if (!Directory.Exists(recipesDir))
                 {
@@ -164,7 +186,7 @@ namespace Server.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                // Update recipe image URL - CHANGED PATH
+                // Update recipe image URL
                 recipe.recipeImage = $"{Request.Scheme}://{Request.Host}/recipes/{fileName}";
                 await _context.SaveChangesAsync();
 
@@ -193,7 +215,7 @@ namespace Server.Controllers
 
             try
             {
-                // Delete recipe image if exists - CHANGED PATH
+                // Delete recipe image if exists
                 if (!string.IsNullOrEmpty(recipe.recipeImage))
                 {
                     var imagePath = Path.Combine(_env.WebRootPath, recipe.recipeImage.TrimStart('/'));

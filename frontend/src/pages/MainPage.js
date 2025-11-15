@@ -5,7 +5,8 @@ import ratingIcon from "../assets/rating.png";
 import commentIcon from "../assets/comment.png";
 import viewsIcon from "../assets/views.png";
 import postIcon from "../assets/post.png";
-import { fetchPosts } from "../api/post";
+import deleteIcon from "../assets/delete.png";
+import { fetchPosts, deletePost } from "../api/post";
 import { apiFetch } from "../api/apiClient";
 import { fetchMyProfile } from "../api/profileapi";
 
@@ -79,7 +80,6 @@ function Avatar({ src, name, size = 40 }) {
 }
 
 export default function MainPage() {
-  const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
   const [posts, setPosts] = useState([]);
   const [me, setMe] = useState(null); // current user
@@ -98,24 +98,29 @@ export default function MainPage() {
       setError(null);
 
       try {
-        // 1️⃣ Fetch current user profile
+        // 1️⃣ Fetch current user profile ONLY if logged in
         let currentUser = null;
-        try {
-          const profile = await fetchMyProfile();
-          if (!mounted) return;
+        if (isLoggedIn) {
+          try {
+            const profile = await fetchMyProfile();
+            if (!mounted) return;
 
-          currentUser = {
-            username: profile.username ?? profile.fullName ?? "You",
-            fullName: profile.fullName ?? profile.username ?? "You",
-            avatar: pickAvatarFromProfile(profile),
-          };
-          setMe(currentUser);
-        } catch (err) {
-          console.warn("Failed to load current profile:", err);
-          if (mounted) setMe(null);
+            currentUser = {
+              username: profile.username ?? profile.fullName ?? "You",
+              fullName: profile.fullName ?? profile.username ?? "You",
+              avatar: pickAvatarFromProfile(profile),
+            };
+            setMe(currentUser);
+          } catch (err) {
+            console.warn("Failed to load current profile:", err);
+            if (mounted) setMe(null);
+          }
+        } else {
+          // For guests, set me to null
+          setMe(null);
         }
 
-        // 2️⃣ Fetch posts
+        // 2️⃣ Fetch posts (this should work for both guests and logged-in users)
         const data = await fetchPosts();
         console.log(data);
         const postsArray = Array.isArray(data) ? data : data?.posts ?? [];
@@ -132,7 +137,7 @@ export default function MainPage() {
           views: p.views ?? 0,
           avatar: pickAvatarFromPost(p) || null,
           imageUrl: resolveAvatarUrl(p.imageUrl ?? p.image ?? p.filePath ?? p.postImage ?? null),
-          isLikedByCurrentUser: p.isLikedByCurrentUser ?? false, // Add this
+          isLikedByCurrentUser: p.isLikedByCurrentUser ?? false,
         }));
 
         if (!mounted) return;
@@ -149,7 +154,7 @@ export default function MainPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isLoggedIn]); // Add isLoggedIn as dependency
 
   const handleNewPost = () => {
     if (!isLoggedIn) {
@@ -157,6 +162,28 @@ export default function MainPage() {
       return;
     }
     navigate("/postblog", { state: { title: newPost } });
+  };
+
+  const handleDeletePost = async (postId, e) => {
+    e.stopPropagation(); // Prevent triggering the post click
+    
+    if (!isLoggedIn) {
+      alert("You need to log in to delete posts.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deletePost(postId);
+      // Remove the post from the state
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (err) {
+      console.error("Failed to delete post:", err);
+      alert("Failed to delete post. Please try again.");
+    }
   };
 
   const handleRate = async (id, e) => {
@@ -198,17 +225,24 @@ export default function MainPage() {
 
   const handleComment = (id, e) => {
     e.stopPropagation();
+    if (!isLoggedIn) {
+      alert("Please log in to view post details and comments.");
+      return;
+    }
     navigate(`/posts/${id}`);
   };
 
   const handlePostClick = async (id) => {
-    // Track view for logged-in users (same logic as BlogDetails)
-    if (isLoggedIn) {
-      try {
-        await apiFetch(`/posts/${id}/view`, { method: "POST" });
-      } catch (viewErr) {
-        console.warn("Failed to track view:", viewErr);
-      }
+    if (!isLoggedIn) {
+      alert("Please log in to view post details.");
+      return;
+    }
+    
+    // Track view for logged-in users
+    try {
+      await apiFetch(`/posts/${id}/view`, { method: "POST" });
+    } catch (viewErr) {
+      console.warn("Failed to track view:", viewErr);
     }
     
     navigate(`/posts/${id}`);
@@ -228,29 +262,29 @@ export default function MainPage() {
       <Navbar />
 
       <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818", border: "1px solid #2d2d2d" }}>
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Main Feed</h2>
-          <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="bg-gray-800 text-white px-3 py-2 rounded-lg focus:outline-none">
-            <option value="Popular">Popular</option>
-            <option value="Recent">Recent</option>
-          </select>
-        </div>
 
         {/* New Post Input */}
         <div className="mb-8 flex items-center space-x-3">
           <Avatar 
             src={me?.avatar} 
-            name={me?.fullName || me?.username} 
+            name={isLoggedIn ? (me?.fullName || me?.username) : "Guest"} 
             size={40} 
           />
           <input
-            placeholder={isLoggedIn ? `What's on your mind, ${me?.username ?? "you"}?` : "New Blog Post?"}
+            placeholder={isLoggedIn ? `What's on your mind, ${me?.username ?? "you"}?` : "Log in to create posts"}
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
-            className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none"
+            onClick={!isLoggedIn ? () => alert("Please log in to create posts.") : undefined}
+            readOnly={!isLoggedIn}
+            className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none cursor-pointer"
           />
-          <button onClick={handleNewPost} className="px-4 py-1.5 border border-gray-600 rounded-lg hover:bg-gray-900">
+          <button 
+            onClick={handleNewPost} 
+            className={`px-4 py-1.5 border border-gray-600 rounded-lg ${
+              isLoggedIn ? "hover:bg-gray-900" : "opacity-50 cursor-not-allowed"
+            }`}
+            disabled={!isLoggedIn}
+          >
             Post
           </button>
         </div>
@@ -266,17 +300,32 @@ export default function MainPage() {
                 {/* Post Container - Now Clickable */}
                 <div 
                   onClick={() => handlePostClick(post.id)}
-                  className="w-full pb-6 border-b cursor-pointer hover:bg-gray-900 hover:bg-opacity-30 transition-colors rounded-lg p-4 -m-4" 
+                  className={`w-full pb-6 border-b cursor-pointer transition-colors rounded-lg p-4 -m-4 ${
+                    isLoggedIn ? "hover:bg-gray-900 hover:bg-opacity-30" : "cursor-not-allowed"
+                  }`}
                   style={{ borderColor: "#2d2d2d" }}
                 >
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden">
-                      <Avatar src={post.avatar} name={post.username} size={40} />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <Avatar src={post.avatar} name={post.username} size={40} />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="font-semibold text-white">{post.username}</h3>
+                        <p className="text-sm text-gray-400">{post.createdAt.toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <h3 className="font-semibold text-white">{post.username}</h3>
-                      <p className="text-sm text-gray-400">{post.createdAt.toLocaleString()}</p>
-                    </div>
+                    
+                    {/* Delete button - only show if current user owns the post */}
+                    {me && post.username === me.username && (
+                      <button 
+                        onClick={(e) => handleDeletePost(post.id, e)}
+                        className="text-red-500 hover:text-red-400 transition p-2 rounded-full hover:bg-red-900 hover:bg-opacity-20"
+                        title="Delete post"
+                      >
+                        <img src={deleteIcon} alt="Delete" className="w-5 h-5 invert opacity-70 hover:opacity-100" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Show Title only */}
@@ -310,7 +359,10 @@ export default function MainPage() {
 
                       <button 
                         onClick={(e) => handleComment(post.id, e)} 
-                        className="flex items-center space-x-1 hover:text-white transition"
+                        disabled={!isLoggedIn}
+                        className={`flex items-center space-x-1 transition ${
+                          isLoggedIn ? "hover:text-white" : "opacity-50 cursor-not-allowed"
+                        }`}
                       >
                         <img src={commentIcon} alt="Comment" className="w-5 h-5 invert" />
                         <span>{post.comments || 0}</span>

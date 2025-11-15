@@ -92,7 +92,6 @@ function AddRecipePage() {
   };
 
   const handleSubmitRecipe = async () => {
-    // Check if user is a chef
     if (!chefId) {
       alert("You need to be a chef to add recipes");
       return;
@@ -105,7 +104,6 @@ function AddRecipePage() {
       return;
     }
 
-    // Upload image if file is selected but not uploaded yet
     if (imageFile && !recipeImage) {
       alert("Please upload the selected image before submitting");
       return;
@@ -209,7 +207,7 @@ function AddRecipePage() {
                     </button>
                   )}
                   {recipeImage && (
-                    <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
+                    <p className="text-green-400 text-sm mt-2"> Image uploaded successfully</p>
                   )}
                 </div>
               ) : (

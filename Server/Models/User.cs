@@ -3,11 +3,11 @@ namespace Server.Models
     public class User
     {
         public int id { get; set; }  
-        public string fullName { get; set; }
-        public string username { get; set; }
-        public string email { get; set; }
-        public string phone { get; set; }
-        public string password { get; set; } 
+        public required string fullName { get; set; }
+        public required string username { get; set; }
+        public required string email { get; set; }
+        public required string phone { get; set; }
+        public required string password { get; set; } 
         public string role { get; set; } = "User";
         public bool isBanned { get; set; } = false;
         public DateTime joinDate { get; set; } = DateTime.Now;

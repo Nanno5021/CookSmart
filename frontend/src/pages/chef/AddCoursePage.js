@@ -38,7 +38,6 @@ function AddCoursePage() {
   const [quizAnswer, setQuizAnswer] = useState("");
   const [editingQuiz, setEditingQuiz] = useState(null);
 
-  // Get logged-in chef ID from localStorage
   const chefId = parseInt(localStorage.getItem("chefId"));
 
   const handleImageSelect = (e) => {
@@ -131,7 +130,6 @@ function AddCoursePage() {
       return;
     }
 
-    // Check if image type and file not uploaded
     if (sectionContentType === "image" && sectionImageFile && !sectionContent) {
       alert("Please upload the selected image before adding the section");
       return;
@@ -224,7 +222,6 @@ function AddCoursePage() {
   };
 
   const handleSubmitCourse = async () => {
-    // Check if user is a chef
     if (!chefId) {
       alert("You need to be a chef to create courses");
       return;
@@ -235,7 +232,6 @@ function AddCoursePage() {
       return;
     }
 
-    // Upload image if file is selected but not uploaded yet
     if (imageFile && !courseImage) {
       alert("Please upload the selected image before submitting");
       return;
@@ -245,7 +241,7 @@ function AddCoursePage() {
 
     try {
       const courseData = {
-        chefId: chefId, // This should be the chef ID, not user ID
+        chefId: chefId, 
         courseName: courseName,
         courseImage: courseImage || "",
         ingredients: ingredients || "",
@@ -269,7 +265,7 @@ function AddCoursePage() {
         }))
       };
 
-      console.log("Submitting course with chefId:", chefId); // Debug log
+      console.log("Submitting course with chefId:", chefId); 
       
       const response = await createCourse(courseData);
       console.log("Course created:", response);
@@ -283,7 +279,6 @@ function AddCoursePage() {
     }
   };
 
-  // Check if user is a chef
   if (!chefId) {
     return (
       <div className="min-h-screen bg-black text-white pl-24 m-0 p-0" style={{ overflowX: "hidden" }}>
@@ -309,7 +304,6 @@ function AddCoursePage() {
       <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Add New Course</h1>
 
-        {/* Basic Course Info */}
         <div className="bg-[#181818] rounded-xl p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Course Information</h2>
           
@@ -351,7 +345,7 @@ function AddCoursePage() {
                     </button>
                   )}
                   {courseImage && (
-                    <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
+                    <p className="text-green-400 text-sm mt-2"> Image uploaded successfully</p>
                   )}
                 </div>
               ) : (
@@ -641,7 +635,7 @@ function AddCoursePage() {
                           </button>
                         )}
                         {sectionContent && (
-                          <p className="text-green-400 text-sm mt-2">âœ“ Image uploaded successfully</p>
+                          <p className="text-green-400 text-sm mt-2"> Image uploaded successfully</p>
                         )}
                       </div>
                     ) : (
