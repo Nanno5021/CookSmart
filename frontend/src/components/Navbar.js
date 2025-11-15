@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import { Home, BookOpen, Bell, GraduationCap, User, LogOut, LogIn } from "lucide-react";
 import { logoutUser } from "../api/auth";
-import logo from "../assets/logo.png";
+import logo from "../assets/navi_logo.png";
 
 function Navbar() {
   const location = useLocation();

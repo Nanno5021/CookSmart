@@ -80,7 +80,6 @@ function Avatar({ src, name, size = 40 }) {
 }
 
 export default function MainPage() {
-  const [sortOption, setSortOption] = useState("Popular");
   const [newPost, setNewPost] = useState("");
   const [posts, setPosts] = useState([]);
   const [me, setMe] = useState(null); // current user
@@ -263,14 +262,6 @@ export default function MainPage() {
       <Navbar />
 
       <div className="w-full max-w-2xl mt-10 p-6 rounded-2xl shadow-lg" style={{ backgroundColor: "#181818", border: "1px solid #2d2d2d" }}>
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Main Feed</h2>
-          <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="bg-gray-800 text-white px-3 py-2 rounded-lg focus:outline-none">
-            <option value="Popular">Popular</option>
-            <option value="Recent">Recent</option>
-          </select>
-        </div>
 
         {/* New Post Input */}
         <div className="mb-8 flex items-center space-x-3">
