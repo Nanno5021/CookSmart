@@ -2423,7 +2423,7 @@
       "email": "chong@gmail.com",
       "phone": "0123456543",
       "password": "$2a$11$cNtXUadIplTOgplPTKhOB.UQN12Szd0d8G7h1Udnnwddcpf2Faweu",
-      "role": "Chef",
+      "role": "User",
       "isBanned": false,
       "joinDate": "2025-11-16T13:49:52.7199392",
       "avatarUrl": "http://localhost:5037/uploads/default.png",
@@ -62587,19 +62587,6 @@
       "rating": 0.0,
       "totalReviews": 0,
       "approvedDate": "2025-11-16T12:51:25.5589444"
-    },
-    {
-      "id": 17,
-      "userId": 16,
-      "specialtyCuisine": "Japanese",
-      "yearsOfExperience": 3,
-      "certificationName": "APU",
-      "certificationImageUrl": "http://localhost:5037/certifications/cert_16_af12c181-77d5-4a7e-9b52-25ed40916d76.jpg",
-      "portfolioLink": "fb",
-      "biography": "New",
-      "rating": 0.0,
-      "totalReviews": 0,
-      "approvedDate": "2025-11-16T13:54:22.2434639"
     }
   ],
   "ChefApplications": [
@@ -65174,6 +65161,87 @@
       "adminRemarks": "",
       "dateApplied": "2025-11-16T01:08:25.0450718",
       "dateReviewed": "2025-11-16T12:51:25.5700751"
+    },
+    {
+      "id": 17,
+      "userId": 16,
+      "User": {
+        "id": 16,
+        "fullName": "Chong Bee Leng",
+        "username": "Chong",
+        "email": "chong@gmail.com",
+        "phone": "0123456543",
+        "password": "$2a$11$cNtXUadIplTOgplPTKhOB.UQN12Szd0d8G7h1Udnnwddcpf2Faweu",
+        "role": "User",
+        "isBanned": false,
+        "joinDate": "2025-11-16T13:49:52.7199392",
+        "avatarUrl": "http://localhost:5037/uploads/default.png",
+        "Posts": []
+      },
+      "specialtyCuisine": "Japanese",
+      "yearsOfExperience": 6,
+      "certificationName": "WorkForce Cert",
+      "certificationImageUrl": "http://localhost:5037/certifications/e7f28243-8ecf-4d9f-8208-30b7c99ff6d7.jpg",
+      "portfolioLink": "fb",
+      "biography": "hi",
+      "status": "Pending",
+      "adminRemarks": "",
+      "dateApplied": "2025-11-16T06:17:33.3777423",
+      "dateReviewed": null
+    },
+    {
+      "id": 18,
+      "userId": 17,
+      "User": {
+        "id": 17,
+        "fullName": "Wong Qi Hern",
+        "username": "Wongs",
+        "email": "Wong@gmail.com",
+        "phone": "01232355211",
+        "password": "$2a$11$.5k3HkeybSJ57ZfQc30VZO/12XXNfE6a/JsTqrhH0MUlKbbAennxi",
+        "role": "User",
+        "isBanned": false,
+        "joinDate": "2025-11-16T14:03:34.1111496",
+        "avatarUrl": "http://localhost:5037/uploads/default.png",
+        "Posts": []
+      },
+      "specialtyCuisine": "Italian",
+      "yearsOfExperience": 5,
+      "certificationName": "Chef World Record",
+      "certificationImageUrl": "http://localhost:5037/certifications/4913838b-cc1c-4e95-a064-9e4fa49719ab.jpg",
+      "portfolioLink": "FB",
+      "biography": "Im the best chef",
+      "status": "Pending",
+      "adminRemarks": "",
+      "dateApplied": "2025-11-16T06:18:39.2687908",
+      "dateReviewed": null
+    },
+    {
+      "id": 19,
+      "userId": 15,
+      "User": {
+        "id": 15,
+        "fullName": "Wong Kai Hin",
+        "username": "kaihin111",
+        "email": "kaihin@gmail.com",
+        "phone": "0122480306",
+        "password": "$2a$11$QgljWIVnBI6idj2a93A71uCdelQ1m9IzdgdCk3cY.D17OEXx0B7Oa",
+        "role": "User",
+        "isBanned": false,
+        "joinDate": "2025-11-16T09:25:07.1733159",
+        "avatarUrl": "http://localhost:5037/uploads/default.png",
+        "Posts": []
+      },
+      "specialtyCuisine": "Malay",
+      "yearsOfExperience": 5,
+      "certificationName": "Master Chef",
+      "certificationImageUrl": "http://localhost:5037/certifications/e018dce6-5a48-481b-902c-2d4798235f04.jpg",
+      "portfolioLink": "fb",
+      "biography": "Im a new chef",
+      "status": "Pending",
+      "adminRemarks": "",
+      "dateApplied": "2025-11-16T06:20:12.2983899",
+      "dateReviewed": null
     }
   ],
   "OtpVerifications": []
