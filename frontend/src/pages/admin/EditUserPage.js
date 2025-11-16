@@ -133,20 +133,19 @@ function EditUserPage({ userId, onBack, onSave }) {
     }
   };
 
-  // Show EditChefProfile component if editing chef profile
-  if (editingChef && user) {
-    return (
-      <EditChefProfile
-        user={user}
-        chefProfile={user.chefProfile}
-        onBack={() => setEditingChef(false)}
-        onSave={async () => {
-          await loadUserDetails(); // Reload user data
-          if (onSave) await onSave();
-        }}
-      />
-    );
-  }
+
+if (editingChef && user) {
+  return (
+    <EditChefProfile
+      userId={user.id}  // ✅ Pass userId instead of user
+      onBack={() => setEditingChef(false)}
+      onSave={async () => {
+        await loadUserDetails(); // Reload user data
+        if (onSave) await onSave();
+      }}
+    />
+  );
+}
 
   if (loading) {
     return (

@@ -69,7 +69,7 @@ function ManageUserPage() {
     }
   };
 
-  // NEW: Handle user creation
+
   const handleCreateUser = async (userData) => {
     try {
       const newUser = await createUser(userData);
@@ -87,7 +87,7 @@ function ManageUserPage() {
         alert('User created successfully!');
       }
     } catch (err) {
-      throw err; // Let CreateUserPage handle the error
+      throw err; 
     }
   };
 

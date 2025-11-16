@@ -225,7 +225,7 @@ namespace Server.Controllers
                     }
                 }
 
-                // Delete the recipe (reviews will be cascade deleted if properly configured)
+                // Delete the recipe 
                 _context.Recipes.Remove(recipe);
                 await _context.SaveChangesAsync();
 

@@ -7,7 +7,7 @@ function ChefApplicationForm({ user, onBack, onSubmit }) {
     specialtyCuisine: '',
     yearsOfExperience: 0,
     certificationName: '',
-    certificationImage: null, // Changed from certificationImageUrl to certificationImage
+    certificationImage: null, 
     portfolioLink: '',
     biography: '',
   });

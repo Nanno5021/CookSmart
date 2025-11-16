@@ -290,13 +290,13 @@ namespace Server.Controllers
         [HttpDelete("delete-chef/{id}")]
         public async Task<IActionResult> DeleteChefProfile(int id)
         {
-            // Find the chef profile associated with this user
+            // Find the chef profile
             var chef = await _context.Chefs.FirstOrDefaultAsync(c => c.userId == id);
             
             if (chef == null)
                 return NotFound(new { message = "Chef profile not found" });
 
-            // Also delete any chef applications for this user
+            // Delete Chef Application
             var chefApplications = await _context.ChefApplications
                 .Where(ca => ca.userId == id)
                 .ToListAsync();

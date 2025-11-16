@@ -11,49 +11,7 @@
       "isBanned": false,
       "joinDate": "2025-11-15T13:41:24.9300976",
       "avatarUrl": "http://localhost:5037/uploads/default.png",
-      "Posts": [
-        {
-          "id": 11,
-          "title": "This is my first Cert",
-          "content": "Took me 2 years to earn it",
-          "createdAt": "2025-11-16T01:04:25.1939693",
-          "rating": 1,
-          "comments": 1,
-          "views": 1,
-          "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-          "userId": 1,
-          "Comments": [
-            {
-              "id": 4,
-              "content": "I love this cert",
-              "createdAt": "2025-11-16T01:04:37.6033692",
-              "likes": 0,
-              "postId": 11,
-              "userId": 1,
-              "parentCommentId": null,
-              "ParentComment": null,
-              "Replies": [],
-              "CommentLikes": []
-            }
-          ],
-          "PostLikes": [
-            {
-              "id": 4,
-              "userId": 1,
-              "postId": 11,
-              "createdAt": "2025-11-16T01:04:39.6973508"
-            }
-          ],
-          "PostViews": [
-            {
-              "id": 12,
-              "userId": 1,
-              "postId": 11,
-              "viewedAt": "2025-11-16T01:04:30.7179242"
-            }
-          ]
-        }
-      ]
+      "Posts": []
     },
     {
       "id": 2,
@@ -2413,7 +2371,7 @@
       "email": "lowyingqi@gmail.com",
       "phone": "0123456789",
       "password": "$2a$11$DoGt14kPDgNg0gpzf/DSiOZOvzVPtR40PdgERx3uR2/Oq5h1MUT22",
-      "role": "User",
+      "role": "Chef",
       "isBanned": false,
       "joinDate": "2025-11-15T15:11:50.7002742",
       "avatarUrl": "http://localhost:5037/uploads/user_12_6140f23a-7506-4dad-a299-f0c2cc42b806.jpg",
@@ -2442,6 +2400,45 @@
       "role": "User",
       "isBanned": false,
       "joinDate": "2025-11-15T18:05:17.9294992",
+      "avatarUrl": "http://localhost:5037/uploads/default.png",
+      "Posts": []
+    },
+    {
+      "id": 15,
+      "fullName": "Wong Kai Hin",
+      "username": "kaihin111",
+      "email": "kaihin@gmail.com",
+      "phone": "0122480306",
+      "password": "$2a$11$QgljWIVnBI6idj2a93A71uCdelQ1m9IzdgdCk3cY.D17OEXx0B7Oa",
+      "role": "User",
+      "isBanned": false,
+      "joinDate": "2025-11-16T09:25:07.1733159",
+      "avatarUrl": "http://localhost:5037/uploads/default.png",
+      "Posts": []
+    },
+    {
+      "id": 16,
+      "fullName": "Chong Bee Leng",
+      "username": "Chong",
+      "email": "chong@gmail.com",
+      "phone": "0123456543",
+      "password": "$2a$11$cNtXUadIplTOgplPTKhOB.UQN12Szd0d8G7h1Udnnwddcpf2Faweu",
+      "role": "Chef",
+      "isBanned": false,
+      "joinDate": "2025-11-16T13:49:52.7199392",
+      "avatarUrl": "http://localhost:5037/uploads/default.png",
+      "Posts": []
+    },
+    {
+      "id": 17,
+      "fullName": "Wong Qi Hern",
+      "username": "Wongs",
+      "email": "Wong@gmail.com",
+      "phone": "01232355211",
+      "password": "$2a$11$.5k3HkeybSJ57ZfQc30VZO/12XXNfE6a/JsTqrhH0MUlKbbAennxi",
+      "role": "User",
+      "isBanned": false,
+      "joinDate": "2025-11-16T14:03:34.1111496",
       "avatarUrl": "http://localhost:5037/uploads/default.png",
       "Posts": []
     }
@@ -4892,99 +4889,6 @@
           "viewedAt": "2025-11-15T08:54:57.4767608"
         }
       ]
-    },
-    {
-      "id": 11,
-      "title": "This is my first Cert",
-      "content": "Took me 2 years to earn it",
-      "createdAt": "2025-11-16T01:04:25.1939693",
-      "rating": 1,
-      "comments": 1,
-      "views": 1,
-      "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-      "userId": 1,
-      "User": {
-        "id": 1,
-        "fullName": "TAI WEI PING",
-        "username": "admin1",
-        "email": "taiweipin@gmail.com",
-        "phone": "012-3456789",
-        "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-        "role": "Admin",
-        "isBanned": false,
-        "joinDate": "2025-11-15T13:41:24.9300976",
-        "avatarUrl": "http://localhost:5037/uploads/default.png",
-        "Posts": []
-      },
-      "Comments": [
-        {
-          "id": 4,
-          "content": "I love this cert",
-          "createdAt": "2025-11-16T01:04:37.6033692",
-          "likes": 0,
-          "postId": 11,
-          "userId": 1,
-          "User": {
-            "id": 1,
-            "fullName": "TAI WEI PING",
-            "username": "admin1",
-            "email": "taiweipin@gmail.com",
-            "phone": "012-3456789",
-            "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-            "role": "Admin",
-            "isBanned": false,
-            "joinDate": "2025-11-15T13:41:24.9300976",
-            "avatarUrl": "http://localhost:5037/uploads/default.png",
-            "Posts": []
-          },
-          "parentCommentId": null,
-          "ParentComment": null,
-          "Replies": [],
-          "CommentLikes": []
-        }
-      ],
-      "PostLikes": [
-        {
-          "id": 4,
-          "userId": 1,
-          "User": {
-            "id": 1,
-            "fullName": "TAI WEI PING",
-            "username": "admin1",
-            "email": "taiweipin@gmail.com",
-            "phone": "012-3456789",
-            "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-            "role": "Admin",
-            "isBanned": false,
-            "joinDate": "2025-11-15T13:41:24.9300976",
-            "avatarUrl": "http://localhost:5037/uploads/default.png",
-            "Posts": []
-          },
-          "postId": 11,
-          "createdAt": "2025-11-16T01:04:39.6973508"
-        }
-      ],
-      "PostViews": [
-        {
-          "id": 12,
-          "userId": 1,
-          "User": {
-            "id": 1,
-            "fullName": "TAI WEI PING",
-            "username": "admin1",
-            "email": "taiweipin@gmail.com",
-            "phone": "012-3456789",
-            "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-            "role": "Admin",
-            "isBanned": false,
-            "joinDate": "2025-11-15T13:41:24.9300976",
-            "avatarUrl": "http://localhost:5037/uploads/default.png",
-            "Posts": []
-          },
-          "postId": 11,
-          "viewedAt": "2025-11-16T01:04:30.7179242"
-        }
-      ]
     }
   ],
   "Comments": [
@@ -6702,127 +6606,6 @@
                 },
                 "postId": 10,
                 "viewedAt": "2025-11-15T08:54:57.4767608"
-              }
-            ]
-          }
-        ]
-      },
-      "parentCommentId": null,
-      "ParentComment": null,
-      "Replies": [],
-      "CommentLikes": []
-    },
-    {
-      "id": 4,
-      "content": "I love this cert",
-      "createdAt": "2025-11-16T01:04:37.6033692",
-      "likes": 0,
-      "postId": 11,
-      "Post": {
-        "id": 11,
-        "title": "This is my first Cert",
-        "content": "Took me 2 years to earn it",
-        "createdAt": "2025-11-16T01:04:25.1939693",
-        "rating": 1,
-        "comments": 1,
-        "views": 1,
-        "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-        "userId": 1,
-        "User": {
-          "id": 1,
-          "fullName": "TAI WEI PING",
-          "username": "admin1",
-          "email": "taiweipin@gmail.com",
-          "phone": "012-3456789",
-          "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-          "role": "Admin",
-          "isBanned": false,
-          "joinDate": "2025-11-15T13:41:24.9300976",
-          "avatarUrl": "http://localhost:5037/uploads/default.png",
-          "Posts": []
-        },
-        "Comments": [],
-        "PostLikes": [
-          {
-            "id": 4,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "postId": 11,
-            "createdAt": "2025-11-16T01:04:39.6973508"
-          }
-        ],
-        "PostViews": [
-          {
-            "id": 12,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "postId": 11,
-            "viewedAt": "2025-11-16T01:04:30.7179242"
-          }
-        ]
-      },
-      "userId": 1,
-      "User": {
-        "id": 1,
-        "fullName": "TAI WEI PING",
-        "username": "admin1",
-        "email": "taiweipin@gmail.com",
-        "phone": "012-3456789",
-        "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-        "role": "Admin",
-        "isBanned": false,
-        "joinDate": "2025-11-15T13:41:24.9300976",
-        "avatarUrl": "http://localhost:5037/uploads/default.png",
-        "Posts": [
-          {
-            "id": 11,
-            "title": "This is my first Cert",
-            "content": "Took me 2 years to earn it",
-            "createdAt": "2025-11-16T01:04:25.1939693",
-            "rating": 1,
-            "comments": 1,
-            "views": 1,
-            "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-            "userId": 1,
-            "Comments": [],
-            "PostLikes": [
-              {
-                "id": 4,
-                "userId": 1,
-                "postId": 11,
-                "createdAt": "2025-11-16T01:04:39.6973508"
-              }
-            ],
-            "PostViews": [
-              {
-                "id": 12,
-                "userId": 1,
-                "postId": 11,
-                "viewedAt": "2025-11-16T01:04:30.7179242"
               }
             ]
           }
@@ -9083,133 +8866,6 @@
         ]
       },
       "createdAt": "2025-11-15T08:54:53.0364463"
-    },
-    {
-      "id": 4,
-      "userId": 1,
-      "User": {
-        "id": 1,
-        "fullName": "TAI WEI PING",
-        "username": "admin1",
-        "email": "taiweipin@gmail.com",
-        "phone": "012-3456789",
-        "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-        "role": "Admin",
-        "isBanned": false,
-        "joinDate": "2025-11-15T13:41:24.9300976",
-        "avatarUrl": "http://localhost:5037/uploads/default.png",
-        "Posts": [
-          {
-            "id": 11,
-            "title": "This is my first Cert",
-            "content": "Took me 2 years to earn it",
-            "createdAt": "2025-11-16T01:04:25.1939693",
-            "rating": 1,
-            "comments": 1,
-            "views": 1,
-            "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-            "userId": 1,
-            "Comments": [
-              {
-                "id": 4,
-                "content": "I love this cert",
-                "createdAt": "2025-11-16T01:04:37.6033692",
-                "likes": 0,
-                "postId": 11,
-                "userId": 1,
-                "parentCommentId": null,
-                "ParentComment": null,
-                "Replies": [],
-                "CommentLikes": []
-              }
-            ],
-            "PostLikes": [],
-            "PostViews": [
-              {
-                "id": 12,
-                "userId": 1,
-                "postId": 11,
-                "viewedAt": "2025-11-16T01:04:30.7179242"
-              }
-            ]
-          }
-        ]
-      },
-      "postId": 11,
-      "Post": {
-        "id": 11,
-        "title": "This is my first Cert",
-        "content": "Took me 2 years to earn it",
-        "createdAt": "2025-11-16T01:04:25.1939693",
-        "rating": 1,
-        "comments": 1,
-        "views": 1,
-        "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-        "userId": 1,
-        "User": {
-          "id": 1,
-          "fullName": "TAI WEI PING",
-          "username": "admin1",
-          "email": "taiweipin@gmail.com",
-          "phone": "012-3456789",
-          "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-          "role": "Admin",
-          "isBanned": false,
-          "joinDate": "2025-11-15T13:41:24.9300976",
-          "avatarUrl": "http://localhost:5037/uploads/default.png",
-          "Posts": []
-        },
-        "Comments": [
-          {
-            "id": 4,
-            "content": "I love this cert",
-            "createdAt": "2025-11-16T01:04:37.6033692",
-            "likes": 0,
-            "postId": 11,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "parentCommentId": null,
-            "ParentComment": null,
-            "Replies": [],
-            "CommentLikes": []
-          }
-        ],
-        "PostLikes": [],
-        "PostViews": [
-          {
-            "id": 12,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "postId": 11,
-            "viewedAt": "2025-11-16T01:04:30.7179242"
-          }
-        ]
-      },
-      "createdAt": "2025-11-16T01:04:39.6973508"
     }
   ],
   "CommentLikes": [],
@@ -14072,133 +13728,6 @@
         ]
       },
       "viewedAt": "2025-11-15T08:54:57.4767608"
-    },
-    {
-      "id": 12,
-      "userId": 1,
-      "User": {
-        "id": 1,
-        "fullName": "TAI WEI PING",
-        "username": "admin1",
-        "email": "taiweipin@gmail.com",
-        "phone": "012-3456789",
-        "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-        "role": "Admin",
-        "isBanned": false,
-        "joinDate": "2025-11-15T13:41:24.9300976",
-        "avatarUrl": "http://localhost:5037/uploads/default.png",
-        "Posts": [
-          {
-            "id": 11,
-            "title": "This is my first Cert",
-            "content": "Took me 2 years to earn it",
-            "createdAt": "2025-11-16T01:04:25.1939693",
-            "rating": 1,
-            "comments": 1,
-            "views": 1,
-            "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-            "userId": 1,
-            "Comments": [
-              {
-                "id": 4,
-                "content": "I love this cert",
-                "createdAt": "2025-11-16T01:04:37.6033692",
-                "likes": 0,
-                "postId": 11,
-                "userId": 1,
-                "parentCommentId": null,
-                "ParentComment": null,
-                "Replies": [],
-                "CommentLikes": []
-              }
-            ],
-            "PostLikes": [
-              {
-                "id": 4,
-                "userId": 1,
-                "postId": 11,
-                "createdAt": "2025-11-16T01:04:39.6973508"
-              }
-            ],
-            "PostViews": []
-          }
-        ]
-      },
-      "postId": 11,
-      "Post": {
-        "id": 11,
-        "title": "This is my first Cert",
-        "content": "Took me 2 years to earn it",
-        "createdAt": "2025-11-16T01:04:25.1939693",
-        "rating": 1,
-        "comments": 1,
-        "views": 1,
-        "imageUrl": "http://localhost:5037/post_uploads/fee710d2-e4cc-4d42-a003-84aded0acdb8.jpg",
-        "userId": 1,
-        "User": {
-          "id": 1,
-          "fullName": "TAI WEI PING",
-          "username": "admin1",
-          "email": "taiweipin@gmail.com",
-          "phone": "012-3456789",
-          "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-          "role": "Admin",
-          "isBanned": false,
-          "joinDate": "2025-11-15T13:41:24.9300976",
-          "avatarUrl": "http://localhost:5037/uploads/default.png",
-          "Posts": []
-        },
-        "Comments": [
-          {
-            "id": 4,
-            "content": "I love this cert",
-            "createdAt": "2025-11-16T01:04:37.6033692",
-            "likes": 0,
-            "postId": 11,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "parentCommentId": null,
-            "ParentComment": null,
-            "Replies": [],
-            "CommentLikes": []
-          }
-        ],
-        "PostLikes": [
-          {
-            "id": 4,
-            "userId": 1,
-            "User": {
-              "id": 1,
-              "fullName": "TAI WEI PING",
-              "username": "admin1",
-              "email": "taiweipin@gmail.com",
-              "phone": "012-3456789",
-              "password": "$2a$11$rymgr5NOHHXVRnHNDD344.LD4SQ5ce8OJXgpgcg5h6SLruPXg98CO",
-              "role": "Admin",
-              "isBanned": false,
-              "joinDate": "2025-11-15T13:41:24.9300976",
-              "avatarUrl": "http://localhost:5037/uploads/default.png",
-              "Posts": []
-            },
-            "postId": 11,
-            "createdAt": "2025-11-16T01:04:39.6973508"
-          }
-        ],
-        "PostViews": []
-      },
-      "viewedAt": "2025-11-16T01:04:30.7179242"
     }
   ],
   "Courses": [
@@ -62912,52 +62441,6 @@
         ]
       },
       "reviews": []
-    },
-    {
-      "id": 59,
-      "chefId": 5,
-      "recipeName": "Bulgogi",
-      "cuisine": "Korean",
-      "recipeImage": "http://localhost:5037/recipes/7d81af59-1648-4cc2-8f20-759587c657ad.jpg",
-      "ingredients": "beef (ribeye or sirloin),soy sauce,sugar,garlic,ginger,sesame oil,green onion,onion,carrot,mushroom,black pepper,sesame seeds,oil",
-      "steps": "Slice beef thinly. Mince garlic and ginger. Slice onion, carrot, and mushrooms. Chop green onion.\nMix beef with soy sauce, sugar, garlic, ginger, sesame oil, and black pepper. Marinate for at least 30 minutes.\nHeat oil in a pan or grill. Cook marinated beef with onions, carrots, and mushrooms until beef is cooked and vegetables are tender.\nSprinkle sesame seeds and chopped green onions on top. Serve hot with steamed rice or lettuce wraps.",
-      "createdAt": "2025-11-15T08:17:51.7490741",
-      "chef": {
-        "id": 5,
-        "fullName": "Heston Blumenthal",
-        "username": "hestonblumenthalobe",
-        "email": "hestonblumenthal@gmail.com",
-        "phone": "0123456789",
-        "password": "$2a$11$17vM7loqrqHe4k/GUbSsSOnFVZ3.A8E0fEhk/icgK/WsEb3pJ.KWu",
-        "role": "Chef",
-        "isBanned": false,
-        "joinDate": "2025-11-15T13:49:03.9053454",
-        "avatarUrl": "http://localhost:5037/uploads/88781ee9-a43c-4544-93ca-e3e387e1ca41.jpg",
-        "Posts": [
-          {
-            "id": 4,
-            "title": "Pinot Noir Grape",
-            "content": "Back in 2012, we hosted a wine event with the world-renowned vineyard Chateau d’Yquem, for which our chefs and sommelier collaborated to create a dish that captured the aroma and flavour profile of what noble rot—Botrytis Cinerea—develops in their legendary Sauternes. The complexity of the wine was matched by the complexity of the dish: the recipe has 55 stages in its preparation.\n\nThis year, we’re hosting another prestigious wine dinner, with the equally world-renowned vineyard, Domaine de la Romanée-Conti. In honour of their expression of the Pinot Noir grape, Heston and his development team, pastry chefs and sommeliers were busy creating a brand-new version of this epic dessert, this time inspired by the complex characteristics of Pinot Noir.\n\nPinot Noir Grape will be featured on our à la carte menu from 18th July.",
-            "createdAt": "2025-11-15T06:10:05.3011163",
-            "rating": 0,
-            "comments": 0,
-            "views": 1,
-            "imageUrl": "http://localhost:5037/post_uploads/307bfd67-9b5f-40ba-af47-5367fb75cc90.png",
-            "userId": 5,
-            "Comments": [],
-            "PostLikes": [],
-            "PostViews": [
-              {
-                "id": 5,
-                "userId": 5,
-                "postId": 4,
-                "viewedAt": "2025-11-15T06:10:08.025919"
-              }
-            ]
-          }
-        ]
-      },
-      "reviews": []
     }
   ],
   "RecipeReviews": [],
@@ -63083,7 +62566,7 @@
       "id": 10,
       "userId": 2,
       "specialtyCuisine": "American",
-      "yearsOfExperience": 8,
+      "yearsOfExperience": 11,
       "certificationName": "Beef Wellingon",
       "certificationImageUrl": "http://localhost:5037/certifications/4dcf16c8-b688-4755-a2b9-e2651e9b99f5.webp",
       "portfolioLink": "https://www.gordonramsay.com/",
@@ -63091,6 +62574,32 @@
       "rating": 0.0,
       "totalReviews": 0,
       "approvedDate": "2025-11-15T14:36:29.0739434"
+    },
+    {
+      "id": 15,
+      "userId": 12,
+      "specialtyCuisine": "Japanese",
+      "yearsOfExperience": 5,
+      "certificationName": "APU Cert",
+      "certificationImageUrl": "http://localhost:5037/certifications/96c48b65-0bfe-4e62-b94a-3e9afa02f956.jpg",
+      "portfolioLink": "fb",
+      "biography": "HI",
+      "rating": 0.0,
+      "totalReviews": 0,
+      "approvedDate": "2025-11-16T12:51:25.5589444"
+    },
+    {
+      "id": 17,
+      "userId": 16,
+      "specialtyCuisine": "Japanese",
+      "yearsOfExperience": 3,
+      "certificationName": "APU",
+      "certificationImageUrl": "http://localhost:5037/certifications/cert_16_af12c181-77d5-4a7e-9b52-25ed40916d76.jpg",
+      "portfolioLink": "fb",
+      "biography": "New",
+      "rating": 0.0,
+      "totalReviews": 0,
+      "approvedDate": "2025-11-16T13:54:22.2434639"
     }
   ],
   "ChefApplications": [
@@ -65634,10 +65143,10 @@
       "certificationImageUrl": "http://localhost:5037/certifications/9cbc004b-697c-4953-9587-347e873f974d.jpg",
       "portfolioLink": "",
       "biography": "hi",
-      "status": "Pending",
-      "adminRemarks": "s",
+      "status": "Rejected",
+      "adminRemarks": "Invalid Cert",
       "dateApplied": "2025-11-15T10:11:40.951361",
-      "dateReviewed": "2025-11-16T08:44:36.2188201"
+      "dateReviewed": "2025-11-16T12:54:42.4956501"
     },
     {
       "id": 16,
@@ -65649,7 +65158,7 @@
         "email": "lowyingqi@gmail.com",
         "phone": "0123456789",
         "password": "$2a$11$DoGt14kPDgNg0gpzf/DSiOZOvzVPtR40PdgERx3uR2/Oq5h1MUT22",
-        "role": "User",
+        "role": "Chef",
         "isBanned": false,
         "joinDate": "2025-11-15T15:11:50.7002742",
         "avatarUrl": "http://localhost:5037/uploads/user_12_6140f23a-7506-4dad-a299-f0c2cc42b806.jpg",
@@ -65661,10 +65170,10 @@
       "certificationImageUrl": "http://localhost:5037/certifications/96c48b65-0bfe-4e62-b94a-3e9afa02f956.jpg",
       "portfolioLink": "fb",
       "biography": "HI",
-      "status": "Pending",
+      "status": "Approved",
       "adminRemarks": "",
       "dateApplied": "2025-11-16T01:08:25.0450718",
-      "dateReviewed": null
+      "dateReviewed": "2025-11-16T12:51:25.5700751"
     }
   ],
   "OtpVerifications": []
