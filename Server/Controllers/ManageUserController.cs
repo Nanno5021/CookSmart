@@ -296,11 +296,21 @@ namespace Server.Controllers
             if (chef == null)
                 return NotFound(new { message = "Chef profile not found" });
 
+            // Also delete any chef applications for this user
+            var chefApplications = await _context.ChefApplications
+                .Where(ca => ca.userId == id)
+                .ToListAsync();
+            
+            if (chefApplications.Any())
+            {
+                _context.ChefApplications.RemoveRange(chefApplications);
+            }
+
             // Delete the chef profile
             _context.Chefs.Remove(chef);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Chef profile deleted successfully" });
+            return Ok(new { message = "Chef profile and applications deleted successfully. User can now reapply." });
         }
 
         // POST: api/ManageUser/upload-certification/{id}

@@ -59,7 +59,7 @@ function ChefApprovalPage() {
     try {
       setApproving(true);
       await approveApplication(approveId);
-      setApplications((prev) => prev.filter((a) => a.Id !== approveId));
+      setApplications((prev) => prev.filter((a) => a.id !== approveId));
       setApproveId(null);
       alert('Approved!');
     } catch (err) {
@@ -83,7 +83,7 @@ function ChefApprovalPage() {
     try {
       setRejecting(true);
       await rejectApplication(rejectId, rejectReason);
-      setApplications((prev) => prev.filter((a) => a.Id !== rejectId));
+      setApplications((prev) => prev.filter((a) => a.id !== rejectId));
       setRejectId(null);
       alert('Rejected!');
     } catch (err) {
@@ -294,7 +294,7 @@ function Table({ applications, onView, onApprove, onReject, searchTerm }) {
                     Approve
                   </button>
                   <button
-                    onClick={() => onReject(app.Id)}
+                    onClick={() => onReject(app.id)}
                     className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
                   >
                     Reject
